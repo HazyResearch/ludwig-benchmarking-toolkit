@@ -1,5 +1,5 @@
 # Ludwig Benchmark
-A framework for running a large-scale comparative analysis of common deep learning NLP architectures.
+A framework for running a large-scale comparative analysis of common deep learning NLP architectures using Ludwig.
 
 ## **Relevant files and directories:**
 `model_template.yaml`: Every task (i.e. text classification) will have its owns model template. The template specifies the model architecture (encoder and decoder structure), training parameters, and a hyperopt configuration. A large majority of the values of the template will be populated at training time.

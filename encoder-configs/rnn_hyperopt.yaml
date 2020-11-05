@@ -1,0 +1,11 @@
+parameters:
+  input_features.name.encoder: rnn
+  input_features.name.num_layers: 
+    type: int
+    low: 1
+    high: 5
+  input_features.name.cell_type: 
+    type: category
+    values: [rnn, gru, lstm]
+  
+ 

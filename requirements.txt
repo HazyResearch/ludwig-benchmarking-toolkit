@@ -1,0 +1,10 @@
+git+https://github.com/uber/ludwig
+ludwig[hyperopt]
+ludwig[text]
+copy
+yaml
+wget
+gzip
+tarfile
+shutil
+

@@ -1,0 +1,34 @@
+input_features:
+  -
+    name: ~
+    type: text
+    level: word
+    encoder: rnn
+    preprocessing:
+      word_tokenizer: space
+      pretrained_model_name_or_path: None
+
+output_features:
+  -
+    name: ~
+    type: category
+
+training:
+  learning_rate: 0.01
+
+hyperopt:
+  output_feature: ${output_features.name}
+  metric: ~
+  strategy:
+    type: ~
+    num_samples: ~
+  parameters:
+    training.learning_rate:
+      min: ~
+      max: ~
+      scale: ~
+
+          
+
+
+

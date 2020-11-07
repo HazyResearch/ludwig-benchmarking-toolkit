@@ -7,6 +7,9 @@ ENCODER_HYPEROPT_FILENAMES = ['bert_hyperopt.yaml']
 ENCODER_CONFIG_DIR = './encoder-configs'
 EXPERIMENT_CONFIGS_DIR = './experiment-configs'
 
+if not os.path.isdir(EXPERIMENT_CONFIGS_DIR):
+    os.mkdir(EXPERIMENT_CONFIGS_DIR)
+
 with open('model_template.yaml') as f:
     template = yaml.load(f, Loader=yaml.SafeLoader)
 

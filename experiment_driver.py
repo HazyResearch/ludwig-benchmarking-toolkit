@@ -5,7 +5,6 @@ from build_def_files import *
 from ludwig.api import LudwigModel
 from ludwig.hyperopt.run import hyperopt
 
-MODEL_CONFIGS_DIR = './model-configs'
 
 def download_data():
     data_file_paths = {}
@@ -25,7 +24,7 @@ def main():
         for model_config_path in config_files[dataset_name]:
             with open(model_config_path) as f:
                 model_config = yaml.load(f, Loader=yaml.SafeLoader)
-            #train_stats = hyperopt(model_config, dataset=file_path)
+            train_stats = hyperopt(model_config, dataset=file_path)
 
 if __name__ == '__main__':
     main()

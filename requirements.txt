@@ -1,10 +1,7 @@
 git+https://github.com/uber/ludwig
-ludwig[hyperopt]
-ludwig[text]
-copy
-yaml
+horovod[tensorflow]>=0.20.0
+spacy>=2.3
+transformers
+pyaml
 wget
-gzip
-tarfile
-shutil
 

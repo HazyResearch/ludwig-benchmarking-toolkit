@@ -1,11 +1,11 @@
-metric: accuracy
+metric: loss
 strategy:
   type: random
-  num_samples: 12
+  num_samples: 3
 parameters:
   training.learning_rate:
     type: float
-    low: 0.0001
+    low: 0.001
     high: 0.1
     scale: log
   

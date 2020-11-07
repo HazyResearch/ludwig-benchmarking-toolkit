@@ -3,7 +3,7 @@ import yaml
 import os
 from copy import deepcopy
 
-ENCODER_HYPEROPT_FILENAMES = ['bert_hyperopt.yaml']
+ENCODER_HYPEROPT_FILENAMES = ['bert_hyperopt.yaml', 'rnn_hyperopt.yaml']
 ENCODER_CONFIG_DIR = './encoder-configs'
 EXPERIMENT_CONFIGS_DIR = './experiment-configs'
 

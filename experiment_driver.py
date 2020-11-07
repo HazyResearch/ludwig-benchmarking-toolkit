@@ -4,6 +4,7 @@ from copy import deepcopy
 from build_def_files import *
 from ludwig.api import LudwigModel
 from ludwig.hyperopt.run import hyperopt
+import pickle
 
 MODEL_CONFIGS_DIR = './model-configs'
 
@@ -25,8 +26,8 @@ def main():
         for model_config_path in config_files[dataset_name]:
             with open(model_config_path) as f:
                 model_config = yaml.load(f, Loader=yaml.SafeLoader)
-            #train_stats = hyperopt(model_config, dataset=file_path)
-
+            train_stats = hyperopt(model_config, dataset=file_path, gpus=['gpu0', 'gpu1'])
+            pickle.dump(train_stats, open('train_stats.pkl','wb'))
 if __name__ == '__main__':
     main()
 

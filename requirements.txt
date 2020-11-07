@@ -1,7 +1,9 @@
-git+https://github.com/uber/ludwig
+-e git+git://github.com/uber/ludwig#egg=ludwig
 horovod[tensorflow]>=0.20.0
 spacy>=2.3
 transformers
-pyaml
+pyyaml
 wget
-
+fiber
+bayesmark>=0.0.7
+pySOT

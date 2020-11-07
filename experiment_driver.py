@@ -5,6 +5,7 @@ from build_def_files import *
 from ludwig.api import LudwigModel
 from ludwig.hyperopt.run import hyperopt
 
+MODEL_CONFIGS_DIR = './model-configs'
 
 def download_data():
     data_file_paths = {}
@@ -28,4 +29,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

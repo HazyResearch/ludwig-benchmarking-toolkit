@@ -1,3 +1,9 @@
+input_features:
+  -
+    encoder: rnn
+    preprocessing:
+      word_tokenizer: space
+      pretrained_model_name_or_path: None
 parameters:
   input_features.name.encoder: rnn
   input_features.name.num_layers: 

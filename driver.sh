@@ -5,7 +5,7 @@
 #SBATCH --gres=gpu:2
 #SBATCH --mem=64G
 #SBATCH --open-mode=append
-#SBATCH --output=/juice/scr/avanika/ludwig-benchmark-outputs/mini-text-out
+#SBATCH --output=/juice/scr/avanika/ludwig-benchmark-experiments/mini-text-out
 #SBATCH --partition=jag-standard
 #SBATCH --time=10-0
 

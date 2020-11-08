@@ -1,0 +1,39 @@
+hyperopt:
+  executor:
+    type: parallel
+    workers: 2
+  metric: loss
+  output_feature: emotion_ids
+  parameters:
+    text.cell_type:
+      type: category
+      values:
+      - rnn
+      - gru
+      - lstm
+    text.num_layers:
+      high: 5
+      low: 1
+      type: int
+    training.learning_rate:
+      high: 0.1
+      low: 0.001
+      scale: log
+      type: float
+  strategy:
+    num_samples: 2
+    type: random
+input_features:
+- encoder: rnn
+  level: word
+  name: text
+  preprocessing:
+    pretrained_model_name_or_path: None
+    word_tokenizer: space
+  type: text
+output_features:
+- name: emotion_ids
+  type: set
+training:
+  batch_size: 16
+  learning_rate: 0.01

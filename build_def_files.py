@@ -64,10 +64,10 @@ def build_config_files():
                     if key.split('.')[-1] != 'encoder'
                 }
             }
-            config['input_features'][0]['encoder'] = encoder_name
+            curr_config['input_features'][0]['encoder'] = encoder_name
 
             # populate hyperopt parameters w/encoder specific settings
-            config['hyperopt'].update(
+            curr_config['hyperopt'].update(
                 {
                     'parameters':
                         {**ds_encoder_hyperopt_params['parameters'],
@@ -80,7 +80,7 @@ def build_config_files():
                 f"config_{dataset}_{encoder_name}.yaml"
             )
             with open(config_fp, "w") as f:
-                yaml.dump(config, f)
+                yaml.dump(curr_config, f)
 
             config_fps[dataset].append(config_fp)
 

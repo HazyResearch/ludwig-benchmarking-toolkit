@@ -1,5 +1,7 @@
 import os
-def download_datasets(dataset_class):
+
+
+def download_dataset(dataset_class):
     if dataset_class == 'GoEmotions':
         from ludwig.datasets.goemotions import GoEmotions
         data = GoEmotions()
@@ -14,6 +16,5 @@ def download_datasets(dataset_class):
         data.load()
     else:
         return None
-    return os.path.join(data.processed_dataset_path,data.config['csv_filename'])
-
-
+    return os.path.join(data.processed_dataset_path,
+                        data.config['csv_filename'])

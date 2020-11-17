@@ -1,6 +1,5 @@
 input_features:
-  -
-    name: ~
+  - name: ~
     type: text
     level: word
     encoder: rnn
@@ -9,8 +8,7 @@ input_features:
       pretrained_model_name_or_path: None
 
 output_features:
-  -
-    name: ~
+  - name: ~
     type: category
 
 training:
@@ -27,8 +25,3 @@ hyperopt:
       min: ~
       max: ~
       scale: ~
-
-          
-
-
-

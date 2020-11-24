@@ -33,19 +33,27 @@ def main():
         for model_config_path in config_files[dataset_name]:
             print("Model config: {}".format(model_config_path))
             config_name = model_config_path.split('/')[-1].split('.')[0]
-            with open(model_config_path) as f:
-                model_config = yaml.load(f, Loader=yaml.SafeLoader)
-            start = datetime.datetime.now()
-            train_stats = hyperopt(
-				model_config,
-				dataset=file_path,
-				model_name=config_name, 
-				gpus="0",
-				output_directory='/dfs/scratch1/avanika/ludwig-benchmark-results'
-			)
-            print("time to complete: {}".format(datetime.datetime.now() - start)) 
-	
-            pickle.dump(train_stats, open(f'{config_name}_train_stats.pkl','wb'))
+            experiment_name = config_name.split('_')[-2] + "_" + config_name.split('_')[-1]
+            output_dir = os.path.join('/juice/scr/avanika/ludwig-benchmark-experiments', experiment_name)
+            if not os.path.isdir(output_dir):
+                os.mkdir(output_dir)
+                with open(model_config_path) as f:
+                    model_config = yaml.load(f, Loader=yaml.SafeLoader)
+                start = datetime.datetime.now()
+                train_stats = hyperopt(
+                                    model_config,
+                                    dataset=file_path,
+                                    model_name=config_name, 
+                                    gpus="0,1",
+                                    output_directory=output_dir
+                            )
+                print("time to complete: {}".format(datetime.datetime.now() - start)) 
+           
+                try:
+                    pickle.dump(train_stats, open(os.path.join(output_dir,f'{config_name}_train_stats.pkl'),'wb'))
+                except FileNotFoundError:
+                    continue
+
 if __name__ == '__main__':
     main()
     LOG_FILE.close()

@@ -20,9 +20,12 @@ hyperopt:
       low: 0.001
       scale: log
       type: float
-  strategy:
+  sampler:
     num_samples: 2
     type: random
+  strategy:
+    num_samples: null
+    type: null
 input_features:
 - encoder: rnn
   level: word
@@ -36,4 +39,6 @@ output_features:
   type: set
 training:
   batch_size: 16
+  early_stop: 3
+  eval_batch_size: 64
   learning_rate: 0.01

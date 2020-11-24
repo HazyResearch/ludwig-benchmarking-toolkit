@@ -1,5 +1,5 @@
 metric: loss
-strategy:
+sampler:
   type: random
   num_samples: 2
 parameters:

@@ -13,7 +13,9 @@ output_features:
 
 training:
   learning_rate: 0.01
-
+  batch_size: 16
+  eval_batch_size: 64
+  early_stop: 3
 hyperopt:
   output_feature: ${output_features.name}
   metric: ~

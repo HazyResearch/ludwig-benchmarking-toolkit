@@ -1,6 +1,5 @@
 import os
 
-
 def download_dataset(dataset_class):
     if dataset_class == 'GoEmotions':
         from ludwig.datasets.goemotions import GoEmotions
@@ -18,3 +17,16 @@ def download_dataset(dataset_class):
         return None
     return os.path.join(data.processed_dataset_path,
                         data.config['csv_filename'])
+
+def initialize_elastic_db(host, port, username, password):
+    try:
+        from elasticsearch import Elasticsearch
+    except ImportError:
+        print ("Elastic search needs to be downloaded")
+    
+    es = Elasticsearch([{   
+            'host': host, 
+            'port': port
+        }], http_auth=(username, password), timeout=99999)
+    
+    return es

@@ -1,3 +1,4 @@
+import argparse
 import datetime
 import os
 import pickle
@@ -7,6 +8,7 @@ from copy import deepcopy
 import yaml
 
 from build_def_files import *
+from database import *
 from ludwig.api import LudwigModel
 from ludwig.hyperopt.run import hyperopt
 from utils import *
@@ -38,7 +40,7 @@ def save_to_elastic(es_db, document):
         id=i, 
         body=document
     )
-    return 1
+   
 
 def run_local_experiments(data_file_paths, config_files, es_db=None):
     print("Running hyperopt experiments...")
@@ -89,20 +91,64 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                     save_to_elastic(es_db, document)
 
 def main():
+    # argparse
+    parser = argparse.ArgumentParser(
+        description='ludwig benchmark experiments driver',
+    )
+
+    parser.add_argument(
+        '-hcd',
+        '--hyperopt_config_dir',
+        help='directory to save all model config',
+        type=str,
+        default='./hyperopt-config-dir'
+    )
+    
+    parser.add_argument(
+        '-eod',
+        '--experiment_output_dir',
+        help='directory to save hyperopt runs',
+        type=str,
+        default='./experiment-output-dir'
+    )
+
+    parser.add_argument(
+        '-re',
+        '--run_environment',
+        help='environment where experiment will be run',
+        choices=['local', 'gcp'],
+        default='local'
+    )
+    parser.add_argument(
+        '-esc',
+        '--elasticsearch_config',
+        help='path to elastic db config file',
+        type=str,
+    )
+    
+    parser.add_argument(
+        '-dcd',
+        '--dataset_cache_dir',
+        help="path to cache downloaded datasets",
+        type=str,
+        default=None
+    )
+    
+    args = parser.parse_args()    
+
     print("GPUs {}".format(os.system('nvidia-smi -L')))
-    data_file_paths = download_data()
+    data_file_paths = download_data(args.dataset_cache_dir)
     print("Building config files...")
     config_files = build_config_files()
     print("Set up elastic db...")
     if ELASTIC_DB is not None:
-        es_db = initialize_elastic_db(
+        es_db = Database(
             ELASTIC_DB['host'],
             ELASTIC_DB['port'],
-            ELASTIC_DB['username'],
-            ELASTIC_DB['password']
+            (ELASTIC_DB['username'], ELASTIC_DB['password'])
         )
 
-    if RUN_LOCALLY:
+    if args.run_environment == 'local':
         run_local_experiments(data_file_paths, config_files, es_db=es_db)
 
 if __name__ == '__main__':

@@ -1,6 +1,7 @@
 import os
+import json
 
-def download_dataset(dataset_class):
+def download_dataset(dataset_class: str) -> str:
     if dataset_class == 'GoEmotions':
         from ludwig.datasets.goemotions import GoEmotions
         data = GoEmotions()
@@ -18,15 +19,9 @@ def download_dataset(dataset_class):
     return os.path.join(data.processed_dataset_path,
                         data.config['csv_filename'])
 
-def initialize_elastic_db(host, port, username, password):
-    try:
-        from elasticsearch import Elasticsearch
-    except ImportError:
-        print ("Elastic search needs to be downloaded")
-    
-    es = Elasticsearch([{   
-            'host': host, 
-            'port': port
-        }], http_auth=(username, password), timeout=99999)
-    
-    return es
+def hash_dict(d: dict, max_length: Union[int, None] = 6) -> bytes:
+    s = json.dumps(d, sort_keys=True, ensure_ascii=True)
+    h = hashlib.md5(s.encode())
+    d = h.digest()
+    b = base64.b64encode(d)
+    return b[:max_length]

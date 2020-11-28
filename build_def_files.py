@@ -1,36 +1,32 @@
+import logging
 import os
-import yaml
 from copy import deepcopy
 
-ENCODER_HYPEROPT_FILENAMES = ['bert_hyperopt.yaml','rnn_hyperopt.yaml']
-ENCODER_CONFIG_DIR = './encoder-configs'
+import yaml
+
+from globals import *
+from utils import load_yaml
+
 os.makedirs(ENCODER_CONFIG_DIR, exist_ok=True)
-EXPERIMENT_CONFIGS_DIR = './experiment-configs'
 os.makedirs(EXPERIMENT_CONFIGS_DIR, exist_ok=True)
 
 if not os.path.isdir(EXPERIMENT_CONFIGS_DIR):
     os.mkdir(EXPERIMENT_CONFIGS_DIR)
 
-with open('config_template.yaml') as f:
-    template = yaml.load(f, Loader=yaml.SafeLoader)
-
-with open('dataset_metadata.yaml') as f:
-    dataset_metadata = yaml.load(f, Loader=yaml.SafeLoader)
-
-with open('hyperopt_config.yaml') as f:
-    hyperopt_config = yaml.load(f, Loader=yaml.SafeLoader)
-
-encoder_hyperopt_vals = []
-
-for encoder_filename in ENCODER_HYPEROPT_FILENAMES:
-    with open(os.path.join(ENCODER_CONFIG_DIR, encoder_filename)) as f:
-        encoder_hyperopt_params = yaml.load(f, Loader=yaml.SafeLoader)
-        encoder_hyperopt_vals.append(encoder_hyperopt_params)
-
+template = load_yaml(CONFIG_TEMPLATE_FILE)
+dataset_metadata = load_yaml(DATASET_METADATA_FILE)
+hyperopt_config = load_yaml(HYPEROPT_CONFIG_FILE)
 
 def build_config_files():
     config_fps = {}
     config = deepcopy(template)
+
+    encoder_hyperopt_vals = []
+
+    for encoder_filename in ENCODER_FILE_LIST:
+        with open(os.path.join(ENCODER_CONFIG_DIR, encoder_filename)) as f:
+            encoder_hyperopt_params = yaml.load(f, Loader=yaml.SafeLoader)
+            encoder_hyperopt_vals.append(encoder_hyperopt_params)
 
     config['hyperopt'].update(hyperopt_config)
 
@@ -45,7 +41,6 @@ def build_config_files():
         input_feature_name = metadata['input_name']
 
         for encoder_hyperopt_params in encoder_hyperopt_vals:
-
             curr_config = deepcopy(config)
             encoder_name = encoder_hyperopt_params['parameters'][
                 'input_features.name.encoder']

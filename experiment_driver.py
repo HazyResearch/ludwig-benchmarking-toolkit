@@ -25,6 +25,12 @@ def download_data(cache_dir=None):
         data_file_paths[dataset] = data_path
     return data_file_paths
 
+def get_gpu_list():
+    try:
+        return os.environ['CUDA_VISIBLE_DEVICES']
+    except KeyError:
+        return None
+
 def run_local_experiments(data_file_paths, config_files, es_db=None):
     logging.info("Running hyperopt experiments...")
     for dataset_name, file_path in data_file_paths.items():
@@ -44,7 +50,7 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                     model_config,
                     dataset=file_path,
                     model_name=config_name, 
-                    gpus="0,1",
+                    gpus=get_gpu_list(),
                     output_directory=output_dir
                 )
 

@@ -8,7 +8,6 @@ import yaml
 
 import globals
 
-
 def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
     if dataset_class == 'GoEmotions':
         from ludwig.datasets.goemotions import GoEmotions
@@ -24,8 +23,8 @@ def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
         data.load(cache_dir)
     else:
         return None
-    return os.path.join(data.processed_dataset_path,
-                        data.config['csv_filename'])
+    return os.path.join(data.processed_dataset_path,\
+        data.config['csv_filename'])
 
 def hash_dict(d: dict, max_length: Union[int, None] = 6) -> bytes:
     s = json.dumps(d, sort_keys=True, ensure_ascii=True)
@@ -50,3 +49,9 @@ def set_globals(args):
                     enc_name
                 ])
         globals.ENCODER_FILE_LIST = encoders_list
+
+    # create experiment output directories (if they don't already exist)
+    for exp_dir in [globals.EXPERIMENT_CONFIGS_DIR, \
+        globals.EXPERIMENT_OUTPUT_DIR]:
+        if not os.path.isdir(exp_dir):
+            os.mkdir(exp_dir)

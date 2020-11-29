@@ -7,12 +7,6 @@ import yaml
 from globals import *
 from utils import load_yaml
 
-os.makedirs(ENCODER_CONFIG_DIR, exist_ok=True)
-os.makedirs(EXPERIMENT_CONFIGS_DIR, exist_ok=True)
-
-if not os.path.isdir(EXPERIMENT_CONFIGS_DIR):
-    os.mkdir(EXPERIMENT_CONFIGS_DIR)
-
 template = load_yaml(CONFIG_TEMPLATE_FILE)
 dataset_metadata = load_yaml(DATASET_METADATA_FILE)
 hyperopt_config = load_yaml(HYPEROPT_CONFIG_FILE)

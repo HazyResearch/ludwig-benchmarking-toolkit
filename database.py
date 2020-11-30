@@ -7,28 +7,30 @@ from elasticsearch import Elasticsearch
 class Database:
     def __init__(
         self, 
-        host=None,
-        user_id=None,
-        http_auth=(None, None)
+        host
+        http_auth
+        user_id
+        index
     ):
         self.host = host
         self.http_auth = http_auth
         self.user_id = user_id
+        self.index=index
+        initialize_db()
 
     def initialize_db(self):
-        self.es_db = Elasticsearch(
+        self.es_connection = Elasticsearch(
             [self.host], 
             http_auth=self.http_auth
         )
     
     def upload_document(
         self,
-        index='text-classification',
-        id=None,
-        document={}
+        id
+        document
     ):
-        self.es_db.index(
-            index=index, 
+        self.es_connection.index(
+            index=self.index, 
             id=id, 
             body=document
         )
@@ -38,19 +40,19 @@ class Database:
         dir_path,
         encoder,
         dataset,
-        index='text-classification',
 
     ):
         hyperopt_stats = json.load(
-            open(os.path.join(dir_path, 'hyperopt_statistics.json')),'rb'
+            open(os.path.join(dir_path, 'hyperopt_statistics.json'), 'rb'),
+            parse_int='float'
         )
 
         formatted_document = self.format_document(
             hyperopt_stats, encoder, dataset
         )
 
-        self.es_db.index(
-            index=index, 
+        self.es_connection.index(
+            index=self.index, 
             id=hash_dict(hyperopt_stats['hyperopt_config']), 
             body=formatted_document
         )

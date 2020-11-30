@@ -72,8 +72,17 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
 
                 # save output to db
                 if es_db:
+                    # ensures that all numerical values are of type float
+                    format_fields_float(train_stats)
                     document = {'hyperopt_results': train_stats}
-                    es_db.save_document(
+                    formatted_document = es_db.format_document(
+                        document,
+                        encoder=experiment_name.split('_')[-1],
+                        dataset=experiment_name.split('_')[-2],
+                        config=model_config
+                    )
+
+                    es_db.upload_document(
                         hash_dict(model_config),
                         document
                     )
@@ -149,7 +158,12 @@ def main():
     if args.elasticsearch_config is not None:
         logging.info("Set up elastic db...")
         elastic_config = load_yaml(args.elasticsearch_config)
-        es_db = Database(elastic_config['host'], elastic_config['http_auth'])
+        es_db = Database(
+                elastic_config['host'], 
+                (elastic_config['username'], elastic_config['password']),
+                elastic_config['username'],
+                elastic_config['index']
+                )
     
     if args.run_environment == 'local':
         run_local_experiments(

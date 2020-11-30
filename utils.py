@@ -55,3 +55,13 @@ def set_globals(args):
         globals.EXPERIMENT_OUTPUT_DIR]:
         if not os.path.isdir(exp_dir):
             os.mkdir(exp_dir)
+
+def format_fields_float(d: dict):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            iterdict(v)
+        else:
+            if type(v) == int:
+                v = float(v)
+            d.update({k: v})
+    return d

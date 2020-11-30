@@ -56,12 +56,21 @@ def set_globals(args):
         if not os.path.isdir(exp_dir):
             os.mkdir(exp_dir)
 
-def format_fields_float(d: dict):
-    for k, v in d.items():
-        if isinstance(v, dict):
-            iterdict(v)
-        else:
-            if type(v) == int:
-                v = float(v)
-            d.update({k: v})
-    return d
+def format_fields_float(l: list) -> list:
+    def replace_ints(d):
+        for k, v in d.items():
+            if isinstance(v, dict):
+                replace_ints(v)
+            else:
+                if type(v) == int:
+                    v = float(v)
+                d.update({k: v})
+        return d
+    
+    formatted_out = [
+                replace_ints(d)
+                for d in l
+            ]
+    return formatted_out
+
+

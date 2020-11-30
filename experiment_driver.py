@@ -37,8 +37,9 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
         logging.info("Dataset: {}".format(dataset_name))
         for model_config_path in config_files[dataset_name]:
             config_name = model_config_path.split('/')[-1].split('.')[0]
-            experiment_name = config_name.split('_')[-2] + "_" + \
-                config_name.split('_')[-1]
+            dataset = config_name.split('_')[-2]
+            encoder = config_name.split('_')[-1]
+            experiment_name = dataset + "_" + encoder
             logging.info("Experiment: {}".format(experiment_name))
             output_dir = os.path.join(EXPERIMENT_OUTPUT_DIR, experiment_name)
 
@@ -77,8 +78,8 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                     document = {'hyperopt_results': train_stats}
                     formatted_document = es_db.format_document(
                         document,
-                        encoder=experiment_name.split('_')[-1],
-                        dataset=experiment_name.split('_')[-2],
+                        encoder=encoder,
+                        dataset=dataset
                         config=model_config
                     )
 

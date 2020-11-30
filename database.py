@@ -7,16 +7,16 @@ from elasticsearch import Elasticsearch
 class Database:
     def __init__(
         self, 
-        host
-        http_auth
-        user_id
+        host,
+        http_auth,
+        user_id,
         index
     ):
         self.host = host
         self.http_auth = http_auth
         self.user_id = user_id
         self.index=index
-        initialize_db()
+        self.initialize_db()
 
     def initialize_db(self):
         self.es_connection = Elasticsearch(
@@ -26,7 +26,7 @@ class Database:
     
     def upload_document(
         self,
-        id
+        id,
         document
     ):
         self.es_connection.index(
@@ -44,7 +44,7 @@ class Database:
     ):
         hyperopt_stats = json.load(
             open(os.path.join(dir_path, 'hyperopt_statistics.json'), 'rb'),
-            parse_int='float'
+            parse_int=float
         )
 
         formatted_document = self.format_document(

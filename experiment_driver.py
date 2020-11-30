@@ -64,7 +64,7 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                     pickle.dump(
                         train_stats, 
                         open(os.path.join(
-                            output_dir, f"{config_name}_train_stats.pkl"),'wb'
+                            output_dir, f"{dataset}_{encoder}_train_stats.pkl"),'wb'
                         )
                     )
 
@@ -79,7 +79,7 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                     formatted_document = es_db.format_document(
                         document,
                         encoder=encoder,
-                        dataset=dataset
+                        dataset=dataset,
                         config=model_config
                     )
 

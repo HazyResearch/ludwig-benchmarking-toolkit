@@ -64,7 +64,9 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                     pickle.dump(
                         train_stats, 
                         open(os.path.join(
-                            output_dir, f"{dataset}_{encoder}_train_stats.pkl"),'wb'
+                            output_dir, 
+                            f"{dataset}_{encoder}_train_stats.pkl"
+                            ),'wb'
                         )
                     )
 
@@ -85,7 +87,7 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
 
                     es_db.upload_document(
                         hash_dict(model_config),
-                        document
+                        formatted_document
                     )
 
 def main():
@@ -112,7 +114,7 @@ def main():
     parser.add_argument(
         '-re',
         '--run_environment',
-        help='environment where experiment will be run',
+        help='environment in which experiment will be run',
         choices=['local', 'gcp'],
         default='local'
     )
@@ -137,7 +139,7 @@ def main():
     parser.add_argument(
         '-cel',
         '--custom_encoders_list',
-        help="provide list of encoders to run hyperopt experiments on. \
+        help="list of encoders to run hyperopt experiments on. \
             The default setting is to use all 23 Ludwig encoders",
         nargs='+',
         choices=['all', 'bert', 'rnn'],

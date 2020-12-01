@@ -162,11 +162,11 @@ def main():
         logging.info("Set up elastic db...")
         elastic_config = load_yaml(args.elasticsearch_config)
         es_db = Database(
-                elastic_config['host'], 
-                (elastic_config['username'], elastic_config['password']),
-                elastic_config['username'],
-                elastic_config['index']
-                )
+            elastic_config['host'], 
+            (elastic_config['username'], elastic_config['password']),
+            elastic_config['username'],
+            elastic_config['index']
+        )
     
     if args.run_environment == 'local':
         run_local_experiments(

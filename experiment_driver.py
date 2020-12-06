@@ -33,6 +33,11 @@ def get_gpu_list():
 
 def run_local_experiments(data_file_paths, config_files, es_db=None):
     logging.info("Running hyperopt experiments...")
+
+    # check if overall experiment has already been run
+    if os.path.exists(os.path.join(EXPERIMENT_OUTPUT_DIR, '.completed')):
+        return 
+
     for dataset_name, file_path in data_file_paths.items():
         logging.info("Dataset: {}".format(dataset_name))
         for model_config_path in config_files[dataset_name]:
@@ -45,9 +50,11 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
 
             if not os.path.isdir(output_dir):
                 os.mkdir(output_dir)
+            
+            if not os.path.exists(os.path.join(output_dir, '.completed')):
                 model_config = load_yaml(model_config_path)
                 start = datetime.datetime.now()
-                train_stats = hyperopt(
+                hyperopt_results = hyperopt(
                     model_config,
                     dataset=file_path,
                     model_name=config_name, 
@@ -62,13 +69,17 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                 # Save output locally
                 try:
                     pickle.dump(
-                        train_stats, 
+                        hyperopt_results, 
                         open(os.path.join(
                             output_dir, 
-                            f"{dataset}_{encoder}_train_stats.pkl"
+                            f"{dataset}_{encoder}_hyperopt_results.pkl"
                             ),'wb'
                         )
                     )
+
+                    # create .completed file to indicate that experiment
+                    # is completed
+                    _ = open(os.path.join(output_dir, '.completed'), 'wb')
 
                 except FileNotFoundError:
                     continue
@@ -76,19 +87,27 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                 # save output to db
                 if es_db:
                     # ensures that all numerical values are of type float
-                    format_fields_float(train_stats)
-                    document = {'hyperopt_results': train_stats}
-                    formatted_document = es_db.format_document(
-                        document,
-                        encoder=encoder,
-                        dataset=dataset,
-                        config=model_config
-                    )
+                    format_fields_float(hyperopt_results)
+                    for run in hyperopt_results:
+                        new_config = substitute_dict_parameters(
+                            copy.deepcopy(model_config),
+                            key='parameters',
+                            run['parameters']
+                        )
+                        del new_config['hyperopt']
 
-                    es_db.upload_document(
-                        hash_dict(model_config),
-                        formatted_document
-                    )
+                        document = {'hyperopt_results': run}
+                        formatted_document = es_db.format_document(
+                            document,
+                            encoder=encoder,
+                            dataset=dataset,
+                            config=new_config
+                        )
+
+                        es_db.upload_document(
+                            hash_dict(new_config),
+                            formatted_document
+                        )
 
 def main():
     parser = argparse.ArgumentParser(

@@ -1,4 +1,5 @@
 import base64
+import copy
 import hashlib
 import json
 import os
@@ -7,6 +8,7 @@ from typing import Union
 import yaml
 
 import globals
+
 
 def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
     if dataset_class == 'GoEmotions':
@@ -72,5 +74,9 @@ def format_fields_float(l: list) -> list:
                 for d in l
             ]
     return formatted_out
+
+def substitute_dict_parameters(original_dict, key, new_val):
+    original_dict[key] = new_val
+    return original_dict
 
 

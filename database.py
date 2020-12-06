@@ -73,7 +73,7 @@ class Database:
         formatted_document.update(document)
         if config is not None:
             formatted_document.update({
-                'hyperopt_config' : config
+                'hyperopt_exp_config' : config
             })
 
 

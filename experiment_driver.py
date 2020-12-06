@@ -91,8 +91,7 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                     for run in hyperopt_results:
                         new_config = substitute_dict_parameters(
                             copy.deepcopy(model_config),
-                            key='parameters',
-                            run['parameters']
+                            parameters=run['parameters']
                         )
                         del new_config['hyperopt']
 
@@ -101,8 +100,10 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                             document,
                             encoder=encoder,
                             dataset=dataset,
-                            config=new_config
+                            config=model_config
                         )
+
+                        formatted_document['sampled_run_config'] = new_config
 
                         es_db.upload_document(
                             hash_dict(new_config),

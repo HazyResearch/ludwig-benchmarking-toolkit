@@ -75,8 +75,20 @@ def format_fields_float(l: list) -> list:
             ]
     return formatted_out
 
-def substitute_dict_parameters(original_dict, key, new_val):
-    original_dict[key] = new_val
+def substitute_dict_parameters(original_dict: dict, parameters: dict) -> dict:
+    def subsitute_param(dct: dict, path: list, val):
+        if len(path) == 1:
+            dct[path[0]] = val
+            return dct
+        else:
+            key = path.pop(0)
+            subsitute_param(dct[key], path, val)
+
+    for key, value in parameters.items():
+        path = key.split(".")
+        subsitute_param(original_dict, path, value)
+
     return original_dict
+
 
 

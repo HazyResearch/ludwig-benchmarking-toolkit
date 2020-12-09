@@ -7,3 +7,6 @@ wget
 fiber
 bayesmark>=0.0.7
 pySOT
+GPUtil
+psutil
+platform

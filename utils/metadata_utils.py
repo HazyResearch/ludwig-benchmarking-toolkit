@@ -3,11 +3,15 @@ import platform
 from datetime import datetime
 
 import GPUtil
+import ludwig
 import pandas as pd
 import psutil
 from ludwig.api import LudwigModel
 from tensorflow import tf
 
+
+def get_ludwig_version():
+    return ludwig.__version__
 
 def scale_bytes(bytes, suffix='B'):
     factor = 1024
@@ -17,6 +21,9 @@ def scale_bytes(bytes, suffix='B'):
         bytes /= factor
 
 def get_hardware_metadata():
+    """Returns GPU, CPU and RAM information"""
+    # NOTE: NOT TESTED 
+
     machine_info = {} 
     # GPU 
     gpus = GPUtil.getGPUs()
@@ -37,7 +44,9 @@ def get_hardware_metadata():
     machine_info['RAM'] = total_RAM
 
 def get_inference_latency(model_dir, dataset_dir, num_samples=10):
-    "Returns avg. time to perform inference on 1 sample "
+    """Returns avg. time to perform inference on 1 sample"""
+    # NOTE: NOT TESTED 
+
     # Create smaller datasets w/10 samples
     full_dataset = pd.read_csv(dataset_dir)
     # split == 1 indicates the dev set
@@ -55,7 +64,12 @@ def get_inference_latency(model_dir, dataset_dir, num_samples=10):
     return formatted_time
 
 def get_train_speed(model_dir, dataset_dir, train_batch_size):
-    "Returns avg. time to train model on a given mini-batch size"
+    """
+    NOTE: NOT TESTED
+    Returns avg. time to train model on a given mini-batch size
+    model_dir: path to directory which contains model_hyperparameters.json
+    dataset_dir: path to directory which contains dataset file
+    """
     ludwig_model = LudwigModel.load(model_dir)
     start = datetime.datetime.now()
     ludwig_model.train_online(
@@ -66,19 +80,17 @@ def get_train_speed(model_dir, dataset_dir, train_batch_size):
     formatted_time = "{:0>8}".format(str(avg_time_per_minibatch))
     return formatted_time
 
-def model_flops(checkpoint_dir):
-    # TODO 
-    pass
-    """latest = tf.train.latest_checkpoint(checkpoint_dir)
-
-    #load model
+def model_flops(model_dir):
+    """
+    NOTE: NOT TESTED 
+    """
     tf.compat.v1.reset_default_graph()
     session = tf.compat.v1.Session()
     graph = tf.compat.v1.get_default_graph()
 
     with graph.as_default():
         with session.as_default():
-            model = tf.keras.models.load_weights(latest)
+            model = LudwigModel.load(model_dir)
 
             run_meta = tf.compat.v1.RunMetadata()
             opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
@@ -88,6 +100,6 @@ def model_flops(checkpoint_dir):
                                                   cmd='op',
                                                   options=opts)
         
-            return flops.total_float_ops"""
+            return flops.total_float_ops
 
 

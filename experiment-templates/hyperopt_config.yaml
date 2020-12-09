@@ -8,6 +8,9 @@ parameters:
     low: 0.001
     high: 0.1
     scale: log
+  training.optimizer.type:
+    type: category
+    values: [sgd, adam, adagrad]
 executor:
   type: parallel
   workers : 2

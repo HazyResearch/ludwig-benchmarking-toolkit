@@ -7,13 +7,12 @@ import sys
 from copy import deepcopy
 
 import yaml
-from ludwig.api import LudwigModel
 from ludwig.hyperopt.run import hyperopt
 
+import globals
 from build_def_files import *
 from database import *
-from globals import *
-from utils import *
+from utils.experiment_utils import *
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
@@ -35,7 +34,8 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
     logging.info("Running hyperopt experiments...")
 
     # check if overall experiment has already been run
-    if os.path.exists(os.path.join(EXPERIMENT_OUTPUT_DIR, '.completed')):
+    if os.path.exists(os.path.join(globals.EXPERIMENT_OUTPUT_DIR, \
+        '.completed')):
         return 
 
     for dataset_name, file_path in data_file_paths.items():
@@ -46,7 +46,8 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
             encoder = config_name.split('_')[-1]
             experiment_name = dataset + "_" + encoder
             logging.info("Experiment: {}".format(experiment_name))
-            output_dir = os.path.join(EXPERIMENT_OUTPUT_DIR, experiment_name)
+            output_dir = os.path.join(globals.EXPERIMENT_OUTPUT_DIR, \
+                experiment_name)
 
             if not os.path.isdir(output_dir):
                 os.mkdir(output_dir)

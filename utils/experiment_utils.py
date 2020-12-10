@@ -1,4 +1,5 @@
 import base64
+import copy
 import hashlib
 import json
 import os
@@ -7,6 +8,7 @@ from typing import Union
 import yaml
 
 import globals
+
 
 def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
     if dataset_class == 'GoEmotions':
@@ -41,6 +43,8 @@ def load_yaml(filename: str) -> dict:
 def set_globals(args):
     globals.EXPERIMENT_CONFIGS_DIR = args.hyperopt_config_dir
     globals.EXPERIMENT_OUTPUT_DIR = args.experiment_output_dir
+
+    print(globals.EXPERIMENT_OUTPUT_DIR)
     if args.custom_encoders_list is not 'all':
         encoders_list = []
         for enc_name in args.custom_encoders_list:
@@ -72,5 +76,21 @@ def format_fields_float(l: list) -> list:
                 for d in l
             ]
     return formatted_out
+
+def substitute_dict_parameters(original_dict: dict, parameters: dict) -> dict:
+    def subsitute_param(dct: dict, path: list, val):
+        if len(path) == 1:
+            dct[path[0]] = val
+            return dct
+        else:
+            key = path.pop(0)
+            subsitute_param(dct[key], path, val)
+
+    for key, value in parameters.items():
+        path = key.split(".")
+        subsitute_param(original_dict, path, value)
+
+    return original_dict
+
 
 

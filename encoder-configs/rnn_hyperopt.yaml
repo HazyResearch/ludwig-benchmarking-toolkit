@@ -4,6 +4,8 @@ input_features:
     preprocessing:
       word_tokenizer: space
       pretrained_model_name_or_path: None
+    dropout: 0.5
+    
 parameters:
   input_features.name.encoder: rnn
   input_features.name.num_layers:
@@ -13,5 +15,19 @@ parameters:
   input_features.name.cell_type:
     type: category
     values: [rnn, gru, lstm]
-  
- 
+  input_features.name.state_size:
+    type: category
+    values: [256, 512]
+  input_features.name.fc_layers:
+    type: category
+    values: [
+      [{fc_size: 512}, {fc_size: 256}],
+      [{fc_size: 512}]
+    ]
+
+  training.batch_size:
+    type: int
+    low: 32
+    high: 128
+    steps: 4
+    scale: linear

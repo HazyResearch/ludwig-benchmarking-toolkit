@@ -1,6 +1,6 @@
 import os
 import platform
-from datetime import datetime
+import datetime
 
 import GPUtil
 import ludwig
@@ -9,7 +9,7 @@ import pandas as pd
 import psutil
 from ludwig.api import LudwigModel
 from ludwig.collect import collect_weights
-from tensorflow import tf
+import tensorflow as tf
 
 
 def get_ludwig_version():
@@ -44,8 +44,13 @@ def get_hardware_metadata():
     svmem = psutil.virtual_memory()
     total_RAM = scale_bytes(svmem.total)
     machine_info['RAM'] = total_RAM
+    return machine_info
 
-def get_inference_latency(model_dir, dataset_dir, num_samples=10):
+def get_inference_latency(
+	model_dir:str, 
+	dataset_dir:str, 
+	num_samples:int=10
+):
     """Returns avg. time to perform inference on 1 sample"""
     # NOTE: NOT TESTED 
 
@@ -65,7 +70,7 @@ def get_inference_latency(model_dir, dataset_dir, num_samples=10):
     formatted_time = "{:0>8}".format(str(avg_time_per_sample))
     return formatted_time
 
-def get_train_speed(model_dir, dataset_dir, train_batch_size):
+def get_train_speed(model_dir: str, dataset_dir: str, train_batch_size: int):
     """
     NOTE: NOT TESTED
     Returns avg. time to train model on a given mini-batch size
@@ -82,9 +87,9 @@ def get_train_speed(model_dir, dataset_dir, train_batch_size):
     formatted_time = "{:0>8}".format(str(avg_time_per_minibatch))
     return formatted_time
 
-def model_flops(model_dir):
+def model_flops(model_dir: str):
     """
-    NOTE: NOT TESTED 
+    NOTE: NOT TESTED Minor errors about incomplete shape
     """
     tf.compat.v1.reset_default_graph()
     session = tf.compat.v1.Session()
@@ -104,16 +109,17 @@ def model_flops(model_dir):
         
             return flops.total_float_ops
 
-def get_model_size(model_dir):
+def get_model_size(model_dir: str):
     """ Returns minimum bytes required to store model to memory"""
-    tensor_filepaths = collect_weights(model_dir, '.model_tensors')
+    tensor_filepaths = collect_weights(
+	model_path=model_dir, 
+	tensors=None,
+	output_directory='.model_tensors')
     total_size = 0
     for fp in tensor_filepaths:
         weight_tensor = np.load(fp)
-        total_size = weight_tensor.size
-    return total_size * 32
-        
-
-
-
+        total_size += weight_tensor.size
+    total_bytes = total_size * 32
+    scaled_bytes = scale_bytes(total_bytes)
+    return total_bytes, scaled_bytes
 

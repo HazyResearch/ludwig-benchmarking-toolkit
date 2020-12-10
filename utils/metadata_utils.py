@@ -15,16 +15,15 @@ import tensorflow as tf
 def get_ludwig_version():
     return ludwig.__version__
 
-def scale_bytes(bytes, suffix='B'):
+def scale_bytes(bytes: int, suffix: str = 'B') -> str:
     factor = 1024
     for unit in ["", "K", "M", "G", "T", "P"]: 
         if bytes < factor:
             return f"{bytes:.2f}{unit}{suffix}"
         bytes /= factor
 
-def get_hardware_metadata():
+def get_hardware_metadata() -> dict:
     """Returns GPU, CPU and RAM information"""
-    # NOTE: NOT TESTED 
 
     machine_info = {} 
     # GPU 
@@ -47,19 +46,29 @@ def get_hardware_metadata():
     return machine_info
 
 def get_inference_latency(
-	model_dir:str, 
-	dataset_dir:str, 
-	num_samples:int=10
-):
-    """Returns avg. time to perform inference on 1 sample"""
-    # NOTE: NOT TESTED 
+	model_path: str, 
+	dataset_path: str, 
+	num_samples: int = 10
+) -> str:
+    """
+    Returns avg. time to perform inference on 1 sample
+    
+    # Inputs
+    :param model_path: (str) filepath to pre-trained model (directory that
+        contains the model_hyperparameters.json).
+    :param dataset_path: (str) filepath to dataset 
+    :param dataset_path: (int) number of dev samples to randomly sample 
 
-    # Create smaller datasets w/10 samples
-    full_dataset = pd.read_csv(dataset_dir)
-    # split == 1 indicates the dev set
+    # Return
+    :return: (str) avg. time per training step
+    """
+
+    # Create smaller datasets w/10 samples from original dev set
+    full_dataset = pd.read_csv(dataset_path)
+    # Note: split == 1 indicates the dev set
     inference_dataset = full_dataset[full_dataset['split'] == 1].sample(
                                                                 n=num_samples)
-    ludwig_model = LudwigModel.load(model_dir)
+    ludwig_model = LudwigModel.load(model_path)
     start = datetime.datetime.now()
     _, _ = ludwig_model.predict(
         dataset=inference_dataset,
@@ -70,26 +79,41 @@ def get_inference_latency(
     formatted_time = "{:0>8}".format(str(avg_time_per_sample))
     return formatted_time
 
-def get_train_speed(model_dir: str, dataset_dir: str, train_batch_size: int):
+def get_train_speed(
+    model_path: str, 
+    dataset_path: str, 
+    train_batch_size: int
+) -> str:
     """
-    NOTE: NOT TESTED
-    Returns avg. time to train model on a given mini-batch size
-    model_dir: path to directory which contains model_hyperparameters.json
-    dataset_dir: path to directory which contains dataset file
+    Returns avg. time per training step
+
+    # Inputs
+    :param model_path: (str) filepath to pre-trained model (directory that
+        contains the model_hyperparameters.json).
+    :param dataset_path: (str) filepath to dataset 
+
+    # Return
+    :return: (str) avg. time per training step
     """
-    ludwig_model = LudwigModel.load(model_dir)
+    ludwig_model = LudwigModel.load(model_path)
     start = datetime.datetime.now()
     ludwig_model.train_online(
-        dataset=dataset_dir,
+        dataset=dataset_path,
     )
     total_time = datetime.datetime.now() - start
     avg_time_per_minibatch = total_time/train_batch_size
     formatted_time = "{:0>8}".format(str(avg_time_per_minibatch))
     return formatted_time
 
-def model_flops(model_dir: str):
+def model_flops(model_path: str) -> int:
     """
-    NOTE: NOT TESTED Minor errors about incomplete shape
+    Computes total model flops
+
+    # Inputs
+    :param model_path: (str) filepath to pre-trained model.
+
+    # Return
+    :return: (int) total number of flops.
     """
     tf.compat.v1.reset_default_graph()
     session = tf.compat.v1.Session()
@@ -97,11 +121,9 @@ def model_flops(model_dir: str):
 
     with graph.as_default():
         with session.as_default():
-            model = LudwigModel.load(model_dir)
-
+            model = LudwigModel.load(model_path)
             run_meta = tf.compat.v1.RunMetadata()
             opts = tf.compat.v1.profiler.ProfileOptionBuilder.float_operation()
-        
             flops = tf.compat.v1.profiler.profile(graph=graph,
                                                   run_meta=run_meta, 
                                                   cmd='op',
@@ -109,12 +131,22 @@ def model_flops(model_dir: str):
         
             return flops.total_float_ops
 
-def get_model_size(model_dir: str):
-    """ Returns minimum bytes required to store model to memory"""
+def get_model_size(model_path: str) -> (int, str):
+    """ 
+    Computes minimum bytes required to store model to memory
+
+    # Inputs
+    :param model_path: (str) filepath to pre-trained model.
+
+    # Return
+    :return: (int) total bytes 
+    :return: (str) total bytes scaled in string format
+    """
     tensor_filepaths = collect_weights(
-	model_path=model_dir, 
-	tensors=None,
-	output_directory='.model_tensors')
+        model_path=model_path, 
+        tensors=None,
+        output_directory='.model_tensors'
+    )
     total_size = 0
     for fp in tensor_filepaths:
         weight_tensor = np.load(fp)

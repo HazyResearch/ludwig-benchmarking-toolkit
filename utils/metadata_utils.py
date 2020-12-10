@@ -22,7 +22,7 @@ def scale_bytes(bytes: int, suffix: str = 'B') -> str:
             return f"{bytes:.2f}{unit}{suffix}"
         bytes /= factor
 
-def get_hardware_metadata() -> dict:
+def get_hardware_metadata(**kwargs) -> dict:
     """Returns GPU, CPU and RAM information"""
 
     machine_info = {} 
@@ -48,7 +48,8 @@ def get_hardware_metadata() -> dict:
 def get_inference_latency(
 	model_path: str, 
 	dataset_path: str, 
-	num_samples: int = 10
+	num_samples: int = 10,
+    **kwargs
 ) -> str:
     """
     Returns avg. time to perform inference on 1 sample
@@ -82,7 +83,8 @@ def get_inference_latency(
 def get_train_speed(
     model_path: str, 
     dataset_path: str, 
-    train_batch_size: int
+    train_batch_size: int,
+    **kwargs
 ) -> str:
     """
     Returns avg. time per training step
@@ -105,7 +107,7 @@ def get_train_speed(
     formatted_time = "{:0>8}".format(str(avg_time_per_minibatch))
     return formatted_time
 
-def get_model_flops(model_path: str) -> int:
+def get_model_flops(model_path: str, **kwargs) -> int:
     """
     Computes total model flops
 
@@ -131,7 +133,7 @@ def get_model_flops(model_path: str) -> int:
         
             return flops.total_float_ops
 
-def get_model_size(model_path: str) -> (int, str):
+def get_model_size(model_path: str, **kwargs):
     """ 
     Computes minimum bytes required to store model to memory
 
@@ -158,15 +160,22 @@ def get_model_size(model_path: str) -> (int, str):
 def append_experiment_metadata(
     document: dict, 
     model_path: str, 
-    data_path: str
+    data_path: str,
+    train_batch_size: int=16
 ):
-    hardware_metadata = get_hardware_metadata()
-    document.update(hardware_metadata)
-    inference_latency = get_inference_latency(model_path, data_path) 
-    document.update({"inference_latency" : inference_latency})
-    time_per_step = get_train_speed(model_path, data_path, train_batch_size=16) 
-    document.update({"time_per_train_step" : time_per_step})
-    flops = get_model_flops(model_path)
-    document.update({"model_flops": flops})
-    model_size_bytes, model_size_bytes_scaled = get_model_size(model_path)
-    document.update({"model_size": model_size_bytes})
+    for key, metrics_func in metadata_registry.items():
+        output = globals()[metrics_func](
+            model_path=model_path,
+            dataset_path=data_path,
+            train_batch_size=train_batch_size
+        )
+        document.update({
+            key : output
+        })
+
+metadata_registry = {
+    "inference_latency" : "get_inference_latency",
+    "time_per_train_step" : "get_train_speed",
+    "model_flops" : "get_model_flops",
+    "model_size" : "get_model_size"
+}

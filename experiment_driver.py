@@ -132,7 +132,9 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                         )
                         del new_config['hyperopt']
 
-                        document = {'hyperopt_results': run['hyperopt_results']}
+                        document = {
+                            'hyperopt_results': run['hyperopt_results']
+                        }
                         
                         append_experiment_metadata(
                             document, 

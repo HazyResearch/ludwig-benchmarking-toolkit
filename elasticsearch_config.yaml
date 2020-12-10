@@ -1,4 +1,4 @@
 host : "https://ff78e5c35d344d09a913c72d45f6e1e9.us-west1.gcp.cloud.es.io:9243"
 username : "elastic"
 password : "MOR8jKN6GlUTmVuz57tGC6hC"
-index : "test-2"
+index : "mini-e2e-exp"

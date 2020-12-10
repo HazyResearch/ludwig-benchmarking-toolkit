@@ -15,7 +15,7 @@ from database import *
 from globals import *
 from utils import *
 
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(filename='elastic-exp.log', format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 def download_data(cache_dir=None):
     data_file_paths = {}

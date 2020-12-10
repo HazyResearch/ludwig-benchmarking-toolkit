@@ -4,9 +4,11 @@ from datetime import datetime
 
 import GPUtil
 import ludwig
+import numpy as np
 import pandas as pd
 import psutil
 from ludwig.api import LudwigModel
+from ludwig.collect import collect_weights
 from tensorflow import tf
 
 
@@ -101,5 +103,17 @@ def model_flops(model_dir):
                                                   options=opts)
         
             return flops.total_float_ops
+
+def get_model_size(model_dir):
+    """ Returns minimum bytes required to store model to memory"""
+    tensor_filepaths = collect_weights(model_dir, '.model_tensors')
+    total_size = 0
+    for fp in tensor_filepaths:
+        weight_tensor = np.load(fp)
+        total_size = weight_tensor.size
+    return total_size * 32
+        
+
+
 
 

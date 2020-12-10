@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import json
 import logging
 import os
 import pickle
@@ -13,8 +14,13 @@ import globals
 from build_def_files import *
 from database import *
 from utils.experiment_utils import *
+from utils.metadata_utils import append_experiment_metadata
 
-logging.basicConfig(filename='elastic-exp.log', format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(
+    filename='elastic-exp.log', 
+    format='%(levelname)s:%(message)s', 
+    level=logging.DEBUG
+)
 
 def download_data(cache_dir=None):
     data_file_paths = {}
@@ -29,6 +35,33 @@ def get_gpu_list():
         return os.environ['CUDA_VISIBLE_DEVICES']
     except KeyError:
         return None
+
+def map_runstats_to_modelpath(hyperopt_training_stats, output_dir):
+    """ 
+    maps output of individual hyperopt() run statistics to associated 
+    output directories 
+    """ 
+    hyperopt_run_metadata = []
+    for run_dir in os.scandir(output_dir):
+        if os.path.isdir(run_dir):
+            sample_training_stats = json.load(
+                open(
+                    os.path.join(output_dir, run_dir, \
+                        "training_statistics.json"
+                        ), "rb"
+                )
+            )
+            for hyperopt_run in hyperopt_training_stats:
+                if hyperopt_run['training_stats'] == sample_training_stats:
+                    hyperopt_run_metadata.append(
+                        {
+                            'hyperopt_results' : hyperopt_run,
+                            'model_path' : os.path.join(output_dir, run_dir, \
+                                    'model'
+                                )
+                        }
+                    )
+    return hyperopt_run_metadata
 
 def run_local_experiments(data_file_paths, config_files, es_db=None):
     logging.info("Running hyperopt experiments...")
@@ -87,16 +120,26 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
 
                 # save output to db
                 if es_db:
+                    hyperopt_run_data = map_runstats_to_modelpath(
+                        hyperopt_results, output_dir)
+
                     # ensures that all numerical values are of type float
                     format_fields_float(hyperopt_results)
-                    for run in hyperopt_results:
+                    for run in hyperopt_run_data:
                         new_config = substitute_dict_parameters(
                             copy.deepcopy(model_config),
-                            parameters=run['parameters']
+                            parameters=run['hyperopt_results']['parameters']
                         )
                         del new_config['hyperopt']
 
-                        document = {'hyperopt_results': run}
+                        document = {'hyperopt_results': run['hyperopt_results']}
+                        
+                        append_experiment_metadata(
+                            document, 
+                            model_path=run['model_path'], 
+                            data_path=file_path
+                        )
+
                         formatted_document = es_db.format_document(
                             document,
                             encoder=encoder,

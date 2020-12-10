@@ -105,7 +105,7 @@ def get_train_speed(
     formatted_time = "{:0>8}".format(str(avg_time_per_minibatch))
     return formatted_time
 
-def model_flops(model_path: str) -> int:
+def get_model_flops(model_path: str) -> int:
     """
     Computes total model flops
 
@@ -155,3 +155,18 @@ def get_model_size(model_path: str) -> (int, str):
     scaled_bytes = scale_bytes(total_bytes)
     return total_bytes, scaled_bytes
 
+def append_experiment_metadata(
+    document: dict, 
+    model_path: str, 
+    data_path: str
+):
+    hardware_metadata = get_hardware_metadata()
+    document.update(hardware_metadata)
+    inference_latency = get_inference_latency(model_path, data_path) 
+    document.update({"inference_latency" : inference_latency})
+    time_per_step = get_train_speed(model_path, data_path, train_batch_size=16) 
+    document.update({"time_per_train_step" : time_per_step})
+    flops = get_model_flops(model_path)
+    document.update({"model_flops": flops})
+    model_size_bytes, model_size_bytes_scaled = get_model_size(model_path)
+    document.update({"model_size": model_size_bytes})

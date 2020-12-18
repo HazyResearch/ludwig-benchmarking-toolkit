@@ -76,7 +76,6 @@ class Database:
                 'hyperopt_exp_config' : config
             })
 
-
         return formatted_document
 
 

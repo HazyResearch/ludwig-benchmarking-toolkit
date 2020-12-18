@@ -1,7 +1,18 @@
 input_features:
-  - preprocessing:
+  - 
+    preprocessing:
       word_tokenizer: hf_tokenizer
       pretrained_model_name_or_path: distilbert-base-uncased
 
+training:
+  batch_size: 16
+
 parameters:
   input_features.name.encoder: distilbert
+  output_features.name.fc_layers:
+    type: category
+    values: [
+      [{fc_size: 512}, {fc_size: 256}],
+      [{fc_size: 512}],
+      [{fc_size: 256}]
+    ]

@@ -2,40 +2,184 @@ input_features:
   -
     type: sequence
     encoder: stacked_parallel_cnn
+    pretrained_embeddings: PATH_TO_PRETRAINED_EMBEDDINGS
     dropout: 0.5
+    preprocessing:
+      word_tokenizer: hf_tokenizer
+      pretrained_model_name_or_path: t5-base
 
 parameters:
   input_features.name.encoder: stacked_parallel_cnn
-  input_features.name.stacked_layers: 
+
+  input_features.name.stacked_layers:
     type: category
     values: [
+      [ 
+        [{filter_size: 1}, {filter_size: 2}, {filter_size: 3}]
+      ],
       [
-        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}, 
-        {filter_size: 5}], 
-        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}, 
-        {filter_size: 5}],
-        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}, 
-        {filter_size: 5}]
-        ], 
+        [{filter_size: 1}, {filter_size: 2}, {filter_size: 3}],
+        [{filter_size: 1}, {filter_size: 2}, {filter_size: 3}],
+      ],
       [
-        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}, 
-        {filter_size: 6}], 
-        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}, 
-        {filter_size: 6}], 
-        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}, 
-        {filter_size: 6}]
-        ], 
+        [{filter_size: 1}, {filter_size: 2}, {filter_size: 3}],
+        [{filter_size: 1}, {filter_size: 2}, {filter_size: 3}],
+        [{filter_size: 1}, {filter_size: 2}, {filter_size: 3}]
+      ],
+      [
+        [{filter_size: 1}, {filter_size: 2}, {filter_size: 3}],
+        [{filter_size: 1}, {filter_size: 2}, {filter_size: 3}],
+        [{filter_size: 1}, {filter_size: 2}, {filter_size: 3}],
+        [{filter_size: 1}, {filter_size: 2}, {filter_size: 3}]
+      ],
+      [
+        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}]
+      ],
+      [
+        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}],
+        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}]
+
+      ],
+      [
+        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}],
+        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}],
+        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}]
+      ],
+      [
+        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}],
+        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}],
+        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}],
+        [{filter_size: 2}, {filter_size: 3}, {filter_size: 4}]
+
+      ],
+      [
+        [{filter_size: 3}, {filter_size: 4}, {filter_size: 5}]
+      ],
+      [
+        [{filter_size: 3}, {filter_size: 4}, {filter_size: 5}],
+        [{filter_size: 3}, {filter_size: 4}, {filter_size: 5}]
+      ],
+      [
+        [{filter_size: 3}, {filter_size: 4}, {filter_size: 5}],
+        [{filter_size: 3}, {filter_size: 4}, {filter_size: 5}],
+        [{filter_size: 3}, {filter_size: 4}, {filter_size: 5}],
+      ],
+      [
+        [{filter_size: 3}, {filter_size: 4}, {filter_size: 5}],
+        [{filter_size: 3}, {filter_size: 4}, {filter_size: 5}],
+        [{filter_size: 3}, {filter_size: 4}, {filter_size: 5}],
+        [{filter_size: 3}, {filter_size: 4}, {filter_size: 5}],
+      ],
+      [
+        [{filter_size: 4}, {filter_size: 5}, {filter_size: 6}]
+      ],
+      [
+        [{filter_size: 4}, {filter_size: 5}, {filter_size: 6}],
+        [{filter_size: 4}, {filter_size: 5}, {filter_size: 6}]
+      ],
+      [
+        [{filter_size: 4}, {filter_size: 5}, {filter_size: 6}],
+        [{filter_size: 4}, {filter_size: 5}, {filter_size: 6}],
+        [{filter_size: 4}, {filter_size: 5}, {filter_size: 6}]
+      ],
+      [
+        [{filter_size: 4}, {filter_size: 5}, {filter_size: 6}],
+        [{filter_size: 4}, {filter_size: 5}, {filter_size: 6}],
+        [{filter_size: 4}, {filter_size: 5}, {filter_size: 6}],
+        [{filter_size: 4}, {filter_size: 5}, {filter_size: 6}]
+      ],
+      [
+        [{filter_size: 5}, {filter_size: 6}, {filter_size: 7}]
+      ],
+      [
+        [{filter_size: 5}, {filter_size: 6}, {filter_size: 7}],
+        [{filter_size: 5}, {filter_size: 6}, {filter_size: 7}]
+      ],
+      [
+        [{filter_size: 5}, {filter_size: 6}, {filter_size: 7}],
+        [{filter_size: 5}, {filter_size: 6}, {filter_size: 7}],
+        [{filter_size: 5}, {filter_size: 6}, {filter_size: 7}]
+      ],
+      [
+        [{filter_size: 5}, {filter_size: 6}, {filter_size: 7}],
+        [{filter_size: 5}, {filter_size: 6}, {filter_size: 7}],
+        [{filter_size: 5}, {filter_size: 6}, {filter_size: 7}],
+        [{filter_size: 5}, {filter_size: 6}, {filter_size: 7}]
+      ],
+      [
+        [{filter_size: 6}, {filter_size: 7}, {filter_size: 8}]
+      ],
+      [
+        [{filter_size: 6}, {filter_size: 7}, {filter_size: 8}],
+        [{filter_size: 6}, {filter_size: 7}, {filter_size: 8}]
+      ],
+      [
+        [{filter_size: 6}, {filter_size: 7}, {filter_size: 8}],
+        [{filter_size: 6}, {filter_size: 7}, {filter_size: 8}],
+        [{filter_size: 6}, {filter_size: 7}, {filter_size: 8}]
+      ],
+      [
+        [{filter_size: 6}, {filter_size: 7}, {filter_size: 8}],
+        [{filter_size: 6}, {filter_size: 7}, {filter_size: 8}],
+        [{filter_size: 6}, {filter_size: 7}, {filter_size: 8}],
+        [{filter_size: 6}, {filter_size: 7}, {filter_size: 8}]
+      ],
+      [
+        [{filter_size: 7}, {filter_size: 8}, {filter_size: 9}]
+      ],
+      [
+        [{filter_size: 7}, {filter_size: 8}, {filter_size: 9}],
+        [{filter_size: 7}, {filter_size: 8}, {filter_size: 9}]
+      ],
+      [
+        [{filter_size: 7}, {filter_size: 8}, {filter_size: 9}],
+        [{filter_size: 7}, {filter_size: 8}, {filter_size: 9}],
+        [{filter_size: 7}, {filter_size: 8}, {filter_size: 9}]
+      ],
+      [
+        [{filter_size: 7}, {filter_size: 8}, {filter_size: 9}],
+        [{filter_size: 7}, {filter_size: 8}, {filter_size: 9}],
+        [{filter_size: 7}, {filter_size: 8}, {filter_size: 9}],
+        [{filter_size: 7}, {filter_size: 8}, {filter_size: 9}]
+      ],
+      [
+        [{filter_size: 8}, {filter_size: 9}, {filter_size: 10}]
+      ],
+      [
+        [{filter_size: 8}, {filter_size: 9}, {filter_size: 10}],
+        [{filter_size: 8}, {filter_size: 9}, {filter_size: 10}]
+      ],
+      [
+        [{filter_size: 8}, {filter_size: 9}, {filter_size: 10}],
+        [{filter_size: 8}, {filter_size: 9}, {filter_size: 10}],
+        [{filter_size: 8}, {filter_size: 9}, {filter_size: 10}]
+      ],
+      [
+        [{filter_size: 8}, {filter_size: 9}, {filter_size: 10}],
+        [{filter_size: 8}, {filter_size: 9}, {filter_size: 10}],
+        [{filter_size: 8}, {filter_size: 9}, {filter_size: 10}],
+        [{filter_size: 8}, {filter_size: 9}, {filter_size: 10}]
+      ]
+
     ]
+  
+  input_features.name.num_filters:
+    type: int
+    low: 100
+    high: 600
+    steps: 6
+    scale: linear
+
+  input_features.name.activation:
+    type: category
+    values: [tanh, relu]
+
   input_features.name.fc_layers:
     type: category
     values: [
       [{fc_size: 512}, {fc_size: 256}],
-      [{fc_size: 512}]
+      [{fc_size: 512}],
+      [{fc_size: 256}]
     ]
 
-  training.batch_size:
-    type: int
-    low: 32
-    high: 128
-    steps: 4
-    scale: linear
+

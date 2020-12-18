@@ -22,12 +22,7 @@ parameters:
     type: category
     values: [
       [{fc_size: 512}, {fc_size: 256}],
-      [{fc_size: 512}]
+      [{fc_size: 512}],
+      [{fc_size: 256}]
     ]
 
-  training.batch_size:
-    type: int
-    low: 32
-    high: 128
-    steps: 4
-    scale: linear

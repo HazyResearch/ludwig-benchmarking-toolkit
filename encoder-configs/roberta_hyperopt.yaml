@@ -1,10 +1,21 @@
 input_features:
-  - preprocessing:
+  - 
+    preprocessing:
       word_tokenizer: hf_tokenizer
       pretrained_model_name_or_path: roberta-base
+
+training:
+  batch_size: 16
 
 parameters:
   input_features.name.encoder: roberta
   input_features.name.reduced_output: 
     type: category
     values: [cls_pooled, sum, avg]
+  output_features.name.fc_layers:
+    type: category
+    values: [
+      [{fc_size: 512}, {fc_size: 256}],
+      [{fc_size: 512}],
+      [{fc_size: 256}]
+    ]

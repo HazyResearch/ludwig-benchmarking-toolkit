@@ -1,16 +1,13 @@
 metric: loss
 sampler:
   type: random
-  num_samples: 2
+  num_samples: 10
 parameters:
   training.learning_rate:
     type: float
-    low: 0.001
-    high: 0.1
+    low: 0.0001
+    high: 0.01
     scale: log
-  training.optimizer.type:
-    type: category
-    values: [sgd, adam, adagrad]
 executor:
   type: parallel
   workers : 2

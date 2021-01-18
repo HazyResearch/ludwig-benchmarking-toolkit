@@ -1,6 +1,6 @@
 import json
 import os
-from utils import hash_dict
+from utils.experiment_utils import hash_dict
 from elasticsearch import Elasticsearch
 
 

@@ -46,7 +46,7 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir):
         if os.path.isdir(run_dir):
             sample_training_stats = json.load(
                 open(
-                    os.path.join(output_dir, run_dir, \
+                    os.path.join(run_dir, \
                         "training_statistics.json"
                         ), "rb"
                 )
@@ -56,7 +56,7 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir):
                     hyperopt_run_metadata.append(
                         {
                             'hyperopt_results' : hyperopt_run,
-                            'model_path' : os.path.join(output_dir, run_dir, \
+                            'model_path' : os.path.join(run_dir, \
                                     'model'
                                 )
                         }
@@ -78,13 +78,18 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
             dataset = config_name.split('_')[-2]
             encoder = config_name.split('_')[-1]
             experiment_name = dataset + "_" + encoder
+            
+            
             logging.info("Experiment: {}".format(experiment_name))
             output_dir = os.path.join(globals.EXPERIMENT_OUTPUT_DIR, \
                 experiment_name)
 
             if not os.path.isdir(output_dir):
                 os.mkdir(output_dir)
-            
+           
+            output_dir = os.path.join(globals.EXPERIMENT_OUTPUT_DIR, \
+                experiment_name)
+
             if not os.path.exists(os.path.join(output_dir, '.completed')):
                 model_config = load_yaml(model_config_path)
                 start = datetime.datetime.now()
@@ -122,7 +127,6 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                 if es_db:
                     hyperopt_run_data = map_runstats_to_modelpath(
                         hyperopt_results, output_dir)
-
                     # ensures that all numerical values are of type float
                     format_fields_float(hyperopt_results)
                     for run in hyperopt_run_data:
@@ -135,12 +139,14 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                         document = {
                             'hyperopt_results': run['hyperopt_results']
                         }
-                        
-                        append_experiment_metadata(
-                            document, 
-                            model_path=run['model_path'], 
-                            data_path=file_path
-                        )
+                        try: 
+                            append_experiment_metadata(
+                                document, 
+                                model_path=run['model_path'], 
+                                data_path=file_path
+                            )
+                        except:
+                            pass
 
                         formatted_document = es_db.format_document(
                             document,
@@ -156,6 +162,9 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                             formatted_document
                         )
 
+        # create .completed file to indicate that entire hyperopt experiment
+        # is completed
+        _ = open(os.path.join(globals.EXPERIMENT_OUTPUT_DIR, '.completed'), 'wb')
 def main():
     parser = argparse.ArgumentParser(
         description='Ludwig experiments benchmarking driver script',

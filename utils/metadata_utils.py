@@ -12,7 +12,7 @@ from ludwig.collect import collect_weights
 import tensorflow as tf
 
 
-def get_ludwig_version():
+def get_ludwig_version(**kwargs):
     return ludwig.__version__
 
 def scale_bytes(bytes: int, suffix: str = 'B') -> str:
@@ -155,7 +155,11 @@ def get_model_size(model_path: str, **kwargs):
         total_size += weight_tensor.size
     total_bytes = total_size * 32
     scaled_bytes = scale_bytes(total_bytes)
-    return total_bytes, scaled_bytes
+    model_size = {
+            'total_bytes' : total_bytes,
+            'scaled_bytes' : scaled_bytes
+    }
+    return model_size
 
 def append_experiment_metadata(
     document: dict, 
@@ -174,8 +178,10 @@ def append_experiment_metadata(
         })
 
 metadata_registry = {
-    "inference_latency" : "get_inference_latency",
-    "time_per_train_step" : "get_train_speed",
+    #"inference_latency" : "get_inference_latency",
+    #"time_per_train_step" : "get_train_speed",
+    "model_size" : "get_model_size",
     "model_flops" : "get_model_flops",
-    "model_size" : "get_model_size"
+    "hardware_metadata" : "get_hardware_metadata",
+    "ludwig_version" : "get_ludwig_version"
 }

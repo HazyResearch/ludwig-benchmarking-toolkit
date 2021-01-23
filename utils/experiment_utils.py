@@ -78,6 +78,9 @@ def format_fields_float(l: list) -> list:
     return formatted_out
 
 def substitute_dict_parameters(original_dict: dict, parameters: dict) -> dict:
+    """
+    Fills in original ludwig config w/actual sampled hyperopt values
+    """
     def subsitute_param(dct: dict, path: list, val):
         if len(path) == 1:
             dct[path[0]] = val
@@ -88,8 +91,20 @@ def substitute_dict_parameters(original_dict: dict, parameters: dict) -> dict:
 
     for key, value in parameters.items():
         path = key.split(".")
-        subsitute_param(original_dict, path, value)
+        # Check for input/output parameter edge cases
+        if path[0] not in original_dict.keys():
+            # check if param is associate with output feature
+            for idx, out_feature in enumerate(original_dict['output_features']):
+                if out_feature['name'] == path[0]:
+                    original_dict['output_features'][idx][path[1]] = value
+                    break
 
+            for idx, out_feature in enumerate(original_dict['input_features']):
+                if out_feature['name'] == path[0]:
+                    original_dict['input_features'][idx][path[1]] = value
+                    break
+        else:
+            subsitute_param(original_dict, path, value)
     return original_dict
 
 

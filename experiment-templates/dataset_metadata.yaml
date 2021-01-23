@@ -22,16 +22,3 @@ sst2:
   output_name:  label
   output_type: category
 
-irony:
-  data_class : SST2
-  input_name: comment_text
-  output_name:  label
-  output_type: category
-
-agnews:
-  data_class: AGNews
-  input_name: text
-  output_name:  emotion_ids
-  output_type: set
-
-

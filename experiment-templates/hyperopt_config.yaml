@@ -1,7 +1,7 @@
 metric: loss
 sampler:
   type: random
-  num_samples: 10
+  num_samples: 2
 parameters:
   training.learning_rate:
     type: float

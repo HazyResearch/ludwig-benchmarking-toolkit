@@ -9,7 +9,7 @@ training:
   
 parameters:
   input_features.name.encoder: bert
-  input_features.name.reduced_output: 
+  input_features.name.reduce_output: 
     type: category
     values: [cls_pooled, sum, avg]
   output_features.name.fc_layers:

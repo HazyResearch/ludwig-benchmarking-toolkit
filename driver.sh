@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=4
 #SBATCH --job-name=ludwig-bench
 #SBATCH --gres=gpu:2
 #SBATCH --mem=64G
 #SBATCH --open-mode=append
-#SBATCH --output=experiment-logs/min_exp_bash_out
+#SBATCH --output=experiment-logs/allencs-miniexp
 #SBATCH --partition=jag-hi
-#SBATCH --nodelist=jagupard10
+#SBATCH --nodelist=jagupard11
 #SBATCH --time=10-0
 
 # activate your desired anaconda environment

@@ -178,8 +178,8 @@ def append_experiment_metadata(
         })
 
 metadata_registry = {
-    #"inference_latency" : "get_inference_latency",
-    #"time_per_train_step" : "get_train_speed",
+    "inference_latency" : "get_inference_latency",
+    "time_per_train_step" : "get_train_speed",
     "model_size" : "get_model_size",
     "model_flops" : "get_model_flops",
     "hardware_metadata" : "get_hardware_metadata",

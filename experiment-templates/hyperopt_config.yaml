@@ -1,16 +1,16 @@
 metric: loss
-sampler:
-  type: random
-  num_samples: 2
 parameters:
   training.learning_rate:
     type: float
-    low: 0.0001
-    high: 0.01
-    scale: log
+    lower: 0.0001
+    upper: 0.01
+    space: loguniform
+sampler:
+    type: ray
+    search_alg:
+      type: random
+    num_samples: 2
 executor:
-  type: parallel
-  workers : 2
-  
-
-
+  type: ray
+  cpu_resources_per_trial: 1
+  gpu_resources_per_trial: 1

@@ -9,12 +9,15 @@ training:
   
 parameters:
   input_features.name.encoder: bert
-  input_features.name.reduce_output: 
+  input_features.name.reduced_output: 
+    space: choice 
     type: category
-    values: [cls_pooled, sum, avg]
+    categories: ['cls_pooled', 'sum', 'avg']
   output_features.name.fc_layers:
+    # if space is grid_search, change 'categories' to 'values'
+    space: choice
     type: category
-    values: [
+    categories: [
       [{fc_size: 512}, {fc_size: 256}],
       [{fc_size: 512}],
       [{fc_size: 256}]

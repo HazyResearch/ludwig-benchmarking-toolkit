@@ -9,18 +9,22 @@ input_features:
 parameters:
   input_features.name.encoder: rnn
   input_features.name.num_layers:
+    space: uniform
     type: int
-    low: 1
-    high: 5
+    lower: 1
+    upper: 5
   input_features.name.cell_type:
+    space: choice
     type: category
-    values: [rnn, gru, lstm]
+    categories: [rnn, gru, lstm]
   input_features.name.state_size:
+    space: choice
     type: category
-    values: [256, 512]
+    categories: [256, 512]
   input_features.name.fc_layers:
+    space: choice
     type: category
-    values: [
+    categories: [
       [{fc_size: 512}, {fc_size: 256}],
       [{fc_size: 512}],
       [{fc_size: 256}]

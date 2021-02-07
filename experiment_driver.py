@@ -36,31 +36,69 @@ def get_gpu_list():
     except KeyError:
         return None
 
-def map_runstats_to_modelpath(hyperopt_training_stats, output_dir):
+def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray'):
     """ 
     maps output of individual hyperopt() run statistics to associated 
     output directories 
-    """ 
-    hyperopt_run_metadata = []
-    for run_dir in os.scandir(output_dir):
-        if os.path.isdir(run_dir):
-            sample_training_stats = json.load(
-                open(
-                    os.path.join(run_dir, \
-                        "training_statistics.json"
-                        ), "rb"
+    """
+    # helper function for finding output folder
+    def find_path(d):
+        if "model" in os.listdir(d):
+            return d
+        else:
+            for x in os.scandir(d):
+                if os.path.isdir(x): return find_path(x)
+    
+    if executor == 'ray': # folder construction is different
+        hyperopt_run_metadata = []
+        ray_hyperopt_head_dir = os.path.join(
+                    output_dir,
+                    os.listdir(output_dir)[0]
                 )
-            )
-            for hyperopt_run in hyperopt_training_stats:
-                if hyperopt_run['training_stats'] == sample_training_stats:
-                    hyperopt_run_metadata.append(
-                        {
-                            'hyperopt_results' : hyperopt_run,
-                            'model_path' : os.path.join(run_dir, \
-                                    'model'
-                                )
-                        }
+
+        for run_dir in os.scandir(ray_hyperopt_head_dir):
+            if os.path.isdir(run_dir):
+                run_output_dir = find_path(run_dir)
+                if os.path.isdir(run_output_dir):
+                    sample_training_stats = json.load(
+                        open(
+                            os.path.join(run_output_dir, \
+                                "training_statistics.json"
+                                ), "rb"
+                        )
                     )
+                    for hyperopt_run in hyperopt_training_stats:
+                        if hyperopt_run['training_stats'] == sample_training_stats:
+                            hyperopt_run_metadata.append(
+                                {
+                                    'hyperopt_results' : hyperopt_run,
+                                    'model_path' : os.path.join(run_output_dir, \
+                                            'model'
+                                        )
+                                }
+                            )
+    else:
+        hyperopt_run_metadata = []
+        for run_dir in os.scandir(output_dir):
+            if os.path.isdir(run_dir):
+                sample_training_stats = json.load(
+                    open(
+                        os.path.join(run_dir, \
+                            "training_statistics.json"
+                            ), "rb"
+                    )
+                )
+                for hyperopt_run in hyperopt_training_stats:
+                    if hyperopt_run['training_stats'] == sample_training_stats:
+                        hyperopt_run_metadata.append(
+                            {
+                                'hyperopt_results' : hyperopt_run,
+                                'model_path' : os.path.join(run_dir, \
+                                        'model'
+                                    )
+                            }
+                        )
+    
     return hyperopt_run_metadata
 
 def run_local_experiments(data_file_paths, config_files, es_db=None):
@@ -97,7 +135,7 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                     model_config,
                     dataset=file_path,
                     model_name=config_name, 
-                    gpus=get_gpu_list(),
+                    #gpus=get_gpu_list(),
                     output_directory=output_dir
                 )
 
@@ -243,7 +281,7 @@ def main():
             elastic_config['index']
         )
     
-    if args.run_environment == 'local':
+    if args.run_environment == 'local' or args.run_environment == 'gcp':
         run_local_experiments(
             data_file_paths, 
             config_files, 

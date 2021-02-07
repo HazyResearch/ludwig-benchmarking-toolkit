@@ -10,11 +10,13 @@ training:
 parameters:
   input_features.name.encoder: roberta
   input_features.name.reduced_output: 
+    space: choice
     type: category
-    values: [cls_pooled, sum, avg]
+    categories: [cls_pooled, sum, avg]
   output_features.name.fc_layers:
+    space: choice
     type: category
-    values: [
+    categories: [
       [{fc_size: 512}, {fc_size: 256}],
       [{fc_size: 512}],
       [{fc_size: 256}]

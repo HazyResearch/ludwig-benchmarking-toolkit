@@ -12,8 +12,9 @@ parameters:
   input_features.name.encoder: stacked_parallel_cnn
 
   input_features.name.stacked_layers:
+    space: choice
     type: category
-    values: [
+    categories: [
       [ 
         [{filter_size: 1}, {filter_size: 2}, {filter_size: 3}]
       ],
@@ -164,19 +165,22 @@ parameters:
     ]
   
   input_features.name.num_filters:
+    space: qrandint
     type: int
-    low: 100
-    high: 600
-    steps: 6
+    lower: 100
+    upper: 600
+    steps: 100
     scale: linear
 
   input_features.name.activation:
+    space: choice
     type: category
-    values: [tanh, relu]
+    categories: [tanh, relu]
 
   input_features.name.fc_layers:
+    space: choice
     type: category
-    values: [
+    categories: [
       [{fc_size: 512}, {fc_size: 256}],
       [{fc_size: 512}],
       [{fc_size: 256}]

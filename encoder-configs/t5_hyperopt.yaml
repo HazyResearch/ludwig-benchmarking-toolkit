@@ -10,8 +10,9 @@ training:
 parameters:
   input_features.name.encoder: t5
   output_features.name.fc_layers:
+    space: choice
     type: category
-    values: [
+    categories: [
       [{fc_size: 512}, {fc_size: 256}],
       [{fc_size: 512}],
       [{fc_size: 256}]

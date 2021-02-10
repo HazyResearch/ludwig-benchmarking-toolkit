@@ -5,6 +5,7 @@ import logging
 import os
 import pickle
 import sys
+import numpy as np
 from copy import deepcopy
 
 import yaml
@@ -42,41 +43,72 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
     output directories 
     """
     # helper function for finding output folder
+    paths = []
     def find_path(d):
         if "model" in os.listdir(d):
             return d
         else:
             for x in os.scandir(d):
-                if os.path.isdir(x): return find_path(x)
+                if os.path.isdir(x):
+                    path = find_path(x)
+                    if path:
+                        paths.append(path)
+            return None
+
+    def compare_dict(d1, d2):
+        if type(d1) == list:
+            if np.allclose(d1, d2, rtol=1e-04, atol=1e-04): return True
+            return False
+        else:
+            if type(d1) == dict:
+                for key, value in d1.items():
+                    return compare_dict(value, d2[key])
+
+    def decode_hyperopt_run(run):
+        run['training_stats'] = json.loads(run['training_stats'])
+        run['parameters'] = json.loads(run['parameters'])
+        run['eval_stats'] = json.loads(run['eval_stats'])
+        return run
     
     if executor == 'ray': # folder construction is different
         hyperopt_run_metadata = []
-        ray_hyperopt_head_dir = os.path.join(
-                    output_dir,
-                    os.listdir(output_dir)[0]
-                )
 
-        for run_dir in os.scandir(ray_hyperopt_head_dir):
-            if os.path.isdir(run_dir):
-                run_output_dir = find_path(run_dir)
-                if os.path.isdir(run_output_dir):
-                    sample_training_stats = json.load(
-                        open(
-                            os.path.join(run_output_dir, \
-                                "training_statistics.json"
-                                ), "rb"
-                        )
+        # populate paths
+        for x in os.scandir(output_dir):
+            if os.path.isdir(x):
+                find_path(x)
+        
+        for hyperopt_run in hyperopt_training_stats:
+            hyperopt_run_metadata.append(
+                        {
+                            'hyperopt_results' : decode_hyperopt_run(hyperopt_run),
+                            'model_path' : None
+                        }
                     )
-                    for hyperopt_run in hyperopt_training_stats:
-                        if hyperopt_run['training_stats'] == sample_training_stats:
-                            hyperopt_run_metadata.append(
-                                {
-                                    'hyperopt_results' : hyperopt_run,
-                                    'model_path' : os.path.join(run_output_dir, \
-                                            'model'
-                                        )
-                                }
-                            )
+
+        # Populate model_path for respective experiments
+        for run_output_dir in paths:
+            sample_training_stats = json.load(
+                open(
+                    os.path.join(run_output_dir, \
+                        "training_statistics.json"
+                        ), "rb"
+                )
+            )
+            for i, hyperopt_run in enumerate(hyperopt_run_metadata):
+                try:
+                    d_equal = compare_dict(hyperopt_run['hyperopt_results']['training_stats'], \
+                            sample_training_stats)
+                except:
+                    pass
+
+                else:
+                    if d_equal:
+                        hyperopt_run['model_path'] = os.path.join(run_output_dir, \
+                                        'model'
+                                    )
+                        hyperopt_run_metadata[i] = hyperopt_run
+
     else:
         hyperopt_run_metadata = []
         for run_dir in os.scandir(output_dir):
@@ -175,7 +207,8 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                         del new_config['hyperopt']
 
                         document = {
-                            'hyperopt_results': run['hyperopt_results']
+                            'hyperopt_results': run['hyperopt_results'],
+                            'model_path' : run['model_path']
                         }
                         try: 
                             append_experiment_metadata(

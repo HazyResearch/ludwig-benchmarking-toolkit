@@ -77,6 +77,11 @@ def format_fields_float(l: list) -> list:
             ]
     return formatted_out
 
+def decode_str_dicts(d: str) -> dict:
+    json_acceptable_string = d.replace("'", "\"")
+    dct = json.loads(json_acceptable_string)
+    return dct
+
 def substitute_dict_parameters(original_dict: dict, parameters: dict) -> dict:
     """
     Fills in original ludwig config w/actual sampled hyperopt values
@@ -88,6 +93,10 @@ def substitute_dict_parameters(original_dict: dict, parameters: dict) -> dict:
         else:
             key = path.pop(0)
             subsitute_param(dct[key], path, val)
+
+    # in some cases the dict is encoded as a str
+    if type(parameters) == str:
+        parameters = decode_str_dicts(parameters)
 
     for key, value in parameters.items():
         path = key.split(".")

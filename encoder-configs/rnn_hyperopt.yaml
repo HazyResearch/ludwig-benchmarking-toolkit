@@ -9,7 +9,7 @@ input_features:
 parameters:
   input_features.name.encoder: rnn
   input_features.name.num_layers:
-    space: uniform
+    space: randint 
     type: int
     lower: 1
     upper: 5

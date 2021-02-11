@@ -52,7 +52,7 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
                 if os.path.isdir(x):
                     path = find_path(x)
                     if path:
-                        paths.append(path)
+                        paths.append(path.path)
             return None
 
     def compare_dict(d1, d2):
@@ -88,26 +88,28 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
 
         # Populate model_path for respective experiments
         for run_output_dir in paths:
-            sample_training_stats = json.load(
-                open(
-                    os.path.join(run_output_dir, \
-                        "training_statistics.json"
-                        ), "rb"
+            if os.path.isfile(os.path.join(run_output_dir, \
+                    "training_statistics.json")):
+                sample_training_stats = json.load(
+                    open(
+                        os.path.join(run_output_dir, \
+                            "training_statistics.json"
+                            ), "rb"
+                    )
                 )
-            )
-            for i, hyperopt_run in enumerate(hyperopt_run_metadata):
-                try:
-                    d_equal = compare_dict(hyperopt_run['hyperopt_results']['training_stats'], \
-                            sample_training_stats)
-                except:
-                    pass
+                for i, hyperopt_run in enumerate(hyperopt_run_metadata):
+                    try:
+                        d_equal = compare_dict(hyperopt_run['hyperopt_results']['training_stats'], \
+                                sample_training_stats)
+                    except:
+                        pass
 
-                else:
-                    if d_equal:
-                        hyperopt_run['model_path'] = os.path.join(run_output_dir, \
-                                        'model'
-                                    )
-                        hyperopt_run_metadata[i] = hyperopt_run
+                    else:
+                        if d_equal:
+                            hyperopt_run['model_path'] = os.path.join(run_output_dir, \
+                                            'model'
+                                        )
+                            hyperopt_run_metadata[i] = hyperopt_run
 
     else:
         hyperopt_run_metadata = []
@@ -115,7 +117,7 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
             if os.path.isdir(run_dir):
                 sample_training_stats = json.load(
                     open(
-                        os.path.join(run_dir, \
+                        os.path.join(run_dir.path, \
                             "training_statistics.json"
                             ), "rb"
                     )
@@ -125,7 +127,7 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
                         hyperopt_run_metadata.append(
                             {
                                 'hyperopt_results' : hyperopt_run,
-                                'model_path' : os.path.join(run_dir, \
+                                'model_path' : os.path.join(run_dir.path, \
                                         'model'
                                     )
                             }

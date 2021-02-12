@@ -147,8 +147,8 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
         logging.info("Dataset: {}".format(dataset_name))
         for model_config_path in config_files[dataset_name]:
             config_name = model_config_path.split('/')[-1].split('.')[0]
-            dataset = config_name.split('_')[-2]
-            encoder = config_name.split('_')[-1]
+            dataset = config_name.split('_')[1]
+            encoder = "_".join(config_name.split('_')[2:])
             experiment_name = dataset + "_" + encoder
             
             

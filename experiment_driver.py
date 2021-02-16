@@ -37,15 +37,6 @@ def get_gpu_list():
     except KeyError:
         return None
 
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.integer):
-            return int(obj)
-        return json.JSONEncoder.default(self, obj)
 
 def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray'):
     """ 
@@ -300,7 +291,7 @@ def main():
         '--dataset_cache_dir',
         help="path to cache downloaded datasets",
         type=str,
-        default=None
+        default='/experiments/datasets'
     )
 
     # list of encoders to run hyperopt search over : 

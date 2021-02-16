@@ -4,21 +4,10 @@ fever:
   output_name: label
   output_type: category
 
-scicite:
-  data_class: SciCite
-  input_name: string
-  output_name: label
-  output_type: category
-
 goemotions:
   data_class: GoEmotions
   input_name: text
   output_name: emotion_ids
   output_type: set
 
-sst2:
-  data_class : SST2
-  input_name: sentence
-  output_name:  label
-  output_type: category
 

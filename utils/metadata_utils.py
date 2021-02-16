@@ -120,7 +120,7 @@ def get_model_flops(model_path: str, **kwargs) -> int:
     tf.compat.v1.reset_default_graph()
     session = tf.compat.v1.Session()
     graph = tf.compat.v1.get_default_graph()
-
+    flops = None
     with graph.as_default():
         with session.as_default():
             model = LudwigModel.load(model_path)
@@ -131,7 +131,7 @@ def get_model_flops(model_path: str, **kwargs) -> int:
                                                   cmd='op',
                                                   options=opts)
         
-            return flops.total_float_ops
+    return flops.total_float_ops
 
 def get_model_size(model_path: str, **kwargs):
     """ 
@@ -167,7 +167,9 @@ def append_experiment_metadata(
     data_path: str,
     train_batch_size: int=16
 ):
+    print("METADATA tracking")
     for key, metrics_func in metadata_registry.items():
+        print("currently processing: {}".format(key))
         output = globals()[metrics_func](
             model_path=model_path,
             dataset_path=data_path,
@@ -178,10 +180,10 @@ def append_experiment_metadata(
         })
 
 metadata_registry = {
-    #"inference_latency" : "get_inference_latency",
-    #"time_per_train_step" : "get_train_speed",
-    #"model_size" : "get_model_size",
-    #"model_flops" : "get_model_flops",
+    "inference_latency" : "get_inference_latency",
+    "time_per_train_step" : "get_train_speed",
+    "model_size" : "get_model_size",
+    "model_flops" : "get_model_flops",
     "hardware_metadata" : "get_hardware_metadata",
     "ludwig_version" : "get_ludwig_version"
 }

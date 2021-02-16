@@ -93,7 +93,7 @@ def substitute_dict_parameters(original_dict: dict, parameters: dict) -> dict:
         else:
             key = path.pop(0)
             subsitute_param(dct[key], path, val)
-
+    
     # in some cases the dict is encoded as a str
     if type(parameters) == str:
         parameters = decode_str_dicts(parameters)

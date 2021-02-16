@@ -37,32 +37,69 @@ def get_gpu_list():
     except KeyError:
         return None
 
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.integer):
+            return int(obj)
+        return json.JSONEncoder.default(self, obj)
+
 def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray'):
     """ 
     maps output of individual hyperopt() run statistics to associated 
     output directories 
     """
     # helper function for finding output folder
-    paths = []
-    def find_path(d):
+    model_paths = []
+    def find_model_path(d):
         if "model" in os.listdir(d):
             return d
         else:
             for x in os.scandir(d):
                 if os.path.isdir(x):
-                    path = find_path(x)
+                    path = find_model_path(x)
+                    if path is not None:
+                        #model_paths.append(path)
+                        return path
+            return None
+    
+    trial_dirs = []
+    def find_params_experiment_dirs(d):
+        if "params.json" in os.listdir(d):
+            return d
+        else:
+            for x in os.scandir(d):
+                if os.path.isdir(x):
+                    path = find_params_experiment_dirs(x)
                     if path:
-                        paths.append(path.path)
+                        trial_dirs.append(path)
             return None
 
     def compare_dict(d1, d2):
         if type(d1) == list:
-            if np.allclose(d1, d2, rtol=1e-04, atol=1e-04): return True
+            if np.allclose(d1, d2, rtol=1e-02, atol=1e-02): return True
             return False
         else:
             if type(d1) == dict:
                 for key, value in d1.items():
-                    return compare_dict(value, d2[key])
+                    new_d2 = d2[key]
+                    return compare_dict(value, new_d2)
+
+    def compare_configs(cf_non_encoded, cf_json_encoded):
+        for key, value in cf_non_encoded.items():
+            value_other = cf_json_encoded[key]
+            if type(value) == list:
+                value_other = json.loads(value_other)
+            if type(value) == str:
+                value_other = json.loads(value_other)
+            if value_other != value:
+                return False
+        else:
+            return True
+                
 
     def decode_hyperopt_run(run):
         run['training_stats'] = json.loads(run['training_stats'])
@@ -76,7 +113,7 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
         # populate paths
         for x in os.scandir(output_dir):
             if os.path.isdir(x):
-                find_path(x)
+                find_params_experiment_dirs(x)
         
         for hyperopt_run in hyperopt_training_stats:
             hyperopt_run_metadata.append(
@@ -86,31 +123,17 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
                         }
                     )
 
-        # Populate model_path for respective experiments
-        for run_output_dir in paths:
-            if os.path.isfile(os.path.join(run_output_dir, \
-                    "training_statistics.json")):
-                sample_training_stats = json.load(
-                    open(
-                        os.path.join(run_output_dir, \
-                            "training_statistics.json"
-                            ), "rb"
-                    )
-                )
-                for i, hyperopt_run in enumerate(hyperopt_run_metadata):
-                    try:
-                        d_equal = compare_dict(hyperopt_run['hyperopt_results']['training_stats'], \
-                                sample_training_stats)
-                    except:
-                        pass
-
-                    else:
-                        if d_equal:
-                            hyperopt_run['model_path'] = os.path.join(run_output_dir, \
-                                            'model'
-                                        )
-                            hyperopt_run_metadata[i] = hyperopt_run
-
+        for hyperopt_run in hyperopt_run_metadata:
+            hyperopt_params = hyperopt_run['hyperopt_results']['parameters']
+            for path in trial_dirs:
+                config_json = json.load(open(
+                                    os.path.join(path, 'params.json')
+                                    )
+                                )
+                if compare_configs(hyperopt_params, config_json):
+                    model_path = find_model_path(path)
+                    hyperopt_run['model_path'] = os.path.join(model_path,
+                                                    'model')
     else:
         hyperopt_run_metadata = []
         for run_dir in os.scandir(output_dir):
@@ -212,14 +235,12 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                             'hyperopt_results': run['hyperopt_results'],
                             'model_path' : run['model_path']
                         }
-                        try: 
-                            append_experiment_metadata(
-                                document, 
-                                model_path=run['model_path'], 
-                                data_path=file_path
-                            )
-                        except:
-                            pass
+                        
+                        append_experiment_metadata(
+                            document, 
+                            model_path=run['model_path'], 
+                            data_path=file_path
+                        )
 
                         formatted_document = es_db.format_document(
                             document,

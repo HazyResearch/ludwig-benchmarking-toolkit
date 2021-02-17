@@ -130,7 +130,8 @@ def get_model_flops(model_path: str, **kwargs) -> int:
                                                   run_meta=run_meta, 
                                                   cmd='op',
                                                   options=opts)
-        
+    tf.compat.v1.reset_default_graph()
+    session.close()
     return flops.total_float_ops
 
 def get_model_size(model_path: str, **kwargs):

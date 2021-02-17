@@ -69,15 +69,12 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
                         trial_dirs.append(path)
             return None
 
-    def compare_dict(d1, d2):
-        if type(d1) == list:
-            if np.allclose(d1, d2, rtol=1e-02, atol=1e-02): return True
-            return False
-        else:
-            if type(d1) == dict:
-                for key, value in d1.items():
-                    new_d2 = d2[key]
-                    return compare_dict(value, new_d2)
+    def get_last_checkpoint(path):
+        checkpoints = [ ckpt_dir 
+                        for ckpt_dir in os.scandir(path) 
+                        if os.path.isdir(ckpt_dir) and "checkpoint" in ckpt_dir.path]
+        sorted_cps = sorted(checkpoints, key=lambda d: d.path)
+        return sorted_cps[-1]
 
     def compare_configs(cf_non_encoded, cf_json_encoded):
         for key, value in cf_non_encoded.items():
@@ -122,7 +119,9 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
                                     )
                                 )
                 if compare_configs(hyperopt_params, config_json):
-                    model_path = find_model_path(path)
+                    #model_path = find_model_path(path)
+                    print(hyperopt_run['hyperopt_results']['training_iteration'])
+                    model_path = get_last_checkpoint(path)
                     hyperopt_run['model_path'] = os.path.join(model_path,
                                                     'model')
     else:

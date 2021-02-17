@@ -120,7 +120,6 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
                                 )
                 if compare_configs(hyperopt_params, config_json):
                     #model_path = find_model_path(path)
-                    print(hyperopt_run['hyperopt_results']['training_iteration'])
                     model_path = get_last_checkpoint(path)
                     hyperopt_run['model_path'] = os.path.join(model_path,
                                                     'model')

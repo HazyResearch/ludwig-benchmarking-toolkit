@@ -12,7 +12,7 @@ from ludwig.api import LudwigModel
 from ludwig.collect import collect_weights
 import tensorflow as tf
 
-
+@ray.remote
 def get_ludwig_version(**kwargs):
     return ludwig.__version__
 

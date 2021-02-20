@@ -37,15 +37,6 @@ def get_gpu_list():
     except KeyError:
         return None
 
-class NumpyEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.integer):
-            return int(obj)
-        return json.JSONEncoder.default(self, obj)
 
 def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray'):
     """ 
@@ -78,15 +69,12 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
                         trial_dirs.append(path)
             return None
 
-    def compare_dict(d1, d2):
-        if type(d1) == list:
-            if np.allclose(d1, d2, rtol=1e-02, atol=1e-02): return True
-            return False
-        else:
-            if type(d1) == dict:
-                for key, value in d1.items():
-                    new_d2 = d2[key]
-                    return compare_dict(value, new_d2)
+    def get_last_checkpoint(path):
+        checkpoints = [ ckpt_dir 
+                        for ckpt_dir in os.scandir(path) 
+                        if os.path.isdir(ckpt_dir) and "checkpoint" in ckpt_dir.path]
+        sorted_cps = sorted(checkpoints, key=lambda d: d.path)
+        return sorted_cps[-1]
 
     def compare_configs(cf_non_encoded, cf_json_encoded):
         for key, value in cf_non_encoded.items():
@@ -95,6 +83,8 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
                 value_other = json.loads(value_other)
             if type(value) == str:
                 value_other = json.loads(value_other)
+            if type(value) == int:
+                value_other = int(value_other)
             if value_other != value:
                 return False
         else:
@@ -114,7 +104,8 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
         for x in os.scandir(output_dir):
             if os.path.isdir(x):
                 find_params_experiment_dirs(x)
-        
+        print(trial_dirs)
+
         for hyperopt_run in hyperopt_training_stats:
             hyperopt_run_metadata.append(
                         {
@@ -125,13 +116,17 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
 
         for hyperopt_run in hyperopt_run_metadata:
             hyperopt_params = hyperopt_run['hyperopt_results']['parameters']
+            print(hyperopt_params)
             for path in trial_dirs:
                 config_json = json.load(open(
                                     os.path.join(path, 'params.json')
                                     )
                                 )
+                print("CONFIG")
+                print(config_json)
                 if compare_configs(hyperopt_params, config_json):
-                    model_path = find_model_path(path)
+                    #model_path = find_model_path(path)
+                    model_path = get_last_checkpoint(path)
                     hyperopt_run['model_path'] = os.path.join(model_path,
                                                     'model')
     else:
@@ -160,10 +155,11 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
 
 def run_local_experiments(data_file_paths, config_files, es_db=None):
     logging.info("Running hyperopt experiments...")
-
+    
     # check if overall experiment has already been run
     if os.path.exists(os.path.join(globals.EXPERIMENT_OUTPUT_DIR, \
         '.completed')):
+        print("here")
         return 
 
     for dataset_name, file_path in data_file_paths.items():
@@ -300,7 +296,7 @@ def main():
         '--dataset_cache_dir',
         help="path to cache downloaded datasets",
         type=str,
-        default=None
+        default='/experiments/datasets'
     )
 
     # list of encoders to run hyperopt search over : 

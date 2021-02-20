@@ -1,4 +1,5 @@
 import os
+import ray
 import platform
 import datetime
 
@@ -11,7 +12,7 @@ from ludwig.api import LudwigModel
 from ludwig.collect import collect_weights
 import tensorflow as tf
 
-
+@ray.remote
 def get_ludwig_version(**kwargs):
     return ludwig.__version__
 
@@ -22,6 +23,7 @@ def scale_bytes(bytes: int, suffix: str = 'B') -> str:
             return f"{bytes:.2f}{unit}{suffix}"
         bytes /= factor
 
+@ray.remote(num_gpus=1, num_returns=1)
 def get_hardware_metadata(**kwargs) -> dict:
     """Returns GPU, CPU and RAM information"""
 
@@ -45,6 +47,7 @@ def get_hardware_metadata(**kwargs) -> dict:
     machine_info['RAM'] = total_RAM
     return machine_info
 
+@ray.remote(num_gpus=1, num_returns=1, max_calls=1)
 def get_inference_latency(
 	model_path: str, 
 	dataset_path: str, 
@@ -80,6 +83,7 @@ def get_inference_latency(
     formatted_time = "{:0>8}".format(str(avg_time_per_sample))
     return formatted_time
 
+@ray.remote(num_gpus=1, num_returns=1, max_calls=1)
 def get_train_speed(
     model_path: str, 
     dataset_path: str, 
@@ -107,6 +111,7 @@ def get_train_speed(
     formatted_time = "{:0>8}".format(str(avg_time_per_minibatch))
     return formatted_time
 
+@ray.remote(num_gpus=1, num_returns=1, max_calls=1)
 def get_model_flops(model_path: str, **kwargs) -> int:
     """
     Computes total model flops
@@ -130,9 +135,11 @@ def get_model_flops(model_path: str, **kwargs) -> int:
                                                   run_meta=run_meta, 
                                                   cmd='op',
                                                   options=opts)
-        
+    tf.compat.v1.reset_default_graph()
+    session.close()
     return flops.total_float_ops
 
+@ray.remote(num_gpus=1, num_returns=1, max_calls=1)
 def get_model_size(model_path: str, **kwargs):
     """ 
     Computes minimum bytes required to store model to memory
@@ -170,13 +177,13 @@ def append_experiment_metadata(
     print("METADATA tracking")
     for key, metrics_func in metadata_registry.items():
         print("currently processing: {}".format(key))
-        output = globals()[metrics_func](
+        output = globals()[metrics_func].remote(
             model_path=model_path,
             dataset_path=data_path,
             train_batch_size=train_batch_size
         )
         document.update({
-            key : output
+            key : ray.get(output)
         })
 
 metadata_registry = {

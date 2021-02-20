@@ -8,7 +8,7 @@ ENCODER_HYPEROPT_FILENAMES = {
     'electra' : 'electra_hyperopt.yaml',
     'roberta' : 'electra_hyperopt.yaml',
     'stackedparallelcnn' : 'stackedparallelcnn_hyperopt.yaml',
-    't5' : 't5_hyperopt.yaml'
+    #'t5' : 't5_hyperopt.yaml'
 }
 
 ENCODER_FILE_LIST = ENCODER_HYPEROPT_FILENAMES.values()
@@ -16,6 +16,6 @@ ENCODER_FILE_LIST = ENCODER_HYPEROPT_FILENAMES.values()
 CONFIG_TEMPLATE_FILE = './experiment-templates/config_template.yaml'
 DATASET_METADATA_FILE = './experiment-templates/dataset_metadata.yaml'
 HYPEROPT_CONFIG_FILE = './experiment-templates/hyperopt_config.yaml'
-EXPERIMENT_OUTPUT_DIR = './experiment-outputs'
+EXPERIMENT_OUTPUT_DIR = './experiment-outputs-2'
 
 PATH_TO_PRETRAINED_EMBEDDINGS = None

@@ -2,10 +2,10 @@
 
 #SBATCH --cpus-per-task=4
 #SBATCH --job-name=ludwig-bench
-#SBATCH --gres=gpu:2
+#SBATCH --gres=gpu:4
 #SBATCH --mem=64G
 #SBATCH --open-mode=append
-#SBATCH --output=experiment-logs/allencs-miniexp
+#SBATCH --output=experiment-logs/test_bohb
 #SBATCH --partition=jag-hi
 #SBATCH --nodelist=jagupard11
 #SBATCH --time=10-0

@@ -226,12 +226,15 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                             'hyperopt_results': run['hyperopt_results'],
                             'model_path' : run['model_path']
                         }
-                        
-                        append_experiment_metadata(
-                            document, 
-                            model_path=run['model_path'], 
-                            data_path=file_path
-                        )
+                       
+                        try:
+                            append_experiment_metadata(
+                                document, 
+                                model_path=run['model_path'], 
+                                data_path=file_path
+                            )
+                        except:
+                            pass
 
                         formatted_document = es_db.format_document(
                             document,

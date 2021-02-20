@@ -83,6 +83,8 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
                 value_other = json.loads(value_other)
             if type(value) == str:
                 value_other = json.loads(value_other)
+            if type(value) == int:
+                value_other = int(value_other)
             if value_other != value:
                 return False
         else:

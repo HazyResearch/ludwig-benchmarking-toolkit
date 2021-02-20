@@ -12,7 +12,7 @@ sampler:
   scheduler:
     type: hb_bohb
     time_attr: training_iteration
-    max_t: 2
+    max_t: 4
     reduction_factor: 2
     stop_last_trials: False
   num_samples: 4

@@ -241,7 +241,8 @@ def run_local_experiments(data_file_paths, config_files, top_n_trials, es_db=Non
                         append_experiment_metadata(
                             document, 
                             model_path=run['model_path'], 
-                            data_path=file_path
+                            data_path=file_path,
+                            run_stats=run['hyperopt_results']
                         )
 
                         formatted_document = es_db.format_document(
@@ -302,7 +303,7 @@ def main():
         '--dataset_cache_dir',
         help="path to cache downloaded datasets",
         type=str,
-        default='/experiments/datasets'
+        default='/data'
     )
 
     # list of encoders to run hyperopt search over : 

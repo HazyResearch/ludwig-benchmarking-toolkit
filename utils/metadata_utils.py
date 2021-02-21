@@ -49,9 +49,9 @@ def get_hardware_metadata(**kwargs) -> dict:
 
 @ray.remote(num_gpus=1, num_returns=1, max_calls=1)
 def get_inference_latency(
-	model_path: str, 
-	dataset_path: str, 
-	num_samples: int = 10,
+    model_path: str, 
+    dataset_path: str, 
+    num_samples: int = 10,
     **kwargs
 ) -> str:
     """
@@ -83,11 +83,21 @@ def get_inference_latency(
     formatted_time = "{:0>8}".format(str(avg_time_per_sample))
     return formatted_time
 
+@ray.remote
+def get_training_cost(
+    run_stats: dict,
+    gpu_cost_per_min: float=0.35, #GCP cost for Tesla T4
+
+):
+    total_time_s = int(run_stats['hyperopt_results']['time_total_s'])
+    return total_time_s * gpu_cost_per_min
+
 @ray.remote(num_gpus=1, num_returns=1, max_calls=1)
 def get_train_speed(
     model_path: str, 
     dataset_path: str, 
     train_batch_size: int,
+    run_stats: dict,
     **kwargs
 ) -> str:
     """
@@ -101,7 +111,10 @@ def get_train_speed(
     # Return
     :return: (str) avg. time per training step
     """
+    
+    """
     ludwig_model = LudwigModel.load(model_path)
+    #print(ludwig_model.batch_size)
     start = datetime.datetime.now()
     ludwig_model.train_online(
         dataset=dataset_path,
@@ -109,6 +122,12 @@ def get_train_speed(
     total_time = datetime.datetime.now() - start
     avg_time_per_minibatch = total_time/train_batch_size
     formatted_time = "{:0>8}".format(str(avg_time_per_minibatch))
+    """
+    full_dataset = pd.read_csv(dataset_path)
+    total_samples = len(full_dataset[full_dataset['split'] == 0])
+    total_training_steps = int(total_samples/train_batch_size)
+    time_per_batch = int(run_stats['hyperopt_results']['time_this_iter_s']) / total_training_steps
+    formatted_time = "{:0>8}".format(str(datetime.timedelta(seconds=time_per_batch)))
     return formatted_time
 
 @ray.remote(num_gpus=1, num_returns=1, max_calls=1)
@@ -172,19 +191,24 @@ def append_experiment_metadata(
     document: dict, 
     model_path: str, 
     data_path: str,
+    run_stats: dict,
     train_batch_size: int=16
 ):
     print("METADATA tracking")
     for key, metrics_func in metadata_registry.items():
         print("currently processing: {}".format(key))
-        output = globals()[metrics_func].remote(
-            model_path=model_path,
-            dataset_path=data_path,
-            train_batch_size=train_batch_size
-        )
-        document.update({
-            key : ray.get(output)
-        })
+        try:
+            output = globals()[metrics_func].remote(
+                model_path=model_path,
+                dataset_path=data_path,
+                train_batch_size=train_batch_size,
+                run_stats=run_stats
+            )
+            document.update({
+                key : ray.get(output)
+            })
+        except:
+            pass
 
 metadata_registry = {
     "inference_latency" : "get_inference_latency",
@@ -192,5 +216,6 @@ metadata_registry = {
     "model_size" : "get_model_size",
     "model_flops" : "get_model_flops",
     "hardware_metadata" : "get_hardware_metadata",
-    "ludwig_version" : "get_ludwig_version"
+    "ludwig_version" : "get_ludwig_version",
+    "training_cost" : "get_training_cost"
 }

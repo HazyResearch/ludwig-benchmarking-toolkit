@@ -5,7 +5,7 @@
 #SBATCH --gres=gpu:4
 #SBATCH --mem=64G
 #SBATCH --open-mode=append
-#SBATCH --output=experiment-logs/test_bohb
+#SBATCH --output=experiment-logs/test_bohb_2
 #SBATCH --partition=jag-hi
 #SBATCH --nodelist=jagupard11
 #SBATCH --time=10-0

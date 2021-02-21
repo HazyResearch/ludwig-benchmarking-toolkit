@@ -15,7 +15,7 @@ sampler:
     max_t: 4
     reduction_factor: 2
     stop_last_trials: False
-  num_samples: 4
+  num_samples: 10
 executor:
   type: ray
   cpu_resources_per_trial: 1

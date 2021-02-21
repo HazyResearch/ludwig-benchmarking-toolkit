@@ -153,13 +153,13 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
     
     return hyperopt_run_metadata
 
-def run_local_experiments(data_file_paths, config_files, es_db=None):
+def run_local_experiments(data_file_paths, config_files, top_n_trials, es_db=None):
     logging.info("Running hyperopt experiments...")
     
     # check if overall experiment has already been run
     if os.path.exists(os.path.join(globals.EXPERIMENT_OUTPUT_DIR, \
         '.completed')):
-        print("here")
+        logging.info("Experiment already completed!")
         return 
 
     for dataset_name, file_path in data_file_paths.items():
@@ -188,7 +188,7 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                     model_config,
                     dataset=file_path,
                     model_name=config_name, 
-                    #gpus=get_gpu_list(),
+                    #gpus=get_gpu_list(), #if using Ray not necessary
                     output_directory=output_dir
                 )
 
@@ -216,8 +216,14 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
 
                 # save output to db
                 if es_db:
+
+                    # save top_n model configs to elastic
+                    if len(hyperopt_results) > top_n_trials:
+                        hyperopt_results = hyperopt_results[0:top_n_trials]
+
                     hyperopt_run_data = map_runstats_to_modelpath(
                         hyperopt_results, output_dir)
+
                     # ensures that all numerical values are of type float
                     format_fields_float(hyperopt_results)
                     for run in hyperopt_run_data:
@@ -310,7 +316,16 @@ def main():
         choices=['all', 'bert', 'rnn'],
         default="all"
     )
-    
+
+    parser.add_argument(
+        '-topn',
+        '--top_n_trials',
+        help="top n trials to save model performance for.",
+        type=int,
+        default=10
+    )
+
+
     args = parser.parse_args()   
 
     logging.info("Set global variables...")
@@ -337,7 +352,8 @@ def main():
         run_local_experiments(
             data_file_paths, 
             config_files, 
-            es_db=es_db
+            top_n_trials=args.top_n_trials,
+            es_db=es_db,
         )
 
 if __name__ == '__main__':

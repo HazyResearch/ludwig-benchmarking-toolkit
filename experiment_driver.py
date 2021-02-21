@@ -38,7 +38,11 @@ def get_gpu_list():
         return None
 
 
-def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray'):
+def map_runstats_to_modelpath(
+    hyperopt_training_stats, 
+    output_dir, 
+    executor='ray'
+):
     """ 
     maps output of individual hyperopt() run statistics to associated 
     output directories 
@@ -70,9 +74,12 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
             return None
 
     def get_last_checkpoint(path):
-        checkpoints = [ ckpt_dir 
-                        for ckpt_dir in os.scandir(path) 
-                        if os.path.isdir(ckpt_dir) and "checkpoint" in ckpt_dir.path]
+        checkpoints = [
+            ckpt_dir 
+            for ckpt_dir in os.scandir(path) 
+            if os.path.isdir(ckpt_dir) and "checkpoint" in ckpt_dir.path
+        ]
+        
         sorted_cps = sorted(checkpoints, key=lambda d: d.path)
         return sorted_cps[-1]
 
@@ -107,11 +114,11 @@ def map_runstats_to_modelpath(hyperopt_training_stats, output_dir, executor='ray
         
         for hyperopt_run in hyperopt_training_stats:
             hyperopt_run_metadata.append(
-                        {
-                            'hyperopt_results' : decode_hyperopt_run(hyperopt_run),
-                            'model_path' : None
-                        }
-                    )
+                    {
+                        'hyperopt_results' : decode_hyperopt_run(hyperopt_run),
+                        'model_path' : None
+                    }
+            )
 
         for hyperopt_run in hyperopt_run_metadata:
             hyperopt_params = hyperopt_run['hyperopt_results']['parameters']
@@ -230,7 +237,8 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
                             append_experiment_metadata(
                                 document, 
                                 model_path=run['model_path'], 
-                                data_path=file_path
+                                data_path=file_path,
+                                run_stats=run
                             )
                         except:
                             pass
@@ -251,7 +259,9 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
 
         # create .completed file to indicate that entire hyperopt experiment
         # is completed
-        _ = open(os.path.join(globals.EXPERIMENT_OUTPUT_DIR, '.completed'), 'wb')
+        _ = open(os.path.join(
+            globals.EXPERIMENT_OUTPUT_DIR, '.completed'), 'wb')
+
 def main():
     parser = argparse.ArgumentParser(
         description='Ludwig experiments benchmarking driver script',
@@ -293,7 +303,7 @@ def main():
         '--dataset_cache_dir',
         help="path to cache downloaded datasets",
         type=str,
-        default='/experiments/datasets'
+        default='/data'
     )
 
     # list of encoders to run hyperopt search over : 

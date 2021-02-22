@@ -83,12 +83,11 @@ def get_inference_latency(
     formatted_time = "{:0>8}".format(str(avg_time_per_sample))
     return formatted_time
 
-@ray.remote
+@ray.remote(num_returns=1)
 def get_training_cost(
     run_stats: dict,
     gpu_cost_per_hr: float=0.35, #GCP cost for Tesla T4
-
-):
+) -> float:
     total_time_s = int(run_stats['hyperopt_results']['time_total_s'])
     total_time_hr = total_time_s/3600
     return float(total_time_hr * gpu_cost_per_hr)
@@ -209,6 +208,7 @@ def append_experiment_metadata(
                 key : ray.get(output)
             })
         except:
+            print("failure")
             pass
 
 metadata_registry = {

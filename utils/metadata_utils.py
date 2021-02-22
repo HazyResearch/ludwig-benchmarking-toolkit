@@ -86,11 +86,12 @@ def get_inference_latency(
 @ray.remote
 def get_training_cost(
     run_stats: dict,
-    gpu_cost_per_min: float=0.35, #GCP cost for Tesla T4
+    gpu_cost_per_hr: float=0.35, #GCP cost for Tesla T4
 
 ):
     total_time_s = int(run_stats['hyperopt_results']['time_total_s'])
-    return total_time_s * gpu_cost_per_min
+    total_time_hr = total_time_s/3600
+    return float(total_time_hr * gpu_cost_per_hr)
 
 @ray.remote(num_gpus=1, num_returns=1, max_calls=1)
 def get_train_speed(
@@ -110,6 +111,18 @@ def get_train_speed(
 
     # Return
     :return: (str) avg. time per training step
+    """
+    
+    """
+    ludwig_model = LudwigModel.load(model_path)
+    #print(ludwig_model.batch_size)
+    start = datetime.datetime.now()
+    ludwig_model.train_online(
+        dataset=dataset_path,
+    )
+    total_time = datetime.datetime.now() - start
+    avg_time_per_minibatch = total_time/train_batch_size
+    formatted_time = "{:0>8}".format(str(avg_time_per_minibatch))
     """
     full_dataset = pd.read_csv(dataset_path)
     total_samples = len(full_dataset[full_dataset['split'] == 0])

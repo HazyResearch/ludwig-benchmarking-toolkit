@@ -13,19 +13,19 @@ import globals
 def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
     if dataset_class == 'GoEmotions':
         from ludwig.datasets.goemotions import GoEmotions
-        data = GoEmotions()
+        data = GoEmotions(cache_dir)
         data.load(cache_dir)
     elif dataset_class == 'Fever':
         from ludwig.datasets.fever import Fever
-        data = Fever()
+        data = Fever(cache_dir)
         data.load(cache_dir)
     elif dataset_class == 'SST2':
         from ludwig.datasets.sst2 import SST2
-        data = SST2()
+        data = SST2(cache_dir)
         data.load(cache_dir)
     else:
         return None
-    return os.path.join(cache_dir,\
+    return os.path.join(data.processed_dataset_path,\
         data.config['csv_filename'])
 
 def hash_dict(d: dict, max_length: Union[int, None] = 6) -> bytes:

@@ -155,7 +155,12 @@ def map_runstats_to_modelpath(
     
     return hyperopt_run_metadata
 
-def run_local_experiments(data_file_paths, config_files, es_db=None):
+def run_local_experiments(
+    data_file_paths, 
+    config_files, 
+    top_n_trials,
+    es_db=None
+):
     logging.info("Running hyperopt experiments...")
 
     # check if overall experiment has already been run
@@ -217,8 +222,14 @@ def run_local_experiments(data_file_paths, config_files, es_db=None):
 
                 # save output to db
                 if es_db:
+
+                    # save top_n model configs to elastic
+                    if len(hyperopt_results) > top_n_trials:
+                        hyperopt_results = hyperopt_results[0:top_n_trials]
+
                     hyperopt_run_data = map_runstats_to_modelpath(
                         hyperopt_results, output_dir)
+                        
                     # ensures that all numerical values are of type float
                     format_fields_float(hyperopt_results)
                     for run in hyperopt_run_data:
@@ -317,6 +328,14 @@ def main():
         choices=['all', 'bert', 'rnn'],
         default="all"
     )
+
+    parser.add_argument(
+        '-topn',
+        '--top_n_trials',
+        help="top n trials to save model performance for.",
+        type=int,
+        default=10
+    )
     
     args = parser.parse_args()   
 
@@ -344,6 +363,7 @@ def main():
         run_local_experiments(
             data_file_paths, 
             config_files, 
+            top_n_trials=args.top_n_trials,
             es_db=es_db
         )
 

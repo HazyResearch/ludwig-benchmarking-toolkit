@@ -25,7 +25,7 @@ def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
         data.load(cache_dir)
     else:
         return None
-    return os.path.join(data.processed_dataset_path,\
+    return os.path.join(cache_dir,\
         data.config['csv_filename'])
 
 def hash_dict(d: dict, max_length: Union[int, None] = 6) -> bytes:

@@ -229,7 +229,7 @@ def run_local_experiments(
 
                     hyperopt_run_data = map_runstats_to_modelpath(
                         hyperopt_results, output_dir)
-                        
+
                     # ensures that all numerical values are of type float
                     format_fields_float(hyperopt_results)
                     for run in hyperopt_run_data:
@@ -314,7 +314,7 @@ def main():
         '--dataset_cache_dir',
         help="path to cache downloaded datasets",
         type=str,
-        default='/data'
+        default='/experiments/ludwig-bench-textclassification/data'
     )
 
     # list of encoders to run hyperopt search over : 

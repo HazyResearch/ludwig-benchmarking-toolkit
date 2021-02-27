@@ -44,7 +44,6 @@ def set_globals(args):
     globals.EXPERIMENT_CONFIGS_DIR = args.hyperopt_config_dir
     globals.EXPERIMENT_OUTPUT_DIR = args.experiment_output_dir
 
-    print(globals.EXPERIMENT_OUTPUT_DIR)
     if args.custom_encoders_list is not 'all':
         encoders_list = []
         for enc_name in args.custom_encoders_list:

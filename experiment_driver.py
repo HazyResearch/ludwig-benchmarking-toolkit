@@ -189,9 +189,10 @@ def run_local_experiments(
 
             if not os.path.exists(os.path.join(output_dir, '.completed')):
                 model_config = load_yaml(model_config_path)
+
                 start = datetime.datetime.now()
                 hyperopt_results = hyperopt(
-                    model_config,
+                    copy.deepcopy(model_config),
                     dataset=file_path,
                     model_name=config_name, 
                     #gpus=get_gpu_list(),

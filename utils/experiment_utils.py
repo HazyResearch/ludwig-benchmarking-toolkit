@@ -23,6 +23,10 @@ def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
         from ludwig.datasets.sst2 import SST2
         data = SST2()
         data.load(cache_dir)
+    elif dataset_class == 'AGNews':
+        from ludwig.datasets.agnews import AGNews
+        data = AGNews()
+        data.load(cache_dir)
     else:
         return None
     return os.path.join(data.processed_dataset_path,\

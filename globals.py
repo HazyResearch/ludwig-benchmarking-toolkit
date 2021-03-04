@@ -19,3 +19,8 @@ HYPEROPT_CONFIG_FILE = './experiment-templates/hyperopt_config.yaml'
 EXPERIMENT_OUTPUT_DIR = './experiment-outputs-2'
 
 PATH_TO_PRETRAINED_EMBEDDINGS = None
+
+SMOKE_DATASETS = {
+    'goemotions' : './smoke-datasets/goemotions.csv',
+    'fever' : './smoke-datasets/fever.csv'
+}

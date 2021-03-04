@@ -16,13 +16,34 @@ class Database:
         self.http_auth = http_auth
         self.user_id = user_id
         self.index=index
-        self.initialize_db()
+        self._initialize_db()
+        self._create_index(self.index)
 
-    def initialize_db(self):
+    def _initialize_db(self):
         self.es_connection = Elasticsearch(
             [self.host], 
             http_auth=self.http_auth
         )
+
+    def _create_index(self, index_name: str):
+        mapping = {
+            "mappings": {
+                "_doc" : {
+                    "properties": {
+                        "sampled_run_config" : {
+                            "type" : "nested"
+                            }
+                        }
+                    }
+                }
+            }
+        self.es_connection.indices.create(
+                index=index_name,
+                body=mapping,
+		include_type_name=True,
+		ignore=400 
+            )
+
     
     def upload_document(
         self,

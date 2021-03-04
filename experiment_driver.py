@@ -155,10 +155,101 @@ def map_runstats_to_modelpath(
     
     return hyperopt_run_metadata
 
+@ray.remote(num_gpus=1, num_returns=1)
+def run_hyperopt_exp(
+    experiment_attr: dict
+) -> int:
+    dataset = experiment_attr['dataset']
+    encoder = experiment_attr['encoder']
+    output_dir = experiment_attr['output_dir']
+    top_n_trials = experiment_attr['top_n_trials']
+
+    start = datetime.datetime.now()
+
+    hyperopt_results = hyperopt(
+        copy.deepcopy(experiment_attr['model_config']),
+        dataset=experiment_attr['dataset_path'],
+        model_name=experiment_attr['config_name'], 
+        #gpus=get_gpu_list(),
+        output_directory=experiment_attr['output_dir']
+    )
+
+    logging.info("time to complete: {}".format(
+        datetime.datetime.now() - start)
+    ) 
+
+    # Save output locally
+    try:
+        pickle.dump(
+            hyperopt_results, 
+            open(os.path.join(
+                output_dir, 
+                f"{dataset}_{encoder}_hyperopt_results.pkl"
+                ),'wb'
+            )
+        )
+
+        # create .completed file to indicate that experiment
+        # is completed
+        _ = open(os.path.join(output_dir, '.completed'), 'wb')
+
+    except FileNotFoundError:
+        continue
+
+    # save output to db
+    if es_db:
+
+        # save top_n model configs to elastic
+        if len(hyperopt_results) > top_n_trials:
+            hyperopt_results = hyperopt_results[0:top_n_trials]
+
+        hyperopt_run_data = map_runstats_to_modelpath(
+            hyperopt_results, output_dir)
+
+        # ensures that all numerical values are of type float
+        format_fields_float(hyperopt_results)
+        for run in hyperopt_run_data:
+            new_config = substitute_dict_parameters(
+                copy.deepcopy(model_config),
+                parameters=run['hyperopt_results']['parameters']
+            )
+            del new_config['hyperopt']
+
+            document = {
+                'hyperopt_results': run['hyperopt_results'],
+                'model_path' : run['model_path']
+            }
+            
+            try:
+                append_experiment_metadata(
+                    document, 
+                    model_path=run['model_path'], 
+                    data_path=file_path,
+                    run_stats=run
+                )
+            except:
+                pass
+
+            formatted_document = es_db.format_document(
+                document,
+                encoder=encoder,
+                dataset=dataset,
+                config=experiment_attr['model_config']
+            )
+
+            formatted_document['sampled_run_config'] = new_config
+
+            es_db.upload_document(
+                hash_dict(new_config),
+                formatted_document
+            )
+    return 1
+    
+
 def run_local_experiments(
-    data_file_paths, 
-    config_files, 
-    top_n_trials,
+    data_file_paths: dict, 
+    config_files: dict, 
+    top_n_trials: int,
     es_db=None
 ):
     logging.info("Running hyperopt experiments...")
@@ -166,8 +257,10 @@ def run_local_experiments(
     # check if overall experiment has already been run
     if os.path.exists(os.path.join(globals.EXPERIMENT_OUTPUT_DIR, \
         '.completed')):
+        print("Experiment is already completed!")
         return 
 
+    experiment_queue = []
     for dataset_name, file_path in data_file_paths.items():
         logging.info("Dataset: {}".format(dataset_name))
         for model_config_path in config_files[dataset_name]:
@@ -188,91 +281,32 @@ def run_local_experiments(
                 experiment_name)
 
             if not os.path.exists(os.path.join(output_dir, '.completed')):
+                
                 model_config = load_yaml(model_config_path)
 
-                start = datetime.datetime.now()
-                hyperopt_results = hyperopt(
-                    copy.deepcopy(model_config),
-                    dataset=file_path,
-                    model_name=config_name, 
-                    #gpus=get_gpu_list(),
-                    output_directory=output_dir
-                )
+                experiment_attr = {
+                    'model_config': copy.deepcopy(model_config),
+                    'dataset_path': file_path,
+                    'top_n_trials': top_n_trials,
+                    'model_name': config_name,
+                    'output_dir': output_dir,
+                    'encoder': encoder,
+                    'dataset': dataset,
+                    'es_db': es_db
+                }
 
-                logging.info("time to complete: {}".format(
-                    datetime.datetime.now() - start)
-                ) 
-           
-                # Save output locally
-                try:
-                    pickle.dump(
-                        hyperopt_results, 
-                        open(os.path.join(
-                            output_dir, 
-                            f"{dataset}_{encoder}_hyperopt_results.pkl"
-                            ),'wb'
-                        )
-                    )
+                experiment_queue.append(experiment_attr)
+        
+        complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
 
-                    # create .completed file to indicate that experiment
-                    # is completed
-                    _ = open(os.path.join(output_dir, '.completed'), 'wb')
 
-                except FileNotFoundError:
-                    continue
-
-                # save output to db
-                if es_db:
-
-                    # save top_n model configs to elastic
-                    if len(hyperopt_results) > top_n_trials:
-                        hyperopt_results = hyperopt_results[0:top_n_trials]
-
-                    hyperopt_run_data = map_runstats_to_modelpath(
-                        hyperopt_results, output_dir)
-
-                    # ensures that all numerical values are of type float
-                    format_fields_float(hyperopt_results)
-                    for run in hyperopt_run_data:
-                        new_config = substitute_dict_parameters(
-                            copy.deepcopy(model_config),
-                            parameters=run['hyperopt_results']['parameters']
-                        )
-                        del new_config['hyperopt']
-
-                        document = {
-                            'hyperopt_results': run['hyperopt_results'],
-                            'model_path' : run['model_path']
-                        }
-                       
-                        try:
-                            append_experiment_metadata(
-                                document, 
-                                model_path=run['model_path'], 
-                                data_path=file_path,
-                                run_stats=run
-                            )
-                        except:
-                            pass
-
-                        formatted_document = es_db.format_document(
-                            document,
-                            encoder=encoder,
-                            dataset=dataset,
-                            config=model_config
-                        )
-
-                        formatted_document['sampled_run_config'] = new_config
-
-                        es_db.upload_document(
-                            hash_dict(new_config),
-                            formatted_document
-                        )
-
-        # create .completed file to indicate that entire hyperopt experiment
-        # is completed
-        _ = open(os.path.join(
-            globals.EXPERIMENT_OUTPUT_DIR, '.completed'), 'wb')
+        if len(complete) == len(experiment_queue):                
+            # create .completed file to indicate that entire hyperopt experiment
+            # is completed
+            _ = open(os.path.join(
+                globals.EXPERIMENT_OUTPUT_DIR, '.completed'), 'wb')
+        else:
+            print("Not all experimetns completed!")
 
 def main():
     parser = argparse.ArgumentParser(

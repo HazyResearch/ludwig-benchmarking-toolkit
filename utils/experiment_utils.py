@@ -9,19 +9,22 @@ import yaml
 
 import globals
 
-
 def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
     if dataset_class == 'GoEmotions':
         from ludwig.datasets.goemotions import GoEmotions
-        data = GoEmotions(cache_dir)
+        data = GoEmotions()
         data.load(cache_dir)
     elif dataset_class == 'Fever':
         from ludwig.datasets.fever import Fever
-        data = Fever(cache_dir)
+        data = Fever()
         data.load(cache_dir)
     elif dataset_class == 'SST2':
         from ludwig.datasets.sst2 import SST2
-        data = SST2(cache_dir)
+        data = SST2()
+        data.load(cache_dir)
+    elif dataset_class == 'AGNews':
+        from ludwig.datasets.agnews import AGNews
+        data = AGNews()
         data.load(cache_dir)
     else:
         return None
@@ -44,6 +47,7 @@ def set_globals(args):
     globals.EXPERIMENT_CONFIGS_DIR = args.hyperopt_config_dir
     globals.EXPERIMENT_OUTPUT_DIR = args.experiment_output_dir
 
+    print(globals.EXPERIMENT_OUTPUT_DIR)
     if args.custom_encoders_list is not 'all':
         encoders_list = []
         for enc_name in args.custom_encoders_list:

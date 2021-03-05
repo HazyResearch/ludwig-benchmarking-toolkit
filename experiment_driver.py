@@ -3,6 +3,7 @@ import datetime
 import json
 import logging
 import os
+import ray
 import pickle
 import sys
 import numpy as np
@@ -10,10 +11,11 @@ from copy import deepcopy
 
 import yaml
 from ludwig.hyperopt.run import hyperopt
+from collections import defaultdict 
 
 import globals
 from build_def_files import *
-from database import *
+from database import Database
 from utils.experiment_utils import *
 from utils.metadata_utils import append_experiment_metadata
 
@@ -22,6 +24,10 @@ logging.basicConfig(
     format='%(levelname)s:%(message)s', 
     level=logging.DEBUG
 )
+
+ray.init()
+
+es_db=None
 
 def download_data(cache_dir=None):
     data_file_paths = {}
@@ -169,7 +175,7 @@ def run_hyperopt_exp(
     hyperopt_results = hyperopt(
         copy.deepcopy(experiment_attr['model_config']),
         dataset=experiment_attr['dataset_path'],
-        model_name=experiment_attr['config_name'], 
+        model_name=experiment_attr['model_name'], 
         #gpus=get_gpu_list(),
         output_directory=experiment_attr['output_dir']
     )
@@ -194,7 +200,7 @@ def run_hyperopt_exp(
         _ = open(os.path.join(output_dir, '.completed'), 'wb')
 
     except FileNotFoundError:
-        continue
+        pass
 
     # save output to db
     if es_db:
@@ -283,8 +289,15 @@ def run_local_experiments(
             if not os.path.exists(os.path.join(output_dir, '.completed')):
                 
                 model_config = load_yaml(model_config_path)
-
-                experiment_attr = {
+                experiment_attr = defaultdict()
+                experiment_attr["model_config"] = copy.deepcopy(model_config)
+                experiment_attr['dataset_path'] = file_path
+                experiment_attr['top_n_trials'] = top_n_trials
+                experiment_attr['model_name'] = config_name
+                experiment_attr['output_dir'] = output_dir
+                experiment_attr['encoder'] = encoder
+                experiment_attr['dataset'] = dataset
+                """experiment_attr = {
                     'model_config': copy.deepcopy(model_config),
                     'dataset_path': file_path,
                     'top_n_trials': top_n_trials,
@@ -293,7 +306,7 @@ def run_local_experiments(
                     'encoder': encoder,
                     'dataset': dataset,
                     'es_db': es_db
-                }
+                }"""
 
                 experiment_queue.append(experiment_attr)
         
@@ -371,6 +384,13 @@ def main():
         type=int,
         default=10
     )
+
+    parser.add_argument(
+        '-smoke',
+        '--smoke_tests',
+        type=bool,
+        default=False
+    )
     
     args = parser.parse_args()   
 
@@ -379,7 +399,11 @@ def main():
 
     logging.info("GPUs {}".format(os.system('nvidia-smi -L')))
 
-    data_file_paths = download_data(args.dataset_cache_dir)
+    if args.smoke_tests:
+        data_file_paths = SMOKE_DATASETS
+    else:
+        data_file_paths = download_data(args.dataset_cache_dir)
+    
     logging.info("Building hyperopt config files...")
     config_files = build_config_files()
 

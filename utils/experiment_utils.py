@@ -5,31 +5,47 @@ import json
 import os
 from typing import Union
 
+import globals
+import pandas as pd
 import yaml
 
-import globals
 
 def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
     if dataset_class == 'GoEmotions':
         from ludwig.datasets.goemotions import GoEmotions
-        data = GoEmotions()
+        data = GoEmotions(cache_dir)
         data.load(cache_dir)
     elif dataset_class == 'Fever':
         from ludwig.datasets.fever import Fever
-        data = Fever()
+        data = Fever(cache_dir)
         data.load(cache_dir)
     elif dataset_class == 'SST2':
         from ludwig.datasets.sst2 import SST2
-        data = SST2()
+        data = SST2(cache_dir)
         data.load(cache_dir)
     elif dataset_class == 'AGNews':
         from ludwig.datasets.agnews import AGNews
-        data = AGNews()
+        data = AGNews(cache_dir)
         data.load(cache_dir)
     else:
         return None
     return os.path.join(data.processed_dataset_path,\
         data.config['csv_filename'])
+
+def process_dataset(dataset_path: str):
+    dataset = pd.read_csv(dataset_path)
+    if 'split' in dataset.columns:
+        train_df = dataset[dataset['split'] == 0]
+        val_df = dataset[dataset['split'] == 1]
+        test_df = dataset[dataset['split'] == 2]
+
+        # no validation set provided, sample 10% of train set
+        if len(val_df) == 0:
+            val_df = train_df.sample(frac=0.1, replace=False)
+            train_df = train_df.drop(val_df.index)
+
+        return None, train_df, val_df, test_df
+    return dataset, None, None, None
 
 def hash_dict(d: dict, max_length: Union[int, None] = 6) -> bytes:
     s = json.dumps(d, sort_keys=True, ensure_ascii=True)

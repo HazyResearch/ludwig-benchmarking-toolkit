@@ -19,3 +19,5 @@ HYPEROPT_CONFIG_FILE = './experiment-templates/hyperopt_config.yaml'
 EXPERIMENT_OUTPUT_DIR = '/experiments/ludwig-bench-textclassification/experiment-outputs'
 
 PATH_TO_PRETRAINED_EMBEDDINGS = None
+
+SMOKE_DATASETS = {}

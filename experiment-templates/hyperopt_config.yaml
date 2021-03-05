@@ -1,24 +1,16 @@
 goal: maximize
 metric: accuracy
-split: validation
-
 parameters:
   training.learning_rate:
     type: float
     lower: 0.001
     upper: 0.01
     space: loguniform
-    
 sampler:
   type: ray
   search_alg:
     type: skopt
-  scheduler:
-    type: hb_bohb
-    time_attr: training_iteration
-    max_t: 16
-    reduction_factor: 2
-    stop_last_trials: False
+    max_concurrent: 2
   num_samples: 20
 executor:
   type: ray

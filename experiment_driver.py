@@ -3,16 +3,15 @@ import datetime
 import json
 import logging
 import os
+import ray
 import pickle
 import sys
-from collections import defaultdict
+import numpy as np
 from copy import deepcopy
 
-import numpy as np
-import ray
 import yaml
 from ludwig.hyperopt.run import hyperopt
-from multiprocessing import Pool
+from collections import defaultdict 
 
 import globals
 from build_def_files import *
@@ -27,7 +26,7 @@ logging.basicConfig(
 )
 
 ray.init(address="auto")
-es_db=None 
+es_db=None
 
 def download_data(cache_dir=None):
     data_file_paths = {}
@@ -172,9 +171,16 @@ def run_hyperopt_exp(
 
     start = datetime.datetime.now()
 
+    dataset, train_set, val_set, test_set = None, None, None, None
+    dataset, train_set, val_set, test_set = process_dataset(
+        experiment_attr['dataset_path'])
+
     hyperopt_results = hyperopt(
         copy.deepcopy(experiment_attr['model_config']),
         dataset=experiment_attr['dataset_path'],
+        training_set=train_set,
+        validation_set=val_set,
+        test_set=test_set,
         model_name=experiment_attr['model_name'], 
         #gpus=get_gpu_list(),
         output_directory=experiment_attr['output_dir']
@@ -275,7 +281,6 @@ def run_local_experiments(
             encoder = "_".join(config_name.split('_')[2:])
             experiment_name = dataset + "_" + encoder
             
-            
             logging.info("Experiment: {}".format(experiment_name))
             output_dir = os.path.join(globals.EXPERIMENT_OUTPUT_DIR, \
                 experiment_name)
@@ -297,6 +302,7 @@ def run_local_experiments(
                 experiment_attr['output_dir'] = output_dir
                 experiment_attr['encoder'] = encoder
                 experiment_attr['dataset'] = dataset
+           
                 experiment_queue.append(experiment_attr)
         
     complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
@@ -370,7 +376,7 @@ def main():
         '--top_n_trials',
         help="top n trials to save model performance for.",
         type=int,
-        default=20
+        default=10
     )
 
     parser.add_argument(

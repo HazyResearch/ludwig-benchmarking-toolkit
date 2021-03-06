@@ -172,9 +172,16 @@ def run_hyperopt_exp(
 
     start = datetime.datetime.now()
 
+    dataset, train_set, val_set, test_set = None, None, None, None
+    dataset, train_set, val_set, test_set = process_dataset(
+        experiment_attr['dataset_path'])
+
     hyperopt_results = hyperopt(
         copy.deepcopy(experiment_attr['model_config']),
         dataset=experiment_attr['dataset_path'],
+        training_set=train_set,
+        validation_set=val_set,
+        test_set=test_set,
         model_name=experiment_attr['model_name'], 
         #gpus=get_gpu_list(),
         output_directory=experiment_attr['output_dir']
@@ -275,7 +282,6 @@ def run_local_experiments(
             encoder = "_".join(config_name.split('_')[2:])
             experiment_name = dataset + "_" + encoder
             
-            
             logging.info("Experiment: {}".format(experiment_name))
             output_dir = os.path.join(globals.EXPERIMENT_OUTPUT_DIR, \
                 experiment_name)
@@ -297,21 +303,10 @@ def run_local_experiments(
                 experiment_attr['output_dir'] = output_dir
                 experiment_attr['encoder'] = encoder
                 experiment_attr['dataset'] = dataset
-                """experiment_attr = {
-                    'model_config': copy.deepcopy(model_config),
-                    'dataset_path': file_path,
-                    'top_n_trials': top_n_trials,
-                    'model_name': config_name,
-                    'output_dir': output_dir,
-                    'encoder': encoder,
-                    'dataset': dataset,
-                    'es_db': es_db
-                }"""
-
+           
                 experiment_queue.append(experiment_attr)
         
         complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
-
 
         if len(complete) == len(experiment_queue):                
             # create .completed file to indicate that entire hyperopt experiment

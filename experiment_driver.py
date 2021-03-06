@@ -177,7 +177,7 @@ def run_hyperopt_exp(
 
     hyperopt_results = hyperopt(
         copy.deepcopy(experiment_attr['model_config']),
-        dataset=experiment_attr['dataset_path'],
+        dataset=dataset,
         training_set=train_set,
         validation_set=val_set,
         test_set=test_set,

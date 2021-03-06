@@ -164,7 +164,7 @@ def map_runstats_to_modelpath(
 def run_hyperopt_exp(
     experiment_attr: dict
 ) -> int:
-    dataset = experiment_attr['dataset']
+    dataset_name = experiment_attr['dataset']
     encoder = experiment_attr['encoder']
     output_dir = experiment_attr['output_dir']
     top_n_trials = experiment_attr['top_n_trials']
@@ -196,7 +196,7 @@ def run_hyperopt_exp(
             hyperopt_results, 
             open(os.path.join(
                 output_dir, 
-                f"{dataset}_{encoder}_hyperopt_results.pkl"
+                f"{dataset_name}_{encoder}_hyperopt_results.pkl"
                 ),'wb'
             )
         )

@@ -26,7 +26,6 @@ logging.basicConfig(
 )
 
 #ray.init(address="auto")
-es_db=None
 
 def download_data(cache_dir=None):
     data_file_paths = {}
@@ -168,6 +167,8 @@ def run_hyperopt_exp(
     encoder = experiment_attr['encoder']
     output_dir = experiment_attr['output_dir']
     top_n_trials = experiment_attr['top_n_trials']
+    model_config = experiment_attr['model_config']
+    elastic_config = experiment_attr['elastic_config']
 
     start = datetime.datetime.now()
 
@@ -209,7 +210,13 @@ def run_hyperopt_exp(
         pass
 
     # save output to db
-    if es_db:
+    if elastic_config:
+        es_db = Database(
+            elastic_config['host'], 
+            (elastic_config['username'], elastic_config['password']),
+            elastic_config['username'],
+            elastic_config['index']
+        )
 
         # save top_n model configs to elastic
         if len(hyperopt_results) > top_n_trials:
@@ -262,7 +269,7 @@ def run_local_experiments(
     data_file_paths: dict, 
     config_files: dict, 
     top_n_trials: int,
-    es_db=None
+    elastic_config=None
 ):
     logging.info("Running hyperopt experiments...")
 
@@ -302,6 +309,7 @@ def run_local_experiments(
                 experiment_attr['output_dir'] = output_dir
                 experiment_attr['encoder'] = encoder
                 experiment_attr['dataset'] = dataset
+                experiment_attr['elastic_config'] = elastic_config
            
                 experiment_queue.append(experiment_attr)
         
@@ -406,23 +414,17 @@ def main():
     logging.info("Building hyperopt config files...")
     config_files = build_config_files()
 
-    es_db = None
+    elastic_config = None
     if args.elasticsearch_config is not None:
         logging.info("Set up elastic db...")
         elastic_config = load_yaml(args.elasticsearch_config)
-        es_db = Database(
-            elastic_config['host'], 
-            (elastic_config['username'], elastic_config['password']),
-            elastic_config['username'],
-            elastic_config['index']
-        )
     
     if args.run_environment == 'local' or args.run_environment == 'gcp':
         run_local_experiments(
             data_file_paths, 
             config_files, 
             top_n_trials=args.top_n_trials,
-            es_db=es_db
+            elastic_config=elastic_config
         )
 
 if __name__ == '__main__':

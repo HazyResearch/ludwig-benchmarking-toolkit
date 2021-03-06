@@ -12,6 +12,7 @@ import numpy as np
 import ray
 import yaml
 from ludwig.hyperopt.run import hyperopt
+from multiprocessing import Pool
 
 import globals
 from build_def_files import *
@@ -25,8 +26,8 @@ logging.basicConfig(
     level=logging.DEBUG
 )
 
-ray.init()
-es_db=None
+ray.init(address="auto")
+es_db=None 
 
 def download_data(cache_dir=None):
     data_file_paths = {}
@@ -160,7 +161,7 @@ def map_runstats_to_modelpath(
     
     return hyperopt_run_metadata
 
-@ray.remote(num_gpus=1, num_returns=1)
+@ray.remote(num_returns=1)
 def run_hyperopt_exp(
     experiment_attr: dict
 ) -> int:
@@ -296,29 +297,17 @@ def run_local_experiments(
                 experiment_attr['output_dir'] = output_dir
                 experiment_attr['encoder'] = encoder
                 experiment_attr['dataset'] = dataset
-                """experiment_attr = {
-                    'model_config': copy.deepcopy(model_config),
-                    'dataset_path': file_path,
-                    'top_n_trials': top_n_trials,
-                    'model_name': config_name,
-                    'output_dir': output_dir,
-                    'encoder': encoder,
-                    'dataset': dataset,
-                    'es_db': es_db
-                }"""
-
                 experiment_queue.append(experiment_attr)
         
-        complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
+    complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
 
-
-        if len(complete) == len(experiment_queue):                
-            # create .completed file to indicate that entire hyperopt experiment
-            # is completed
-            _ = open(os.path.join(
-                globals.EXPERIMENT_OUTPUT_DIR, '.completed'), 'wb')
-        else:
-            print("Not all experimetns completed!")
+    if len(complete) == len(experiment_queue):                
+        # create .completed file to indicate that entire hyperopt experiment
+        # is completed
+        _ = open(os.path.join(
+            globals.EXPERIMENT_OUTPUT_DIR, '.completed'), 'wb')
+    else:
+        print("Not all experiments completed!")
 
 def main():
     parser = argparse.ArgumentParser(

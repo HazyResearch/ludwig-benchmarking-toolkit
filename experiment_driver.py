@@ -25,7 +25,7 @@ logging.basicConfig(
     level=logging.DEBUG
 )
 
-ray.init(address="auto")
+#ray.init(address="auto")
 es_db=None
 
 def download_data(cache_dir=None):
@@ -160,7 +160,7 @@ def map_runstats_to_modelpath(
     
     return hyperopt_run_metadata
 
-@ray.remote(num_returns=1)
+#@ray.remote(num_returns=1)
 def run_hyperopt_exp(
     experiment_attr: dict
 ) -> int:
@@ -305,7 +305,10 @@ def run_local_experiments(
            
                 experiment_queue.append(experiment_attr)
         
-    complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
+    #complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
+    ray_pool = Pool()
+
+    complete = ray_pool.map(run_hyperopt_exp, experiment_queue)
 
     if len(complete) == len(experiment_queue):                
         # create .completed file to indicate that entire hyperopt experiment
@@ -314,6 +317,8 @@ def run_local_experiments(
             globals.EXPERIMENT_OUTPUT_DIR, '.completed'), 'wb')
     else:
         print("Not all experiments completed!")
+    
+    ray_pool.close()
 
 def main():
     parser = argparse.ArgumentParser(

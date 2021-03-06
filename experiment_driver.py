@@ -164,20 +164,20 @@ def map_runstats_to_modelpath(
 def run_hyperopt_exp(
     experiment_attr: dict
 ) -> int:
-    dataset_name = experiment_attr['dataset']
+    dataset = experiment_attr['dataset']
     encoder = experiment_attr['encoder']
     output_dir = experiment_attr['output_dir']
     top_n_trials = experiment_attr['top_n_trials']
 
     start = datetime.datetime.now()
 
-    dataset, train_set, val_set, test_set = None, None, None, None
-    dataset, train_set, val_set, test_set = process_dataset(
+    combined_ds, train_set, val_set, test_set = None, None, None, None
+    combined_ds, train_set, val_set, test_set = process_dataset(
         experiment_attr['dataset_path'])
 
     hyperopt_results = hyperopt(
         copy.deepcopy(experiment_attr['model_config']),
-        dataset=dataset,
+        dataset=combined_ds,
         training_set=train_set,
         validation_set=val_set,
         test_set=test_set,
@@ -196,7 +196,7 @@ def run_hyperopt_exp(
             hyperopt_results, 
             open(os.path.join(
                 output_dir, 
-                f"{dataset_name}_{encoder}_hyperopt_results.pkl"
+                f"{dataset}_{encoder}_hyperopt_results.pkl"
                 ),'wb'
             )
         )

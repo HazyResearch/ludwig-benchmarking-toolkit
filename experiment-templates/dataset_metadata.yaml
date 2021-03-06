@@ -12,8 +12,8 @@ sst5:
 
 agnews:
   data_class: AGNews
-  input_name: text
-  output_name: label
+  input_name: description
+  output_name: class_index
   output_type: category
 
 

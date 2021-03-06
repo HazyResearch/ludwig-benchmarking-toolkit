@@ -3,7 +3,7 @@ metric: accuracy
 parameters:
   training.learning_rate:
     type: float
-    lower: 0.001
+    lower: 0.00002
     upper: 0.01
     space: loguniform
 sampler:

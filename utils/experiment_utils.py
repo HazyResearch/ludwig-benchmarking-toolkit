@@ -5,30 +5,30 @@ import json
 import os
 from typing import Union
 
+import globals
 import yaml
 
-import globals
 
 def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
     if dataset_class == 'GoEmotions':
         from ludwig.datasets.goemotions import GoEmotions
-        data = GoEmotions()
+        data = GoEmotions(cache_dir)
         data.load(cache_dir)
     elif dataset_class == 'Fever':
         from ludwig.datasets.fever import Fever
-        data = Fever()
+        data = Fever(cache_dir)
         data.load(cache_dir)
     elif dataset_class == 'SST2':
         from ludwig.datasets.sst2 import SST2
-        data = SST2()
+        data = SST2(cache_dir)
         data.load(cache_dir)
     elif dataset_class == 'SST5':
         from ludwig.datasets.sst5 import SST5
-        data = SST5()
+        data = SST5(cache_dir)
         data.load(cache_dir)
     elif dataset_class == 'AGNews':
         from ludwig.datasets.agnews import AGNews
-        data = AGNews()
+        data = AGNews(cache_dir)
         data.load(cache_dir)
     else:
         return None

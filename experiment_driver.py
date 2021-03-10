@@ -5,6 +5,7 @@ import logging
 import os
 import ray
 import pickle
+import socket
 import sys
 import numpy as np
 from copy import deepcopy
@@ -25,7 +26,8 @@ logging.basicConfig(
     level=logging.DEBUG
 )
 
-#ray.init(address="auto")
+ray.init(address="auto")
+hostname = socket.gethostbyname(socket.gethostname())
 
 def download_data(cache_dir=None):
     data_file_paths = {}
@@ -159,10 +161,12 @@ def map_runstats_to_modelpath(
     
     return hyperopt_run_metadata
 
-#@ray.remote(num_returns=1)
+@ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})
 def run_hyperopt_exp(
     experiment_attr: dict
 ) -> int:
+
+    os.environ["TUNE_PLACEMENT_GROUP_CLEANUP_DISABLED"] = "1"
     dataset = experiment_attr['dataset']
     encoder = experiment_attr['encoder']
     output_dir = experiment_attr['output_dir']
@@ -313,10 +317,11 @@ def run_local_experiments(
            
                 experiment_queue.append(experiment_attr)
         
-    #complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
-    ray_pool = Pool()
+    complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
+    
+    #ray_pool = Pool()
 
-    complete = ray_pool.map(run_hyperopt_exp, experiment_queue)
+    #complete = ray_pool.map(run_hyperopt_exp, experiment_queue)
 
     if len(complete) == len(experiment_queue):                
         # create .completed file to indicate that entire hyperopt experiment
@@ -326,7 +331,6 @@ def run_local_experiments(
     else:
         print("Not all experiments completed!")
     
-    ray_pool.close()
 
 def main():
     parser = argparse.ArgumentParser(

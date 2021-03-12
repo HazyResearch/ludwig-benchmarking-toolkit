@@ -3,16 +3,16 @@ import datetime
 import json
 import logging
 import os
-import ray
 import pickle
 import socket
 import sys
-import numpy as np
+from collections import defaultdict
 from copy import deepcopy
 
+import numpy as np
+import ray
 import yaml
 from ludwig.hyperopt.run import hyperopt
-from collections import defaultdict 
 
 import globals
 from build_def_files import *

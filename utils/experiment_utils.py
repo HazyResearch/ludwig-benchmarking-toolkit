@@ -138,5 +138,24 @@ def substitute_dict_parameters(original_dict: dict, parameters: dict) -> dict:
             subsitute_param(original_dict, path, value)
     return original_dict
 
+def compare_json_enc_configs(cf_non_encoded, cf_json_encoded):
+    for key, value in cf_non_encoded.items():
+        value_other = cf_json_encoded[key]
+        if type(value) == list:
+            value_other = json.loads(value_other)
+        if type(value) == str:
+            value_other = json.loads(value_other)
+        if type(value) == int:
+            value_other = int(value_other)
+        if value_other != value:
+            return False
+    else:
+        return True
+
+def decode_json_enc_dict(encoded_dict):
+    for key, value in encoded_dict:
+        encoded_dict[key] = json.loads(value)
+    return encoded_dict
+
 
 

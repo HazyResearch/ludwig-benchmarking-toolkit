@@ -1,13 +1,6 @@
-fever:
-  data_class: Fever
-  input_name: claim
+sst5:
+  data_class: SST5
+  input_name: sentence
   output_name: label
   output_type: category
-
-goemotions:
-  data_class: GoEmotions
-  input_name: text
-  output_name: emotion_ids
-  output_type: set
-
 

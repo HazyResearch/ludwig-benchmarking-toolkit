@@ -6,6 +6,7 @@ input_features:
 
 training:
   batch_size: 16
+  early_stop: 3
 
 parameters:
   input_features.name.encoder: t5

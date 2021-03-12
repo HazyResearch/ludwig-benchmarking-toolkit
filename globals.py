@@ -6,7 +6,7 @@ ENCODER_HYPEROPT_FILENAMES = {
     'rnn' : 'rnn_hyperopt.yaml',
     'distilbert' : 'distilbert_hyperopt.yaml',
     'electra' : 'electra_hyperopt.yaml',
-    'roberta' : 'electra_hyperopt.yaml',
+    'roberta' : 'roberta_hyperopt.yaml',
     'stackedparallelcnn' : 'stackedparallelcnn_hyperopt.yaml',
     't5' : 't5_hyperopt.yaml'
 }
@@ -19,3 +19,5 @@ HYPEROPT_CONFIG_FILE = './experiment-templates/hyperopt_config.yaml'
 EXPERIMENT_OUTPUT_DIR = '/experiments/ludwig-bench-textclassification/experiment-outputs'
 
 PATH_TO_PRETRAINED_EMBEDDINGS = None
+
+SMOKE_DATASETS = {}

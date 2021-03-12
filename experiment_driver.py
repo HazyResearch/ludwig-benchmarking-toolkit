@@ -28,7 +28,6 @@ logging.basicConfig(
     level=logging.DEBUG
 )
 
-ray.init(address="auto")
 hostname = socket.gethostbyname(socket.gethostname())
 
 def download_data(cache_dir=None):
@@ -45,18 +44,17 @@ def get_gpu_list():
     except KeyError:
         return None
 
-
 def map_runstats_to_modelpath(
     hyperopt_training_stats, 
     output_dir, 
     executor='ray'
 ):
     """ 
-    maps output of individual hyperopt() run statistics to associated 
-    output directories 
+    maps output of individual hyperopt run statistics to associated 
+    output directories. Necessary for accessing model checkpoints
     """
-    # helper function for finding output folder
-    model_paths = []
+
+    # helper function for finding folder which contains experiment outputs
     def find_model_path(d):
         if "model" in os.listdir(d):
             return d
@@ -65,7 +63,6 @@ def map_runstats_to_modelpath(
                 if os.path.isdir(x):
                     path = find_model_path(x)
                     if path is not None:
-                        #model_paths.append(path)
                         return path
             return None
     
@@ -90,28 +87,7 @@ def map_runstats_to_modelpath(
         
         sorted_cps = sorted(checkpoints, key=lambda d: d.path)
         return sorted_cps[-1]
-
-    def compare_configs(cf_non_encoded, cf_json_encoded):
-        for key, value in cf_non_encoded.items():
-            value_other = cf_json_encoded[key]
-            if type(value) == list:
-                value_other = json.loads(value_other)
-            if type(value) == str:
-                value_other = json.loads(value_other)
-            if type(value) == int:
-                value_other = int(value_other)
-            if value_other != value:
-                return False
-        else:
-            return True
-                
-
-    def decode_hyperopt_run(run):
-        run['training_stats'] = json.loads(run['training_stats'])
-        run['parameters'] = json.loads(run['parameters'])
-        run['eval_stats'] = json.loads(run['eval_stats'])
-        return run
-    
+            
     if executor == 'ray': # folder construction is different
         hyperopt_run_metadata = []
 
@@ -123,7 +99,7 @@ def map_runstats_to_modelpath(
         for hyperopt_run in hyperopt_training_stats:
             hyperopt_run_metadata.append(
                     {
-                        'hyperopt_results' : decode_hyperopt_run(hyperopt_run),
+                        'hyperopt_results':decode_json_enc_dict(hyperopt_run),
                         'model_path' : None
                     }
             )
@@ -135,7 +111,7 @@ def map_runstats_to_modelpath(
                                     os.path.join(path, 'params.json')
                                     )
                                 )
-                if compare_configs(hyperopt_params, config_json):
+                if compare_json_enc_configs(hyperopt_params, config_json):
                     model_path = get_last_checkpoint(path)
                     hyperopt_run['model_path'] = os.path.join(model_path,
                                                     'model')
@@ -169,6 +145,7 @@ def run_hyperopt_exp(
 ) -> int:
 
     os.environ["TUNE_PLACEMENT_GROUP_CLEANUP_DISABLED"] = "1"
+
     dataset = experiment_attr['dataset']
     encoder = experiment_attr['encoder']
     output_dir = experiment_attr['output_dir']
@@ -182,6 +159,12 @@ def run_hyperopt_exp(
     combined_ds, train_set, val_set, test_set = process_dataset(
         experiment_attr['dataset_path'])
 
+    tune_executor = model_config['hyperopt']['executor']['type']
+
+    gpu_list = None
+    if tune_executor != "ray":
+        gpu_list = get_gpu_list()
+
     hyperopt_results = hyperopt(
         copy.deepcopy(experiment_attr['model_config']),
         dataset=combined_ds,
@@ -189,7 +172,7 @@ def run_hyperopt_exp(
         validation_set=val_set,
         test_set=test_set,
         model_name=experiment_attr['model_name'], 
-        #gpus=get_gpu_list(),
+        gpus=gpu_list,
         output_directory=experiment_attr['output_dir']
     )
 
@@ -229,7 +212,7 @@ def run_hyperopt_exp(
             hyperopt_results = hyperopt_results[0:top_n_trials]
 
         hyperopt_run_data = map_runstats_to_modelpath(
-            hyperopt_results, output_dir)
+            hyperopt_results, output_dir, executor=tune_executor)
 
         # ensures that all numerical values are of type float
         format_fields_float(hyperopt_results)
@@ -295,6 +278,7 @@ def run_local_experiments(
             experiment_name = dataset + "_" + encoder
             
             logging.info("Experiment: {}".format(experiment_name))
+
             output_dir = os.path.join(globals.EXPERIMENT_OUTPUT_DIR, \
                 experiment_name)
 
@@ -308,23 +292,19 @@ def run_local_experiments(
                 
                 model_config = load_yaml(model_config_path)
                 experiment_attr = defaultdict()
-                experiment_attr["model_config"] = copy.deepcopy(model_config)
-                experiment_attr['dataset_path'] = file_path
-                experiment_attr['top_n_trials'] = top_n_trials
-                experiment_attr['model_name'] = config_name
-                experiment_attr['output_dir'] = output_dir
-                experiment_attr['encoder'] = encoder
-                experiment_attr['dataset'] = dataset
-                experiment_attr['elastic_config'] = elastic_config
-           
+                experiment_attr = {
+                    'model_config' : copy.deepcopy(model_config),
+                    'dataset_path' : file_path,
+                    'top_n_trials' : top_n_trials,
+                    'model_name' : config_name,
+                    'output_dir' :  output_dir,
+                    'encoder' : encoder,
+                    'dataset' :  dataset,
+                    'elastic_config' : elastic_config,
+                }
                 experiment_queue.append(experiment_attr)
         
     complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
-    
-    #ray_pool = Pool()
-
-    #complete = ray_pool.map(run_hyperopt_exp, experiment_queue)
-
     if len(complete) == len(experiment_queue):                
         # create .completed file to indicate that entire hyperopt experiment
         # is completed
@@ -375,7 +355,7 @@ def main():
         '--dataset_cache_dir',
         help="path to cache downloaded datasets",
         type=str,
-        default='/experiments/ludwig-bench-textclassification/data'
+        default=None
     )
 
     # list of encoders to run hyperopt search over : 
@@ -395,7 +375,7 @@ def main():
         '--top_n_trials',
         help="top n trials to save model performance for.",
         type=int,
-        default=10
+        default=None
     )
 
     parser.add_argument(
@@ -424,6 +404,11 @@ def main():
     if args.elasticsearch_config is not None:
         logging.info("Set up elastic db...")
         elastic_config = load_yaml(args.elasticsearch_config)
+
+    if args.run_environment == 'local':
+        ray.init()
+    else:
+        ray.init(address="auto")
     
     if args.run_environment == 'local' or args.run_environment == 'gcp':
         run_local_experiments(

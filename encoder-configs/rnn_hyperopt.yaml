@@ -1,3 +1,6 @@
+training:
+  early_stop: 7
+  
 input_features:
   -
     encoder: rnn

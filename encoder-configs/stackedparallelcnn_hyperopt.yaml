@@ -7,6 +7,9 @@ input_features:
     preprocessing:
       word_tokenizer: hf_tokenizer
       pretrained_model_name_or_path: t5-base
+      
+training:
+  early_stop: 7
 
 parameters:
   input_features.name.encoder: stacked_parallel_cnn

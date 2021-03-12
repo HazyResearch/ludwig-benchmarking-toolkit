@@ -5,10 +5,13 @@ import logging
 import os
 import ray
 import pickle
+import socket
 import sys
-import numpy as np
+from collections import defaultdict
 from copy import deepcopy
 
+import numpy as np
+import ray
 import yaml
 from ludwig.hyperopt.run import hyperopt
 from collections import defaultdict 
@@ -25,9 +28,8 @@ logging.basicConfig(
     level=logging.DEBUG
 )
 
-ray.init()
-
-es_db=None
+ray.init(address="auto")
+hostname = socket.gethostbyname(socket.gethostname())
 
 def download_data(cache_dir=None):
     data_file_paths = {}
@@ -161,24 +163,28 @@ def map_runstats_to_modelpath(
     
     return hyperopt_run_metadata
 
-@ray.remote(num_gpus=1, num_returns=1)
+@ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})
 def run_hyperopt_exp(
     experiment_attr: dict
 ) -> int:
+
+    os.environ["TUNE_PLACEMENT_GROUP_CLEANUP_DISABLED"] = "1"
     dataset = experiment_attr['dataset']
     encoder = experiment_attr['encoder']
     output_dir = experiment_attr['output_dir']
     top_n_trials = experiment_attr['top_n_trials']
+    model_config = experiment_attr['model_config']
+    elastic_config = experiment_attr['elastic_config']
 
     start = datetime.datetime.now()
 
-    dataset, train_set, val_set, test_set = None, None, None, None
-    dataset, train_set, val_set, test_set = process_dataset(
+    combined_ds, train_set, val_set, test_set = None, None, None, None
+    combined_ds, train_set, val_set, test_set = process_dataset(
         experiment_attr['dataset_path'])
 
     hyperopt_results = hyperopt(
         copy.deepcopy(experiment_attr['model_config']),
-        dataset=experiment_attr['dataset_path'],
+        dataset=combined_ds,
         training_set=train_set,
         validation_set=val_set,
         test_set=test_set,
@@ -210,7 +216,13 @@ def run_hyperopt_exp(
         pass
 
     # save output to db
-    if es_db:
+    if elastic_config:
+        es_db = Database(
+            elastic_config['host'], 
+            (elastic_config['username'], elastic_config['password']),
+            elastic_config['username'],
+            elastic_config['index']
+        )
 
         # save top_n model configs to elastic
         if len(hyperopt_results) > top_n_trials:
@@ -263,7 +275,7 @@ def run_local_experiments(
     data_file_paths: dict, 
     config_files: dict, 
     top_n_trials: int,
-    es_db=None
+    elastic_config=None
 ):
     logging.info("Running hyperopt experiments...")
 
@@ -303,18 +315,24 @@ def run_local_experiments(
                 experiment_attr['output_dir'] = output_dir
                 experiment_attr['encoder'] = encoder
                 experiment_attr['dataset'] = dataset
+                experiment_attr['elastic_config'] = elastic_config
            
                 experiment_queue.append(experiment_attr)
         
-        complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
+    complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
+    
+    #ray_pool = Pool()
 
-        if len(complete) == len(experiment_queue):                
-            # create .completed file to indicate that entire hyperopt experiment
-            # is completed
-            _ = open(os.path.join(
-                globals.EXPERIMENT_OUTPUT_DIR, '.completed'), 'wb')
-        else:
-            print("Not all experimetns completed!")
+    #complete = ray_pool.map(run_hyperopt_exp, experiment_queue)
+
+    if len(complete) == len(experiment_queue):                
+        # create .completed file to indicate that entire hyperopt experiment
+        # is completed
+        _ = open(os.path.join(
+            globals.EXPERIMENT_OUTPUT_DIR, '.completed'), 'wb')
+    else:
+        print("Not all experiments completed!")
+    
 
 def main():
     parser = argparse.ArgumentParser(
@@ -402,23 +420,17 @@ def main():
     logging.info("Building hyperopt config files...")
     config_files = build_config_files()
 
-    es_db = None
+    elastic_config = None
     if args.elasticsearch_config is not None:
         logging.info("Set up elastic db...")
         elastic_config = load_yaml(args.elasticsearch_config)
-        es_db = Database(
-            elastic_config['host'], 
-            (elastic_config['username'], elastic_config['password']),
-            elastic_config['username'],
-            elastic_config['index']
-        )
     
     if args.run_environment == 'local' or args.run_environment == 'gcp':
         run_local_experiments(
             data_file_paths, 
             config_files, 
             top_n_trials=args.top_n_trials,
-            es_db=es_db
+            elastic_config=elastic_config
         )
 
 if __name__ == '__main__':

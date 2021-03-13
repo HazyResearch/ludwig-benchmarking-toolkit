@@ -15,5 +15,5 @@ sampler:
 executor:
   type: ray
   cpu_resources_per_trial: 1
-  gpu_resources_per_trial: 1
-  kubernetes_namespace: 'ray'
+  gpu_resources_per_trial: 0
+  #kubernetes_namespace: 'ray'

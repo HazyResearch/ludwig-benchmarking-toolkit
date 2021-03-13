@@ -31,6 +31,7 @@ logging.basicConfig(
 hostname = socket.gethostbyname(socket.gethostname())
 
 def download_data(cache_dir=None):
+    """ Returns files paths for all datasets """
     data_file_paths = {}
     for dataset in dataset_metadata:
         data_class = dataset_metadata[dataset]['data_class']
@@ -45,10 +46,10 @@ def get_gpu_list():
         return None
 
 def map_runstats_to_modelpath(
-    hyperopt_training_stats, 
-    output_dir, 
-    executor='ray'
-):
+    hyperopt_training_stats: list, 
+    output_dir: str, 
+    executor: str='ray'
+) -> list :
     """ 
     maps output of individual hyperopt run statistics to associated 
     output directories. Necessary for accessing model checkpoints
@@ -208,7 +209,7 @@ def run_hyperopt_exp(
         )
 
         # save top_n model configs to elastic
-        if len(hyperopt_results) > top_n_trials:
+        if top_n_trials is not None and len(hyperopt_results) > top_n_trials:
             hyperopt_results = hyperopt_results[0:top_n_trials]
 
         hyperopt_run_data = map_runstats_to_modelpath(
@@ -246,11 +247,14 @@ def run_hyperopt_exp(
             )
 
             formatted_document['sampled_run_config'] = new_config
-
-            es_db.upload_document(
-                hash_dict(new_config),
-                formatted_document
-            )
+            
+            try:
+                es_db.upload_document(
+                    hash_dict(new_config),
+                    formatted_document
+                )
+            except:
+                print("ERROR UPLOADING TO ELASTIC")
     return 1
     
 
@@ -406,7 +410,7 @@ def main():
         elastic_config = load_yaml(args.elasticsearch_config)
 
     if args.run_environment == 'local':
-        ray.init()
+        ray.init(local_mode=True, num_gpus=len(GPUtil.getGPUs()))
     else:
         ray.init(address="auto")
     

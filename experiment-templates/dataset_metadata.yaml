@@ -1,6 +1,6 @@
-sst5:
-  data_class: SST5
-  input_name: sentence
-  output_name: label
+ethos_binary:
+  data_class: EthosBinary
+  input_name: comment
+  output_name: isHate
   output_type: category
 

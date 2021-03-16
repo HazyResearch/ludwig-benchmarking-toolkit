@@ -154,109 +154,112 @@ def run_hyperopt_exp(
     model_config = experiment_attr['model_config']
     elastic_config = experiment_attr['elastic_config']
 
-    start = datetime.datetime.now()
+    try: 
+        start = datetime.datetime.now()
 
-    combined_ds, train_set, val_set, test_set = None, None, None, None
-    combined_ds, train_set, val_set, test_set = process_dataset(
-        experiment_attr['dataset_path'])
+        combined_ds, train_set, val_set, test_set = None, None, None, None
+        combined_ds, train_set, val_set, test_set = process_dataset(
+            experiment_attr['dataset_path'])
 
-    tune_executor = model_config['hyperopt']['executor']['type']
+        tune_executor = model_config['hyperopt']['executor']['type']
 
-    gpu_list = None
-    if tune_executor != "ray":
-        gpu_list = get_gpu_list()
+        gpu_list = None
+        if tune_executor != "ray":
+            gpu_list = get_gpu_list()
 
-    hyperopt_results = hyperopt(
-        copy.deepcopy(experiment_attr['model_config']),
-        dataset=combined_ds,
-        training_set=train_set,
-        validation_set=val_set,
-        test_set=test_set,
-        model_name=experiment_attr['model_name'], 
-        gpus=gpu_list,
-        output_directory=experiment_attr['output_dir']
-    )
-
-    logging.info("time to complete: {}".format(
-        datetime.datetime.now() - start)
-    ) 
-
-    # Save output locally
-    try:
-        pickle.dump(
-            hyperopt_results, 
-            open(os.path.join(
-                output_dir, 
-                f"{dataset}_{encoder}_hyperopt_results.pkl"
-                ),'wb'
-            )
+        hyperopt_results = hyperopt(
+            copy.deepcopy(experiment_attr['model_config']),
+            dataset=combined_ds,
+            training_set=train_set,
+            validation_set=val_set,
+            test_set=test_set,
+            model_name=experiment_attr['model_name'], 
+            gpus=gpu_list,
+            output_directory=experiment_attr['output_dir']
         )
 
-        # create .completed file to indicate that experiment
-        # is completed
-        _ = open(os.path.join(output_dir, '.completed'), 'wb')
+        logging.info("time to complete: {}".format(
+            datetime.datetime.now() - start)
+        ) 
 
-    except FileNotFoundError:
-        pass
-
-    # save output to db
-    if elastic_config:
-        es_db = Database(
-            elastic_config['host'], 
-            (elastic_config['username'], elastic_config['password']),
-            elastic_config['username'],
-            elastic_config['index']
-        )
-
-        # save top_n model configs to elastic
-        if top_n_trials is not None and len(hyperopt_results) > top_n_trials:
-            hyperopt_results = hyperopt_results[0:top_n_trials]
-
-        hyperopt_run_data = map_runstats_to_modelpath(
-            hyperopt_results, output_dir, executor=tune_executor)
-
-        # ensures that all numerical values are of type float
-        format_fields_float(hyperopt_results)
-        for run in hyperopt_run_data:
-            new_config = substitute_dict_parameters(
-                copy.deepcopy(model_config),
-                parameters=run['hyperopt_results']['parameters']
-            )
-            del new_config['hyperopt']
-
-            document = {
-                'hyperopt_results': run['hyperopt_results'],
-                'model_path' : run['model_path']
-            }
-            
-            try:
-                append_experiment_metadata(
-                    document, 
-                    model_path=run['model_path'], 
-                    data_path=file_path,
-                    run_stats=run
+        # Save output locally
+        try:
+            pickle.dump(
+                hyperopt_results, 
+                open(os.path.join(
+                    output_dir, 
+                    f"{dataset}_{encoder}_hyperopt_results.pkl"
+                    ),'wb'
                 )
-            except:
-                pass
-
-            formatted_document = es_db.format_document(
-                document,
-                encoder=encoder,
-                dataset=dataset,
-                config=experiment_attr['model_config']
             )
 
-            formatted_document['sampled_run_config'] = new_config
-            
-            try:
-                es_db.upload_document(
-                    hash_dict(new_config),
-                    formatted_document
+            # create .completed file to indicate that experiment
+            # is completed
+            _ = open(os.path.join(output_dir, '.completed'), 'wb')
+
+        except FileNotFoundError:
+            pass
+
+        # save output to db
+        if elastic_config:
+            es_db = Database(
+                elastic_config['host'], 
+                (elastic_config['username'], elastic_config['password']),
+                elastic_config['username'],
+                elastic_config['index']
+            )
+
+            # save top_n model configs to elastic
+            if top_n_trials is not None and len(hyperopt_results) > top_n_trials:
+                hyperopt_results = hyperopt_results[0:top_n_trials]
+
+            hyperopt_run_data = map_runstats_to_modelpath(
+                hyperopt_results, output_dir, executor=tune_executor)
+
+            # ensures that all numerical values are of type float
+            format_fields_float(hyperopt_results)
+            for run in hyperopt_run_data:
+                new_config = substitute_dict_parameters(
+                    copy.deepcopy(model_config),
+                    parameters=run['hyperopt_results']['parameters']
                 )
-            except:
-                print("ERROR UPLOADING TO ELASTIC")
-    return 1
-    
+                del new_config['hyperopt']
+
+                document = {
+                    'hyperopt_results': run['hyperopt_results'],
+                    'model_path' : run['model_path']
+                }
+                
+                try:
+                    append_experiment_metadata(
+                        document, 
+                        model_path=run['model_path'], 
+                        data_path=file_path,
+                        run_stats=run
+                    )
+                except:
+                    pass
+
+                formatted_document = es_db.format_document(
+                    document,
+                    encoder=encoder,
+                    dataset=dataset,
+                    config=experiment_attr['model_config']
+                )
+
+                formatted_document['sampled_run_config'] = new_config
+                
+                try:
+                    es_db.upload_document(
+                        hash_dict(new_config),
+                        formatted_document
+                    )
+                except:
+                    print("ERROR UPLOADING TO ELASTIC")
+        
+        return 1
+    except:
+        return 0
 
 def run_local_experiments(
     data_file_paths: dict, 

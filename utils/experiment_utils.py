@@ -30,6 +30,21 @@ def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
         from ludwig.datasets.sst5 import SST5
         data = SST5(cache_dir, include_subtrees=True)
         data.load(cache_dir)
+    elif dataset_class == 'EthosBinary':
+        from ludwig.datasets.ethos_binary import EthosBinary
+        data = EthosBinary(cache_dir)
+        data.load(cache_dir)
+    elif dataset_class == 'YelpPolarity':
+        from ludwig.datasets.yelp_review_polarity import YelpPolarity
+        data = YelpPolarity(cache_dir)
+    elif dataset_class == 'DBPedia':
+        from ludwig.datasets.dbpedia import DBPedia
+        data = DBPedia(cache_dir)
+        data.load(cache_dir)
+    elif dataset_class == 'Irony':
+        from ludwig.datasets.irony import Irony
+        data = Irony(cache_dir)
+        data.load(cache_dir)
     else:
         return None
     return os.path.join(data.processed_dataset_path,\

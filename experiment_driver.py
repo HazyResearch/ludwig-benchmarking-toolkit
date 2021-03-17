@@ -15,7 +15,7 @@ import ray
 import yaml
 from ludwig.hyperopt.run import hyperopt
 from collections import defaultdict 
-
+from multiprocessing import Pool
 import globals
 from build_def_files import *
 from database import Database
@@ -139,11 +139,10 @@ def map_runstats_to_modelpath(
     
     return hyperopt_run_metadata
 
-@ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})
+@ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001}) 
 def run_hyperopt_exp(
     experiment_attr: dict
 ) -> int:
-
     os.environ["TUNE_PLACEMENT_GROUP_CLEANUP_DISABLED"] = "1"
 
     dataset = experiment_attr['dataset']
@@ -271,6 +270,7 @@ def run_local_experiments(
     experiment_queue = []
     for dataset_name, file_path in data_file_paths.items():
         logging.info("Dataset: {}".format(dataset_name))
+        print(config_files)
         for model_config_path in config_files[dataset_name]:
             config_name = model_config_path.split('/')[-1].split('.')[0]
             dataset = config_name.split('_')[1]
@@ -305,6 +305,9 @@ def run_local_experiments(
                 experiment_queue.append(experiment_attr)
         
     complete = ray.get([run_hyperopt_exp.remote(exp) for exp in experiment_queue])
+    #p = ThreadPool()
+    #a = p.map(run_hyperopt_exp, experiment_queue)
+
     if len(complete) == len(experiment_queue):                
         # create .completed file to indicate that entire hyperopt experiment
         # is completed
@@ -384,16 +387,14 @@ def main():
         type=bool,
         default=False
     )
-    
     args = parser.parse_args()   
-
     logging.info("Set global variables...")
     set_globals(args) 
 
     logging.info("GPUs {}".format(os.system('nvidia-smi -L')))
-
     if args.smoke_tests:
         data_file_paths = SMOKE_DATASETS
+        print(data_file_paths)
     else:
         data_file_paths = download_data(args.dataset_cache_dir)
     
@@ -406,7 +407,12 @@ def main():
         elastic_config = load_yaml(args.elasticsearch_config)
 
     if args.run_environment == 'local':
-        ray.init()
+        import GPUtil
+        gpus = "0,"
+        for i in range(1,len(GPUtil.getGPUs())): gpus += f",f{str(i)}" 
+        #os.environ['CUDA_VISIBLE_GPUS'] = gpus
+        #ray.init(local_mode=True, num_gpus=len(GPUtil.getGPUs()))
+        ray.init(local_mode=True)
     else:
         ray.init(address="auto")
     

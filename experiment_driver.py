@@ -261,9 +261,9 @@ def run_hyperopt_exp(
             output_directory=experiment_attr['output_dir']
         )
 
-        hyperopt_results = [] 
         if existing_results is not None:
             hyperopt_results.extend(existing_results)
+            hyperopt_results.sort(key=lambda result: result['metric_score'])
             # add logic to sort
 
         logging.info("time to complete: {}".format(

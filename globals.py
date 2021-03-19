@@ -5,14 +5,15 @@ EXPERIMENT_CONFIGS_DIR = './hyperopt-experiment-configs'
 ENCODER_HYPEROPT_FILENAMES = {
     'bert': 'bert_hyperopt.yaml',
     'rnn' : 'rnn_hyperopt.yaml',
-    #'distilbert' : 'distilbert_hyperopt.yaml',
-    #'electra' : 'electra_hyperopt.yaml',
-    #'roberta' : 'roberta_hyperopt.yaml',
-    #'stackedparallelcnn' : 'stackedparallelcnn_hyperopt.yaml',
-    #'t5' : 't5_hyperopt.yaml'
+    'distilbert' : 'distilbert_hyperopt.yaml',
+    'electra' : 'electra_hyperopt.yaml',
+    'roberta' : 'roberta_hyperopt.yaml',
+    'stackedparallelcnn' : 'stackedparallelcnn_hyperopt.yaml',
+    't5' : 't5_hyperopt.yaml'
 }
 
 ENCODER_FILE_LIST = ENCODER_HYPEROPT_FILENAMES.values()
+DATASETS_LIST = None
 
 CONFIG_TEMPLATE_FILE = './experiment-templates/config_template.yaml'
 DATASET_METADATA_FILE = './experiment-templates/dataset_metadata.yaml'
@@ -24,3 +25,5 @@ PATH_TO_PRETRAINED_EMBEDDINGS = None
 SMOKE_DATASETS = {
             'sst5' : './smoke-datasets/sst5.csv'
         }
+
+RUNTIME_ENV = "local"

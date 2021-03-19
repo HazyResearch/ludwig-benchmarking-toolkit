@@ -1,5 +1,6 @@
 import logging
 import os
+import pdb
 from copy import deepcopy
 
 import yaml
@@ -23,15 +24,25 @@ def build_config_files():
     config = deepcopy(template)
 
     encoder_hyperopt_vals = []
-
-    for encoder_filename in ENCODER_FILE_LIST:
+    # select relevant encoders
+    for encoder_filename in globals.ENCODER_FILE_LIST:
         with open(os.path.join(ENCODER_CONFIG_DIR, encoder_filename)) as f:
             encoder_hyperopt_params = yaml.load(f, Loader=yaml.SafeLoader)
             encoder_hyperopt_vals.append(encoder_hyperopt_params)
 
+    # select relevant datasets
+    selected_datasets = {}
+    for dataset_name in globals.DATASET_LIST:
+        if dataset_name in dataset_metadata.keys():
+            selected_datasets[dataset_name] = dataset_metadata[dataset_name]
+        else:
+            raise ValueError("The dataset you provided is not available."
+                             "Please see list of available datasets here: " 
+                             "python experiment_drivery.py --h")
+
     config['hyperopt'].update(hyperopt_config)
 
-    for dataset, metadata in dataset_metadata.items():
+    for dataset, metadata in selected_datasets.items():
         # each dataset will have a model specific config file
         config_fps[dataset] = []
 

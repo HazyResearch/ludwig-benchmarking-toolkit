@@ -3,6 +3,7 @@ import copy
 import hashlib
 import json
 import os
+import pdb
 from typing import Union
 
 import globals
@@ -13,38 +14,55 @@ def download_dataset(dataset_class: str, cache_dir: str=None) -> str:
     if dataset_class == 'GoEmotions':
         from ludwig.datasets.goemotions import GoEmotions
         data = GoEmotions(cache_dir)
-        data.load(cache_dir)
+        data.load()
     elif dataset_class == 'Fever':
         from ludwig.datasets.fever import Fever
         data = Fever(cache_dir)
-        data.load(cache_dir)
+        data.load()
     elif dataset_class == 'SST2':
         from ludwig.datasets.sst2 import SST2
         data = SST2(cache_dir, include_subtrees=True, remove_duplicates=True)
-        data.load(cache_dir)
+        data.load()
     elif dataset_class == 'AGNews':
         from ludwig.datasets.agnews import AGNews
         data = AGNews(cache_dir)
-        data.load(cache_dir)
+        data.load()
     elif dataset_class == 'SST5':
         from ludwig.datasets.sst5 import SST5
         data = SST5(cache_dir, include_subtrees=True)
-        data.load(cache_dir)
+        data.load()
     elif dataset_class == 'EthosBinary':
         from ludwig.datasets.ethos_binary import EthosBinary
         data = EthosBinary(cache_dir)
-        data.load(cache_dir)
+        data.load()
     elif dataset_class == 'YelpPolarity':
         from ludwig.datasets.yelp_review_polarity import YelpPolarity
         data = YelpPolarity(cache_dir)
+        data.load()
     elif dataset_class == 'DBPedia':
         from ludwig.datasets.dbpedia import DBPedia
         data = DBPedia(cache_dir)
-        data.load(cache_dir)
+        data.load()
     elif dataset_class == 'Irony':
         from ludwig.datasets.irony import Irony
         data = Irony(cache_dir)
-        data.load(cache_dir)
+        data.load()
+    elif dataset_class == 'YelpReviews':
+        from ludwig.datasets.yelp_reviews import YelpReviews
+        data = YelpReviews(cache_dir)
+        data.load()
+    elif dataset_class == 'YahooAnswers':
+        from ludwig.datasets.yahoo_answers import YahooAnswers
+        data = YahooAnswers(cache_dir)
+        data.load()
+    elif dataset_class == 'AmazonPolarity':
+        from ludwig.datasets.amazon_review_polarity import AmazonPolarity
+        data = AmazonPolarity(cache_dir)
+        data.load()
+    elif dataset_class == 'AmazonReviews':
+        from ludwig.datasets.amazon_reviews import AmazonReviews
+        data = AmazonReviews(cache_dir)
+        data.load()
     else:
         return None
     return os.path.join(data.processed_dataset_path,\
@@ -80,9 +98,17 @@ def load_yaml(filename: str) -> dict:
 def set_globals(args):
     globals.EXPERIMENT_CONFIGS_DIR = args.hyperopt_config_dir
     globals.EXPERIMENT_OUTPUT_DIR = args.experiment_output_dir
+    globals.RUNTIME_ENV = args.run_environment
 
-    print(globals.EXPERIMENT_OUTPUT_DIR)
-    if args.custom_encoders_list is not 'all':
+    if args.datasets is None:
+        raise ValueError("Please specify a dataset or list of dataset."
+                         "Use python experiment_driver.py --h to see \
+                          list of available datasets."
+                        )
+    else:
+        globals.DATASET_LIST = args.datasets
+    
+    if 'all' not in args.custom_encoders_list:
         encoders_list = []
         for enc_name in args.custom_encoders_list:
             if enc_name in globals.ENCODER_HYPEROPT_FILENAMES.keys():
@@ -167,9 +193,10 @@ def compare_json_enc_configs(cf_non_encoded, cf_json_encoded):
     else:
         return True
 
-def decode_json_enc_dict(encoded_dict):
-    for key, value in encoded_dict:
-        encoded_dict[key] = json.loads(value)
+def decode_json_enc_dict(encoded_dict, json_enc_params: list):
+    for key, value in encoded_dict.items():
+        if key in json_enc_params and type(value) == str:
+            encoded_dict[key] = json.loads(value)
     return encoded_dict
 
 

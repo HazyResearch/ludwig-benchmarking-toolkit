@@ -70,8 +70,12 @@ def get_inference_latency(
     # Create smaller datasets w/10 samples from original dev set
     full_dataset = pd.read_csv(dataset_path)
     # Note: split == 1 indicates the dev set
-    inference_dataset = full_dataset[full_dataset['split'] == 1].sample(
-                                                                n=num_samples)
+    if split in full_dataset:
+        sampled_dataset = full_dataset[full_dataset['split'] == 1].sample(
+                                                                    n=num_samples)
+    else:
+        sampled_dataset = full_dataset.sample(n=num_samples)
+
     ludwig_model = LudwigModel.load(model_path)
     start = datetime.datetime.now()
     _, _ = ludwig_model.predict(

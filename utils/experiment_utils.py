@@ -96,6 +96,7 @@ def load_yaml(filename: str) -> dict:
     return file_contents
 
 def set_globals(args):
+    """ set global vars based on command line args """
     globals.EXPERIMENT_CONFIGS_DIR = args.hyperopt_config_dir
     globals.EXPERIMENT_OUTPUT_DIR = args.experiment_output_dir
     globals.RUNTIME_ENV = args.run_environment
@@ -124,6 +125,7 @@ def set_globals(args):
             os.mkdir(exp_dir)
 
 def format_fields_float(l: list) -> list:
+    """ formats fields in elastic db entries """
     def replace_ints(d):
         for k, v in d.items():
             if isinstance(v, dict):
@@ -180,6 +182,7 @@ def substitute_dict_parameters(original_dict: dict, parameters: dict) -> dict:
     return original_dict
 
 def compare_json_enc_configs(cf_non_encoded, cf_json_encoded):
+    """ compars to json encoded dicts """
     for key, value in cf_non_encoded.items():
         value_other = cf_json_encoded[key]
         if type(value) == list:
@@ -198,6 +201,120 @@ def decode_json_enc_dict(encoded_dict, json_enc_params: list):
         if key in json_enc_params and type(value) == str:
             encoded_dict[key] = json.loads(value)
     return encoded_dict
+
+def get_ray_tune_trial_dirs(base_dir: str, trial_dirs):
+    """ returns all output directories of individual ray.tune trials """
+    if "params.json" in os.listdir(base_dir):
+        trial_dirs.append(base_dir)
+    else:
+        for d in os.scandir(base_dir):
+            if os.path.isdir(d):
+                get_ray_tune_trial_dirs(d, trial_dirs)
+        return trial_dirs
+
+def get_lastest_checkpoint(trial_dir: str):
+    checkpoints = [
+        ckpt_dir 
+        for ckpt_dir in os.scandir(trial_dir) 
+        if os.path.isdir(ckpt_dir) and "checkpoint" in ckpt_dir.path
+    ]
+    
+    sorted_cps = sorted(checkpoints, key=lambda d: d.path)
+    return sorted_cps[-1]
+
+
+def get_model_ckpt_paths(
+    hyperopt_training_stats: list, 
+    output_dir: str, 
+    executor: str='ray'
+):
+    """ 
+    maps output of individual tial run statistics to associated 
+    output directories. Necessary for accessing model checkpoints
+    """
+    if executor == 'ray': # folder construction is different
+        hyperopt_run_metadata = []
+        # populate paths
+        for path in os.scandir(output_dir):
+            if os.path.isdir(path):
+                trial_dirs = get_ray_tune_trial_dirs(path, [])
+        
+        for hyperopt_run in hyperopt_training_stats:
+            hyperopt_run_metadata.append(
+                    {
+                        'hyperopt_results': decode_json_enc_dict(hyperopt_run, 
+                            ['parameters', 'training_stats', 'eval_stats']),
+                        'model_path' : None
+                    }
+            )
+
+        for hyperopt_run in hyperopt_run_metadata:
+            hyperopt_params = hyperopt_run['hyperopt_results']['parameters']
+            for path in trial_dirs:
+                config_json = json.load(open(os.path.join(path, 'params.json')))
+                if compare_json_enc_configs(hyperopt_params, config_json):
+                    model_path = get_last_checkpoint(path)
+                    hyperopt_run['model_path'] = os.path.join(model_path,
+                                                             'model')
+    else:
+        hyperopt_run_metadata = []
+        for run_dir in os.scandir(output_dir):
+            if os.path.isdir(run_dir):
+                sample_training_stats = json.load(
+                    open(
+                        os.path.join(run_dir.path, \
+                        "training_statistics.json"
+                        ), "rb"
+                    )
+                )
+                for hyperopt_run in hyperopt_training_stats:
+                    if hyperopt_run['training_stats'] == sample_training_stats:
+                        hyperopt_run_metadata.append(
+                            {
+                                'hyperopt_results' : hyperopt_run,
+                                'model_path' : os.path.join(run_dir.path, \
+                                        'model'
+                                    )
+                            }
+                        )
+    
+    return hyperopt_run_metadata
+
+def collect_completed_trial_results(output_dir: str):
+    results, metrics, params = [], [], []
+    trial_dirs = get_ray_tune_trial_dirs(output_dir)
+    for trial_dir in trial_dirs:
+        for f in os.scandir(trial_dir):
+            if "progress" in f.name:
+                progress = pd.read_csv(f)
+                last_iter = len(progress) - 1
+                last_iter_eval_stats = json.loads(
+                    progress.iloc[last_iter]['eval_stats'])
+                if 'overall_stats' in last_iter_eval_stats[
+                    list(last_iter_eval_stats.keys())[0]].keys():
+                    trial_results = decode_json_enc_dict(
+                        progress.iloc[last_iter].to_dict(),
+                        ['parameters', 'training_stats', 'eval_stats'])
+                    trial_results['done'] = True
+                    metrics.append(progress.iloc[last_iter]['metric_score'])
+                    curr_path = f.path
+                    params_path = curr_path.replace("progress.csv", 
+                                                    "params.json")
+                    trial_params = json.load(open(params_path, "rb"))
+                    params.append(trial_params)
+                    for key, value in trial_params.items():
+                        config_key = "config" + "." +  key
+                        trial_results[config_key] = value
+                    results.append(trial_results)
+    return results, metrics, params
+
+def conditional_decorator(decorator, condition, *args):
+    def wrapper(function):
+        if condition(*args):
+            return decorator(function)
+        else:
+            return function
+    return wrapper
 
 
 

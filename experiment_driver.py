@@ -20,7 +20,7 @@ from collections import defaultdict
 from multiprocessing import Pool
 import globals
 from build_def_files import *
-from database import Database
+from database import Database, save_results_to_es
 from utils.experiment_utils import *
 from utils.metadata_utils import append_experiment_metadata
 
@@ -53,184 +53,35 @@ def get_gpu_list():
     except KeyError:
         return None
 
-def map_runstats_to_modelpath(
-    hyperopt_training_stats: list, 
-    output_dir: str, 
-    executor: str='ray'
-) -> list :
-    """ 
-    maps output of individual hyperopt run statistics to associated 
-    output directories. Necessary for accessing model checkpoints
-    """
-
-    # helper function for finding folder which contains experiment outputs
-    def find_model_path(d):
-        if "model" in os.listdir(d):
-            return d
-        else:
-            for x in os.scandir(d):
-                if os.path.isdir(x):
-                    path = find_model_path(x)
-                    if path is not None:
-                        return path
-            return None
-    
-    trial_dirs = []
-    def find_params_experiment_dirs(d):
-        if "params.json" in os.listdir(d):
-            return d
-        else:
-            for x in os.scandir(d):
-                if os.path.isdir(x):
-                    path = find_params_experiment_dirs(x)
-                    if path:
-                        trial_dirs.append(path)
-            return None
-
-    def get_last_checkpoint(path):
-        checkpoints = [
-            ckpt_dir 
-            for ckpt_dir in os.scandir(path) 
-            if os.path.isdir(ckpt_dir) and "checkpoint" in ckpt_dir.path
-        ]
-        
-        sorted_cps = sorted(checkpoints, key=lambda d: d.path)
-        return sorted_cps[-1]
-            
-    if executor == 'ray': # folder construction is different
-        hyperopt_run_metadata = []
-
-        # populate paths
-        for x in os.scandir(output_dir):
-            if os.path.isdir(x):
-                find_params_experiment_dirs(x)
-        
-        for hyperopt_run in hyperopt_training_stats:
-            hyperopt_run_metadata.append(
-                    {
-                        'hyperopt_results':decode_json_enc_dict(
-                                            hyperopt_run, 
-                                            ['parameters', 'training_stats', 'eval_stats']),
-                        'model_path' : None
-                    }
-            )
-
-        for hyperopt_run in hyperopt_run_metadata:
-            hyperopt_params = hyperopt_run['hyperopt_results']['parameters']
-            for path in trial_dirs:
-                config_json = json.load(open(
-                                    os.path.join(path, 'params.json')
-                                    )
-                                )
-                if compare_json_enc_configs(hyperopt_params, config_json):
-                    model_path = get_last_checkpoint(path)
-                    hyperopt_run['model_path'] = os.path.join(model_path,
-                                                    'model')
-    else:
-        hyperopt_run_metadata = []
-        for run_dir in os.scandir(output_dir):
-            if os.path.isdir(run_dir):
-                sample_training_stats = json.load(
-                    open(
-                        os.path.join(run_dir.path, \
-                            "training_statistics.json"
-                            ), "rb"
-                    )
-                )
-                for hyperopt_run in hyperopt_training_stats:
-                    if hyperopt_run['training_stats'] == sample_training_stats:
-                        hyperopt_run_metadata.append(
-                            {
-                                'hyperopt_results' : hyperopt_run,
-                                'model_path' : os.path.join(run_dir.path, \
-                                        'model'
-                                    )
-                            }
-                        )
-    
-    return hyperopt_run_metadata
-
-def get_exp_path(exp_base_dir: str, trainable_func_prefix: str="trainable_"):
-    dirs = []
-    for dr in os.scandir(exp_base_dir):
-        if trainable_func_prefix in dr.name:
-            dirs.append(dr)
-    return dirs
-
-def json_decode(d: dict):
-    for key, value in d.items():
-        if key in ['parameters', 'training_stats', 'eval_stats']:
-            d[key] = json.loads(d[key])
-    return d
-
-def collect_completed_trial_results(ray_exp_dirs: str):
-    results, metrics, params = [], [], []
-    for ray_exp_dir in ray_exp_dirs:
-        for trial_dir in os.scandir(ray_exp_dir):
-            if "trial_" in trial_dir.name:
-                for f in os.scandir(trial_dir):
-                    if "progress" in f.name:
-                        progress = pd.read_csv(f)
-                        last_iter = len(progress) - 1
-                        last_iter_eval_stats = json.loads(progress.iloc[last_iter]['eval_stats'])
-                        if 'overall_stats' in last_iter_eval_stats[list(last_iter_eval_stats.keys())[0]].keys():
-                            trial_results = decode_json_enc_dict(progress.iloc[last_iter].to_dict(),
-                                                                 ['parameters', 'training_stats', 'eval_stats']
-                                                                )
-                            trial_results['done'] = True
-                            metrics.append(progress.iloc[last_iter]['metric_score'])
-                            curr_path = f.path
-                            params_path = curr_path.replace("progress.csv", "params.json")
-                            trial_params = json.load(open(params_path, "rb"))
-                            params.append(trial_params)
-                            for key, value in trial_params.items():
-                                config_key = "config" + "." +  key
-                                trial_results[config_key] = value
-                            results.append(trial_results)
-    return results, metrics, params
-
-
 def resume_training(model_config: dict, output_dir):
-    ray_exp_dir = get_exp_path(output_dir)
-    results, metrics, params = collect_completed_trial_results(ray_exp_dir)
-    #params = format_params(params)
-    new_num_samples = model_config['hyperopt']['sampler']['num_samples'] - len(metrics)
+    results, metrics, params = collect_completed_trial_results(output_dir)
+    original_num_samples = model_config['hyperopt']['sampler']['num_samples']
+    new_num_samples = max(original_num_samples - len(metrics), 0)
     model_config['hyperopt']['sampler']['search_alg']['points_to_evaluate'] = params
     model_config['hyperopt']['sampler']['search_alg']['evaluated_rewards'] = metrics
     model_config['hyperopt']['sampler']['num_samples'] = new_num_samples
-
     return model_config, results
-
-def conditional_decorator(decorator, condition, *args):
-    def wrapper(function):
-        if condition(*args):
-            return decorator(function)
-        else:
-            return function
-    return wrapper
 
 @conditional_decorator(
     ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001}),
     lambda runtime_env: runtime_env != 'local',
-    globals.RUNTIME_ENV)
+    globals.RUNTIME_ENV
+)
 def run_hyperopt_exp(
     experiment_attr: dict,
     is_resume_training: bool=False,
     runtime_env: str="local"
 ) -> int:
-    """if runtime_env == 'local':
+
+    # the following are temp solutions for issues in Ray
+    if runtime_env == 'local':
         # temp solution to ray problems
         os.environ["TUNE_PLACEMENT_GROUP_AUTO_DISABLED"] = "1"
-    
     os.environ["TUNE_PLACEMENT_GROUP_CLEANUP_DISABLED"] = "1"
-    """
 
     dataset = experiment_attr['dataset']
     encoder = experiment_attr['encoder']
-    output_dir = experiment_attr['output_dir']
-    top_n_trials = experiment_attr['top_n_trials']
     model_config = experiment_attr['model_config']
-    elastic_config = experiment_attr['elastic_config']
     
     try: 
         start = datetime.datetime.now()
@@ -248,7 +99,8 @@ def run_hyperopt_exp(
         new_model_config = copy.deepcopy(experiment_attr['model_config'])
         existing_results = None
         if is_resume_training:
-            new_model_config, existing_results = resume_training(new_model_config, output_dir)
+            new_model_config, existing_results = resume_training(
+                new_model_config, experiment_attr['output_dir'])
 
         hyperopt_results = hyperopt(
             new_model_config, 
@@ -281,8 +133,7 @@ def run_hyperopt_exp(
                 )
             )
 
-            # create .completed file to indicate that experiment
-            # is completed
+            # create .completed file to indicate that experiment is completed
             _ = open(os.path.join(output_dir, '.completed'), 'wb')
 
         except FileNotFoundError:
@@ -290,61 +141,15 @@ def run_hyperopt_exp(
 
         # save output to db
         if elastic_config:
-            es_db = Database(
-                elastic_config['host'], 
-                (elastic_config['username'], elastic_config['password']),
-                elastic_config['username'],
-                elastic_config['index']
-            )
-
-            # save top_n model configs to elastic
-            if top_n_trials is not None and len(hyperopt_results) > top_n_trials:
-                hyperopt_results = hyperopt_results[0:top_n_trials]
-
-            hyperopt_run_data = map_runstats_to_modelpath(
-                hyperopt_results, output_dir, executor=tune_executor)
-
-            # ensures that all numerical values are of type float
-            format_fields_float(hyperopt_results)
-            for run in hyperopt_run_data:
-                new_config = substitute_dict_parameters(
-                    copy.deepcopy(model_config),
-                    parameters=run['hyperopt_results']['parameters']
+            try:
+                save_results_to_es(
+                    experiment_attr,
+                    hyperopt_results,
+                    tune_executor=tune_executor,
+                    top_n_trials=top_n_trials,
                 )
-                del new_config['hyperopt']
-
-                document = {
-                    'hyperopt_results': run['hyperopt_results'],
-                    'model_path' : run['model_path']
-                }
-                
-                try:
-                    append_experiment_metadata(
-                        document, 
-                        model_path=run['model_path'], 
-                        data_path=file_path,
-                        run_stats=run
-                    )
-                except:
-                    pass
-
-                formatted_document = es_db.format_document(
-                    document,
-                    encoder=encoder,
-                    dataset=dataset,
-                    config=experiment_attr['model_config']
-                )
-
-                formatted_document['sampled_run_config'] = new_config
-                
-                try:
-                    es_db.upload_document(
-                        hash_dict(new_config),
-                        formatted_document
-                    )
-                except:
-                    print("error uploading to elastic...")
-        
+            except:
+                print("Not all files were uploaded to elastic db!")
         return 1
     except:
         print("Error running experiment...not completed")
@@ -405,10 +210,14 @@ def run_experiments(
                                                            run_environment))
                 else:
                     experiment_queue.append(experiment_attr)
+            else:
+                print("The {dataset} x {encoder} exp. has already completed!")
     
     if run_environment != 'local':
-        completed_runs = ray.get([run_hyperopt_exp.remote(exp, resume_existing_exp, run_environment) 
-                                  for exp in experiment_queue])
+        completed_runs = ray.get(
+            [run_hyperopt_exp.remote(exp, resume_existing_exp, run_environment) 
+             for exp in experiment_queue
+            ])
 
     if len(completed_runs) == len(experiment_queue):                
         # create .completed file to indicate that entire hyperopt experiment
@@ -451,9 +260,10 @@ def main():
         '--datasets',
         help='list of datasets to run experiemnts on',
         nargs='+',
-        choices=['all', 'agnews', 'amazon_reviews', 'amazon_review_polarity', \
-                 'dbpedia', 'ethos_binary', 'goemotions', 'irony', 'sst2', 'sst5',\
-                 'yahoo_answers', 'yelp_review_polarity', 'yelp_reviews', 'smoke'
+        choices=['all', 'agnews', 'amazon_reviews', 'amazon_review_polarity', 
+                 'dbpedia', 'ethos_binary', 'goemotions', 'irony', 'sst2', 
+                 'sst5','yahoo_answers', 'yelp_review_polarity', 'yelp_reviews',
+                 'smoke'
                 ],
         default=None,
         required=True
@@ -531,15 +341,14 @@ def main():
     if args.run_environment == 'gcp':
         ray.init(address="auto")
     
-    if args.run_environment == 'local' or args.run_environment == 'gcp':
-        run_experiments(
-            data_file_paths, 
-            config_files, 
-            top_n_trials=args.top_n_trials,
-            elastic_config=elastic_config,
-            run_environment=args.run_environment,
-            resume_existing_exp=args.resume_existing_exp
-        )
+    run_experiments(
+        data_file_paths, 
+        config_files, 
+        top_n_trials=args.top_n_trials,
+        elastic_config=elastic_config,
+        run_environment=args.run_environment,
+        resume_existing_exp=args.resume_existing_exp
+    )
 
 if __name__ == '__main__':
     main()

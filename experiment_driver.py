@@ -23,7 +23,6 @@ from utils.experiment_utils import *
 from utils.metadata_utils import append_experiment_metadata
 
 logging.basicConfig(
-    # filename="elastic-exp.log",
     format=logging.basicConfig(
         format="[\N{books} LUDWIG-BENCH \N{books}] => %(levelname)s::%(message)s",
         level=logging.DEBUG,
@@ -86,102 +85,104 @@ def run_hyperopt_exp(
         os.environ["TUNE_PLACEMENT_GROUP_AUTO_DISABLED"] = "1"
     os.environ["TUNE_PLACEMENT_GROUP_CLEANUP_DISABLED"] = "1"
 
-    # try:
-    start = datetime.datetime.now()
-
-    combined_ds, train_set, val_set, test_set = None, None, None, None
-    combined_ds, train_set, val_set, test_set = process_dataset(
-        experiment_attr["dataset_path"]
-    )
-
-    tune_executor = model_config["hyperopt"]["executor"]["type"]
-
-    if tune_executor == "ray" and runtime_env == "gcp":
-        if (
-            "kubernetes_namespace"
-            not in model_config["hyperopt"]["executor"].keys()
-        ):
-            raise ValueError(
-                "Please specify the kubernetes namespace of the Ray cluster"
-            )
-
-    if tune_executor == "ray" and runtime_env == "local":
-        if (
-            "kubernetes_namespace"
-            in model_config["hyperopt"]["executor"].keys()
-        ):
-            raise ValueError(
-                "You are running locally. "
-                "Please remove the kubernetes_namespace param in hyperopt_config.yaml"
-            )
-
-    gpu_list = None
-    if tune_executor != "ray":
-        gpu_list = get_gpu_list()
-
-    new_model_config = copy.deepcopy(experiment_attr["model_config"])
-    existing_results = None
-    if is_resume_training:
-        new_model_config, existing_results = resume_training(
-            new_model_config, experiment_attr["output_dir"]
-        )
-
-    hyperopt_results = hyperopt(
-        new_model_config,
-        dataset=combined_ds,
-        training_set=train_set,
-        validation_set=val_set,
-        test_set=test_set,
-        model_name=experiment_attr["model_name"],
-        gpus=gpu_list,
-        output_directory=experiment_attr["output_dir"],
-    )
-
-    if existing_results is not None:
-        hyperopt_results.extend(existing_results)
-        hyperopt_results.sort(key=lambda result: result["metric_score"])
-
-    logging.info(
-        "time to complete: {}".format(datetime.datetime.now() - start)
-    )
-
-    # Save output locally
     try:
-        pickle.dump(
-            hyperopt_results,
-            open(
-                os.path.join(
-                    experiment_attr["output_dir"],
-                    f"{dataset}_{encoder}_hyperopt_results.pkl",
-                ),
-                "wb",
-            ),
+        start = datetime.datetime.now()
+
+        combined_ds, train_set, val_set, test_set = None, None, None, None
+        combined_ds, train_set, val_set, test_set = process_dataset(
+            experiment_attr["dataset_path"]
         )
-    except:
-        pass
 
-    # create .completed file to indicate that experiment is completed
-    _ = open(os.path.join(experiment_attr["output_dir"], ".completed"), "wb")
+        tune_executor = model_config["hyperopt"]["executor"]["type"]
 
-    logging.info(
-        "time to complete: {}".format(datetime.datetime.now() - start)
-    )
+        if tune_executor == "ray" and runtime_env == "gcp":
+            if (
+                "kubernetes_namespace"
+                not in model_config["hyperopt"]["executor"].keys()
+            ):
+                raise ValueError(
+                    "Please specify the kubernetes namespace of the Ray cluster"
+                )
 
-    # save output to db
-    if experiment_attr["elastic_config"]:
+        if tune_executor == "ray" and runtime_env == "local":
+            if (
+                "kubernetes_namespace"
+                in model_config["hyperopt"]["executor"].keys()
+            ):
+                raise ValueError(
+                    "You are running locally. "
+                    "Please remove the kubernetes_namespace param in hyperopt_config.yaml"
+                )
+
+        gpu_list = None
+        if tune_executor != "ray":
+            gpu_list = get_gpu_list()
+
+        new_model_config = copy.deepcopy(experiment_attr["model_config"])
+        existing_results = None
+        if is_resume_training:
+            new_model_config, existing_results = resume_training(
+                new_model_config, experiment_attr["output_dir"]
+            )
+
+        hyperopt_results = hyperopt(
+            new_model_config,
+            dataset=combined_ds,
+            training_set=train_set,
+            validation_set=val_set,
+            test_set=test_set,
+            model_name=experiment_attr["model_name"],
+            gpus=gpu_list,
+            output_directory=experiment_attr["output_dir"],
+        )
+
+        if existing_results is not None:
+            hyperopt_results.extend(existing_results)
+            hyperopt_results.sort(key=lambda result: result["metric_score"])
+
+        logging.info(
+            "time to complete: {}".format(datetime.datetime.now() - start)
+        )
+
+        # Save output locally
         try:
-            save_results_to_es(
-                experiment_attr,
+            pickle.dump(
                 hyperopt_results,
-                tune_executor=tune_executor,
-                top_n_trials=experiment_attr["top_n_trials"],
+                open(
+                    os.path.join(
+                        experiment_attr["output_dir"],
+                        f"{dataset}_{encoder}_hyperopt_results.pkl",
+                    ),
+                    "wb",
+                ),
             )
         except:
-            logging.warning("Not all files were uploaded to elastic db!")
-    return 1
-    """except:
+            pass
+
+        # create .completed file to indicate that experiment is completed
+        _ = open(
+            os.path.join(experiment_attr["output_dir"], ".completed"), "wb"
+        )
+
+        logging.info(
+            "time to complete: {}".format(datetime.datetime.now() - start)
+        )
+
+        # save output to db
+        if experiment_attr["elastic_config"]:
+            try:
+                save_results_to_es(
+                    experiment_attr,
+                    hyperopt_results,
+                    tune_executor=tune_executor,
+                    top_n_trials=experiment_attr["top_n_trials"],
+                )
+            except:
+                logging.warning("Not all files were uploaded to elastic db!")
+        return 1
+    except:
         logging.warning("Error running experiment...not completed")
-        return 0"""
+        return 0
 
 
 def run_experiments(

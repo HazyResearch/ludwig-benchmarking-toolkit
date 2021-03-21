@@ -38,11 +38,13 @@ python experiment_driver.py --run_environment local --datasets smoke --custom_en
 ### *Running your first REAL experiment*:
 
 To run experiment an experiment do the following:
-1. Declare and configure the space of your training and preprocessing hyperparameters in the `experiment-templates/hyperopt_config.yaml` file
-2. Declare and configure the space of your  encoder specific hyperparams in the `{encoder}_hyperopt.yaml` files in `./encoder_configs` 
+1. Declare and configure the search space of your training and preprocessing hyperparameters in the `experiment-templates/hyperopt_config.yaml` file
+2. Declare and configure the search space of your  encoder specific hyperparams in the `{encoder}_hyperopt.yaml` files in `./encoder_configs` 
 
-    *Note: for both (1) and (2) see the [Ludwig Hyperoptimization guide](https://ludwig-ai.github.io/ludwig-docs/user_guide/#hyper-parameter-optimization) to see what parameters for training, preprocessing, and input/ouput features
-    can be used in the hyperopt search* 
+    **NOTE**: 
+    * for both (1) and (2) see the [Ludwig Hyperparamter Optimization guide](https://ludwig-ai.github.io/ludwig-docs/user_guide/#hyper-parameter-optimization) to see what parameters for training, preprocessing, and input/ouput features
+    can be used in the hyperopt search
+    * if the exectuor type is `Ray` the list of available search spaces and input format differs slightly than the built-in ludwig types. Please see the [Ray Tune search space docs](https://docs.ray.io/en/master/tune/api_docs/search_space.html) for more information.
 
 3. Run the following command specifying the datasets, encoders, path to elastic DB index config file, run environment and more:
 

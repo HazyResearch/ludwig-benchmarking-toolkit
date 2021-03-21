@@ -130,11 +130,13 @@ def set_globals(args):
     if args.datasets is None:
         raise ValueError(
             "Please specify a dataset or list of dataset."
-            "Use python experiment_driver.py --h to see \
-                          list of available datasets."
+            "Use python experiment_driver.py --h to see: list of available datasets."
         )
     else:
-        globals.DATASET_LIST = args.datasets
+        if "smoke" in args.datasets:
+            globals.DATASET_LIST = list(globals.SMOKE_DATASETS.keys())
+        else:
+            globals.DATASET_LIST = args.datasets
 
     if "all" not in args.custom_encoders_list:
         encoders_list = []
@@ -154,7 +156,7 @@ def set_globals(args):
             os.mkdir(exp_dir)
 
 
-def format_fields_float(l: list) -> list:
+def format_fields_float(field_list: list) -> list:
     """ formats fields in elastic db entries """
 
     def replace_ints(d):
@@ -167,7 +169,7 @@ def format_fields_float(l: list) -> list:
                 d.update({k: v})
         return d
 
-    formatted_out = [replace_ints(d) for d in l]
+    formatted_out = [replace_ints(d) for d in field_list]
     return formatted_out
 
 

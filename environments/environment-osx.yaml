@@ -64,7 +64,7 @@ dependencies:
       - jsonschema==3.2.0
       - keras-preprocessing==1.1.2
       - kubernetes==12.0.1
-      - git+https://github.com/ludwig-ai/ludwig.git@1aee2517cb49d70b985d6e00e7d0bb65357dd7be
+      - git+https://github.com/ludwig-ai/ludwig.git@ed5ae805a6fb28f7ba02a50fffebdd24ab52d436
       - lxml==4.6.2
       - markdown==3.3.4
       - msgpack==1.0.2

@@ -3,8 +3,12 @@ import json
 import os
 from elasticsearch import Elasticsearch
 
-from utils.experiment_utils import (format_fields_float, get_model_ckpt_paths,
-                                    hash_dict, substitute_dict_parameters)
+from utils.experiment_utils import (
+    format_fields_float,
+    get_model_ckpt_paths,
+    hash_dict,
+    substitute_dict_parameters,
+)
 from utils.metadata_utils import append_experiment_metadata
 
 
@@ -34,8 +38,8 @@ def save_results_to_es(
     format_fields_float(hyperopt_results)
     for run in hyperopt_run_data:
         new_config = substitute_dict_parameters(
-            copy.deepcopy(experiment_attr['model_config']),
-            parameters=run['hyperopt_results']['parameters']
+            copy.deepcopy(experiment_attr["model_config"]),
+            parameters=run["hyperopt_results"]["parameters"],
         )
         del new_config["hyperopt"]
 
@@ -55,26 +59,21 @@ def save_results_to_es(
             pass
 
         formatted_document = es_db.format_document(
-            document, 
+            document,
             encoder=experiment_attr["encoder"],
             dataset=experiment_attr["dataset"],
             config=experiment_attr["model_config"],
         )
 
         formatted_document["sampled_run_config"] = new_config
-
+        ds = experiment_attr["dataset"]
+        enc = experiment_attr["encoder"]
         try:
             es_db.upload_document(hash_dict(new_config), formatted_document)
-            logging.info(
-                f"{experiment_attr["dataset"]} x {experiment_attr["encoder"]} "
-                f"uploaded to elastic."
-            )
-            print("uploaded")
+            logging.info(f"{ds} x {enc}" f"uploaded to elastic.")
         except:
             logging.warning(
-                f"error uploading"
-                f"{experiment_attr['dataset']} x {experiment_attr['encoder']}"
-                f"to elastic..."
+                f"error uploading" f"{ds} x {enc}" f"to elastic..."
             )
 
 

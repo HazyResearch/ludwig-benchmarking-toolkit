@@ -1,6 +1,7 @@
 import json
 import os
-from utils.experiment_utils import hash_dict, format_fields_float
+import copy
+from utils.experiment_utils import hash_dict, format_fields_float, get_model_ckpt_paths, substitute_dict_parameters
 from elasticsearch import Elasticsearch
 from utils.metadata_utils import append_experiment_metadata
 
@@ -24,13 +25,11 @@ def save_results_to_es(
 
     hyperopt_run_data = get_model_ckpt_paths(hyperopt_results, 
             experiment_attr['output_dir'], executor=tune_executor)
-
     # ensures that all numerical values are of type float
     format_fields_float(hyperopt_results)
-
     for run in hyperopt_run_data:
         new_config = substitute_dict_parameters(
-            copy.deepcopy(model_config),
+            copy.deepcopy(experiment_attr['model_config']),
             parameters=run['hyperopt_results']['parameters']
         )
         del new_config['hyperopt']
@@ -64,6 +63,7 @@ def save_results_to_es(
                 hash_dict(new_config),
                 formatted_document
             )
+            print("uploaded")
         except:
             print(f"error uploading"
                   f"{experiment_attr['dataset']} x {experiment_attr['encoder']}"

@@ -127,30 +127,32 @@ def run_hyperopt_exp(
             pickle.dump(
                 hyperopt_results, 
                 open(os.path.join(
-                    output_dir, 
+                    experiment_attr['output_dir'], 
                     f"{dataset}_{encoder}_hyperopt_results.pkl"
                     ),'wb'
                 )
             )
 
             # create .completed file to indicate that experiment is completed
-            _ = open(os.path.join(output_dir, '.completed'), 'wb')
+            _ = open(os.path.join(experiment_attr['output_dir'], '.completed'), 'wb')
+        except:
+            print("unable to save results locally")
 
         logging.info("time to complete: {}".format(
             datetime.datetime.now() - start)
         ) 
 
         # save output to db
-        if elastic_config:
-            try:
-                save_results_to_es(
-                    experiment_attr,
-                    hyperopt_results,
-                    tune_executor=tune_executor,
-                    top_n_trials=top_n_trials,
-                )
-            except:
-                print("Not all files were uploaded to elastic db!")
+        if experiment_attr['elastic_config']:
+            #try:
+            save_results_to_es(
+                experiment_attr,
+                hyperopt_results,
+                tune_executor=tune_executor,
+                top_n_trials=experiment_attr['top_n_trials'],
+            )
+            """except:
+                print("Not all files were uploaded to elastic db!")"""
         return 1
     except:
         print("Error running experiment...not completed")

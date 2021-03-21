@@ -38,8 +38,8 @@ python experiment_driver.py --run_environment local --datasets smoke --custom_en
 ### *Running your first REAL experiment*:
 
 To run experiment an experiment do the following:
-1. Declare and configure the search space of your training and preprocessing hyperparameters in the `experiment-templates/hyperopt_config.yaml` file
-2. Declare and configure the search space of your  encoder specific hyperparams in the `{encoder}_hyperopt.yaml` files in `./encoder_configs` 
+1. Declare and configure the search space of all non-encoder specific training and preprocessing hyperparameters in the `experiment-templates/hyperopt_config.yaml` file. The parameters specified in this file will be the used across all encoder experiments.
+2. Declare and configure the search space of encoder specific hyperparams in the `{encoder}_hyperopt.yaml` files in `./encoder_configs` 
 
     **NOTE**: 
     * for both (1) and (2) see the [Ludwig Hyperparamter Optimization guide](https://ludwig-ai.github.io/ludwig-docs/user_guide/#hyper-parameter-optimization) to see what parameters for training, preprocessing, and input/ouput features

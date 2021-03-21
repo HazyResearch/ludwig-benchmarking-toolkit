@@ -28,18 +28,18 @@ conda activate ludwig-bench
 
 ### *Running your first DUMMY experiment*:
 
-For testing/setup purposes we have included a set of datasets which we refer to as the "smoke" datasets. Smoke datasets are comprised of samples from an original datasets in the datasets list. For example the smoke sst5 datasets contains a small set of training, test and val samples from the original SST5 datasets. If you would like to use one of the smoke datasets, simply set `--datasets` param to "smoke".
+For testing/setup purposes we have included a set of datasets which we refer to as the "smoke" datasets. Smoke datasets are comprised of samples from an original datasets in the list of datasets. For example, the smoke sst5 datasets contains a small set of training, test and validation samples from the original sst5 dataset. If you would like to use one of the smoke datasets, simply set the `--datasets` param to "smoke".
 
-Before running a full-scale experiment, we recommend running an experiment locally on one of the smoke datasets:
+Before running a full-scale experiment, we recommend running an experiment locally on the smoke datasets as follows:
 ```
 python experiment_driver.py --run_environment local --datasets smoke --custom_encoders_list rnn
 ```
 
 ### *Running your first REAL experiment*:
 
-To run experiment an experiment do the following:
-1. Declare and configure the search space of all non-encoder specific training and preprocessing hyperparameters in the `experiment-templates/hyperopt_config.yaml` file. The parameters specified in this file will be the used across all encoder experiments.
-2. Declare and configure the search space of encoder specific hyperparams in the `{encoder}_hyperopt.yaml` files in `./encoder_configs` 
+Steps for configuring + running an experiment:
+1. Declare and configure the search space of all non-encoder specific training and preprocessing hyperparameters in the `experiment-templates/hyperopt_config.yaml` file. The parameters specified in this file will be used across all encoder experiments.
+2. Declare and configure the search space of encoder specific hyperparameters in the `{encoder}_hyperopt.yaml` files in `./encoder_configs` 
 
     **NOTE**: 
     * for both (1) and (2) see the [Ludwig Hyperparamter Optimization guide](https://ludwig-ai.github.io/ludwig-docs/user_guide/#hyper-parameter-optimization) to see what parameters for training, preprocessing, and input/ouput features

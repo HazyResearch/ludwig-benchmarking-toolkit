@@ -1,5 +1,6 @@
 import copy
 import json
+import logging
 import os
 from elasticsearch import Elasticsearch
 

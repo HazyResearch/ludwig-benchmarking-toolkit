@@ -245,11 +245,11 @@ def run_experiments(
                             run_environment,
                         )
                     )
-                else:
-                    experiment_queue.append(experiment_attr)
+                
+                experiment_queue.append(experiment_attr)
             else:
                 logging.info(
-                    "The {dataset} x {encoder} exp. has already completed!"
+                    f"The {dataset} x {encoder} exp. has already completed!"
                 )
 
     if run_environment != "local":

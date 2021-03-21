@@ -268,10 +268,10 @@ def get_model_ckpt_paths(
     if executor == "ray":  # folder construction is different
         hyperopt_run_metadata = []
         # populate paths
+        trial_dirs = []
         for path in os.scandir(output_dir):
             if os.path.isdir(path):
-                trial_dirs = get_ray_tune_trial_dirs(path, [])
-
+                trial_dirs.extend(get_ray_tune_trial_dirs(path, []))
         for hyperopt_run in hyperopt_training_stats:
             hyperopt_run_metadata.append(
                 {
@@ -320,37 +320,42 @@ def get_model_ckpt_paths(
 
 def collect_completed_trial_results(output_dir: str):
     results, metrics, params = [], [], []
-    trial_dirs = get_ray_tune_trial_dirs(output_dir)
+    trial_dirs = get_ray_tune_trial_dirs(output_dir, [])
     for trial_dir in trial_dirs:
         for f in os.scandir(trial_dir):
             if "progress" in f.name:
-                progress = pd.read_csv(f)
-                last_iter = len(progress) - 1
-                last_iter_eval_stats = json.loads(
-                    progress.iloc[last_iter]["eval_stats"]
-                )
-                if (
-                    "overall_stats"
-                    in last_iter_eval_stats[
-                        list(last_iter_eval_stats.keys())[0]
-                    ].keys()
-                ):
-                    trial_results = decode_json_enc_dict(
-                        progress.iloc[last_iter].to_dict(),
-                        ["parameters", "training_stats", "eval_stats"],
+                try:
+                    progress = pd.read_csv(f)
+                    last_iter = len(progress) - 1
+                    last_iter_eval_stats = json.loads(
+                        progress.iloc[last_iter]["eval_stats"]
                     )
-                    trial_results["done"] = True
-                    metrics.append(progress.iloc[last_iter]["metric_score"])
-                    curr_path = f.path
-                    params_path = curr_path.replace(
-                        "progress.csv", "params.json"
-                    )
-                    trial_params = json.load(open(params_path, "rb"))
-                    params.append(trial_params)
-                    for key, value in trial_params.items():
-                        config_key = "config" + "." + key
-                        trial_results[config_key] = value
-                    results.append(trial_results)
+                    if (
+                        "overall_stats"
+                        in last_iter_eval_stats[
+                            list(last_iter_eval_stats.keys())[0]
+                        ].keys()
+                    ):
+                        trial_results = decode_json_enc_dict(
+                            progress.iloc[last_iter].to_dict(),
+                            ["parameters", "training_stats", "eval_stats"],
+                        )
+                        trial_results["done"] = True
+                        metrics.append(
+                            progress.iloc[last_iter]["metric_score"]
+                        )
+                        curr_path = f.path
+                        params_path = curr_path.replace(
+                            "progress.csv", "params.json"
+                        )
+                        trial_params = json.load(open(params_path, "rb"))
+                        params.append(trial_params)
+                        for key, value in trial_params.items():
+                            config_key = "config" + "." + key
+                            trial_results[config_key] = value
+                        results.append(trial_results)
+                except:
+                    pass
     return results, metrics, params
 
 

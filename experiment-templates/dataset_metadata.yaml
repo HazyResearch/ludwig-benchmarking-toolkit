@@ -1,6 +1,73 @@
+agnews:
+  data_class: AGNews 
+  input_name: description
+  output_name: class_index
+  output_type: category
+
+amazon_review_polarity:
+  data_class: AmazonPolarity
+  input_name: review_text
+  output_name: label
+  output_type: category
+
+amazon_reviews:
+  data_class: AmazonReviews
+  input_name: review_text
+  output_name: label
+  output_type: category
+
+dbpedia:
+  data_class: DBPedia
+  input_name: content
+  output_name: label
+  output_type: category
+
 ethos_binary:
   data_class: EthosBinary
   input_name: comment
   output_name: isHate
   output_type: category
+
+goemotions:
+  data_class: GoEmotions
+  input_name: text
+  output_name: emotion_ids
+  output_type: set
+
+irony:
+  data_class: Irony
+  input_name: comment_text
+  output_name: label
+  output_type: category
+
+sst2:
+  data_class: SST2
+  input_name: sentence
+  output_name: label
+  output_type: category
+
+sst5:
+  data_class: SST5
+  input_name: sentence
+  output_name: label
+  output_type: category
+
+yahoo_answers:
+  data_class: YahooAnswers 
+  input_name: question
+  output_name: label
+  output_type: category
+
+yelp_review_polarity:
+  data_class: YelpPolarity
+  input_name: text
+  output_name: label
+  output_type: category
+
+yelp_reviews:
+  data_class: YelpReviews
+  input_name: text
+  output_name: label
+  output_type: category
+
 

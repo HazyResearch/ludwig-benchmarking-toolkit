@@ -1,16 +1,16 @@
-import os
-import ray
-import platform
 import datetime
+import os
+import platform
 
 import GPUtil
 import ludwig
 import numpy as np
 import pandas as pd
 import psutil
+import ray
+import tensorflow as tf
 from ludwig.api import LudwigModel
 from ludwig.collect import collect_weights
-import tensorflow as tf
 
 
 @ray.remote
@@ -71,17 +71,16 @@ def get_inference_latency(
     # Create smaller datasets w/10 samples from original dev set
     full_dataset = pd.read_csv(dataset_path)
     # Note: split == 1 indicates the dev set
-    if split in full_dataset:
+    if "split" in full_dataset:
         sampled_dataset = full_dataset[full_dataset["split"] == 1].sample(
             n=num_samples
         )
     else:
         sampled_dataset = full_dataset.sample(n=num_samples)
-
     ludwig_model = LudwigModel.load(model_path)
     start = datetime.datetime.now()
     _, _ = ludwig_model.predict(
-        dataset=inference_dataset,
+        dataset=sampled_dataset,
         batch_size=1,
     )
     total_time = datetime.datetime.now() - start
@@ -125,8 +124,13 @@ def get_train_speed(
     # Return
     :return: (str) avg. time per training step
     """
+
+    train_split_size = 0.7
     full_dataset = pd.read_csv(dataset_path)
-    total_samples = len(full_dataset[full_dataset["split"] == 0])
+    if "split" in full_dataset:
+        total_samples = len(full_dataset[full_dataset["split"] == 0])
+    else:
+        total_samples = int(train_split_size * len(full_dataset))
     total_training_steps = int(total_samples / train_batch_size)
     time_per_batch = (
         int(run_stats["hyperopt_results"]["time_this_iter_s"])
@@ -210,7 +214,7 @@ def append_experiment_metadata(
             )
             document.update({key: ray.get(output)})
         except:
-            print("failure")
+            print(f"failure processing: {key}")
             pass
 
 

@@ -151,9 +151,12 @@ def run_hyperopt_exp(
             _ = open(
                 os.path.join(experiment_attr["output_dir"], ".completed"), "wb"
             )
-
-        except FileNotFoundError:
+        except:
             pass
+
+        logging.info(
+            "time to complete: {}".format(datetime.datetime.now() - start)
+        )
 
         # save output to db
         if experiment_attr["elastic_config"]:

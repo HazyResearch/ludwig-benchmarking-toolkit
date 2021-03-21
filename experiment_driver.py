@@ -342,7 +342,7 @@ def main():
         "--dataset_cache_dir",
         help="path to cache downloaded datasets",
         type=str,
-        default=None,
+        default=DATASET_CACHE_DIR,
     )
 
     # list of encoders to run hyperopt search over :

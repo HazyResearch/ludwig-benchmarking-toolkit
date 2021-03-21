@@ -1,6 +1,7 @@
 ENCODER_CONFIG_DIR = "./encoder-configs"
 # EXPERIMENT_CONFIGS_DIR = '/experiments/ludwig-bench-textclassification/experiment-configs'
 EXPERIMENT_CONFIGS_DIR = "./hyperopt-experiment-configs"
+DATASET_CACHE_DIR = "./datasets"
 
 ENCODER_HYPEROPT_FILENAMES = {
     "bert": "bert_hyperopt.yaml",

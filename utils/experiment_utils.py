@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import pdb
+import logging
 from typing import Union
 
 import globals
@@ -18,7 +19,7 @@ def get_gpu_list():
         return None
 
 
-def download_dataset(dataset_class: str, cache_dir: str = None) -> str:
+def download_dataset(dataset_class: str, cache_dir: str) -> str:
     if dataset_class == "GoEmotions":
         from ludwig.datasets.goemotions import GoEmotions
 
@@ -124,8 +125,13 @@ def load_yaml(filename: str) -> dict:
 def set_globals(args):
     """ set global vars based on command line args """
     globals.EXPERIMENT_CONFIGS_DIR = args.hyperopt_config_dir
+    logging.info(f"EXPERIMENT_CONFIG_DIR set to {args.hyperopt_config_dir}")
     globals.EXPERIMENT_OUTPUT_DIR = args.experiment_output_dir
+    logging.info(f"EXPERIMENT_OUTPUT_DIR set to {args.experiment_output_dir}")
     globals.RUNTIME_ENV = args.run_environment
+    logging.info(f"RUNTIME_ENV set to {args.run_environment}")
+    globals.DATASET_CACHE_DIR = args.dataset_cache_dir
+    logging.info(f"DATASET_CACHE_DIR set to {args.dataset_cache_dir}")
 
     if args.datasets is None:
         raise ValueError(
@@ -135,8 +141,10 @@ def set_globals(args):
     else:
         if "smoke" in args.datasets:
             globals.DATASET_LIST = list(globals.SMOKE_DATASETS.keys())
+            logging.info("Setting global datasets list to smoke datasets...")
         else:
             globals.DATASET_LIST = args.datasets
+            logging.info(f"Setting global datasets list to {args.datasets}")
 
     if "all" not in args.custom_encoders_list:
         encoders_list = []
@@ -151,6 +159,7 @@ def set_globals(args):
     for exp_dir in [
         globals.EXPERIMENT_CONFIGS_DIR,
         globals.EXPERIMENT_OUTPUT_DIR,
+        globals.DATASET_CACHE_DIR
     ]:
         if not os.path.isdir(exp_dir):
             os.mkdir(exp_dir)

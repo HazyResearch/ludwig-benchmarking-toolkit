@@ -4,7 +4,6 @@ channels:
 dependencies:
   - ca-certificates=2021.1.19
   - certifi=2020.12.5
-  - libcxx=10.0.0
   - libedit=3.1.20191231
   - libffi=3.3
   - ncurses=6.2

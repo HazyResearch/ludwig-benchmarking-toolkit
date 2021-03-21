@@ -32,7 +32,7 @@ For testing/setup purposes we have included a set of datasets which we refer to 
 
 Before running a full-scale experiment, we recommend running an experiment locally on one of the smoke datasets:
 ```
-python experiment_driver.py -re local --datasets smoke -cel rnn
+python experiment_driver.py --run_environment local --datasets smoke --custom_encoders_list rnn
 ```
 
 ### *Running your first REAL experiment*:
@@ -40,7 +40,7 @@ python experiment_driver.py -re local --datasets smoke -cel rnn
 To run experiment an experiment do the following:
 1. Declare and configure the space of your training hyperparameters in the `experiment-templates/hyperopt_config.yaml` file
 2. Set the space of the encoder specific hyperparams in the `{encoder}_hyperopt.yaml` files in `./encoder_configs`
-3. Run the following command specifying the datasets, encoders, elastic_db config file, run environment and more:
+3. Run the following command specifying the datasets, encoders, path to elastic DB index config file, run environment and more:
 
     ```
         python experiment_driver.py \

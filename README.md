@@ -10,7 +10,7 @@ conda env create -f environments/{environment-osx.yaml, environment-linux.yaml}
 conda activate ludwig-bench
 ```
 
-## **Relevant files and directories:**
+## **Relevant files and directories**
 `experiment-templates/model_template.yaml`: Every task (i.e. text classification) will have its owns model template. The template specifies the model architecture (encoder and decoder structure), training parameters, and a hyperopt configuration. A large majority of the values of the template will be populated by the values in the hyperopt_config.yaml file and dataset_metadata.yaml at training time.
 
 `experiment-templates/hyperopt_config.yaml`: provides a range of values for training parameters and hyperopt params that will populate the hyperopt configuration in the model template
@@ -24,11 +24,11 @@ conda activate ludwig-bench
 `elasticsearch_config.yaml `: this is an optional file that is to be defined if an experiment data will be saved to an elastic database.
 
 
-## **Running an experiment:**
+## **Running an experiment**
 
 ### *Running your first DUMMY experiment*:
 
-For testing/setup purposes we have included a set of datasets which we refer to as the "smoke" datasets. Smoke datasets are comprised of samples from an original datasets in the list of datasets. For example, the smoke sst5 datasets contains a small set of training, test and validation samples from the original sst5 dataset. If you would like to use one of the smoke datasets, simply set the `--datasets` param to "smoke".
+For testing/setup purposes we have included a set of datasets which we refer to as the "smoke" datasets. Smoke datasets are comprised of samples from an original dataset in the list of datasets. For example, the smoke sst5 datasets contains a small set of training, test and validation samples from the original sst5 dataset. If you would like to use one of the smoke datasets, simply set the `--datasets` param to "smoke".
 
 Before running a full-scale experiment, we recommend running an experiment locally on the smoke datasets as follows:
 ```

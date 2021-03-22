@@ -2,9 +2,10 @@ import base64
 import copy
 import hashlib
 import json
+import logging
+import math
 import os
 import pdb
-import logging
 from typing import Union
 
 import globals
@@ -159,7 +160,7 @@ def set_globals(args):
     for exp_dir in [
         globals.EXPERIMENT_CONFIGS_DIR,
         globals.EXPERIMENT_OUTPUT_DIR,
-        globals.DATASET_CACHE_DIR
+        globals.DATASET_CACHE_DIR,
     ]:
         if not os.path.isdir(exp_dir):
             os.mkdir(exp_dir)
@@ -175,6 +176,16 @@ def format_fields_float(field_list: list) -> list:
             else:
                 if type(v) == int:
                     v = float(v)
+                if type(v) == list and type(v[0]) not in [list, dict]:
+                    new_v = []
+                    for x in v:
+                        if isinstance(x, (int, float)) and math.isnan(x):
+                            new_v.append(0.0)
+                        else:
+                            new_v.append(x)
+                    v = new_v
+                if isinstance(v, (int, float)) and math.isnan(v):
+                    v = 0.0
                 d.update({k: v})
         return d
 

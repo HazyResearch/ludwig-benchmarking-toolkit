@@ -2,7 +2,7 @@ input_features:
   - 
     preprocessing:
       word_tokenizer: hf_tokenizer
-      pretrained_model_name_or_path: google/electra-base-generator
+    pretrained_model_name_or_path: google/electra-base-generator
 
 training:
   batch_size: 16

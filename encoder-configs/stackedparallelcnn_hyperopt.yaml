@@ -10,8 +10,11 @@ input_features:
       
 training:
   early_stop: 7
+  eval_batch_size: 256
+  batch_size: 128
 
 parameters:
+
   input_features.name.encoder: stacked_parallel_cnn
 
   input_features.name.stacked_layers:

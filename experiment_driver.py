@@ -210,10 +210,10 @@ def run_experiments(
         
         combined_ds, train_set, val_set, test_set = None, None, None, None        
         combined_ds, train_set, val_set, test_set = process_dataset(
-            experiment_attr["dataset_path"]
+           file_path 
         )
         
-        if runtime_env == 'gcp':
+        if run_environment == 'gcp':
             combined_ds = ray.put(combined_ds)
             train_set = ray.put(train_set)
             val_set = ray.put(val_set)

@@ -17,6 +17,7 @@ training:
   eval_batch_size: 64
   early_stop: 3
   epochs: 25
+  validation_metric: accuracy
   
 hyperopt:
   output_feature: ${output_features.name}

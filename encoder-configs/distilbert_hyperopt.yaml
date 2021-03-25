@@ -2,7 +2,7 @@ input_features:
   - 
     preprocessing:
       word_tokenizer: hf_tokenizer
-      pretrained_model_name_or_path: distilbert-base-uncased
+    pretrained_model_name_or_path: distilbert-base-uncased
 
 training:
   batch_size: 16

@@ -105,8 +105,11 @@ def process_dataset(dataset_path: str):
             val_df = train_df.sample(frac=0.1, replace=False)
             train_df = train_df.drop(val_df.index)
 
-        return None, train_df, val_df, test_df
-    return dataset, None, None, None
+        concat_df = pd.concat([train_df, val_df, test_df], ignore_index=True)
+        concat_df.to_csv(
+            dataset_path,
+            index=False)
+    return 
 
 
 def hash_dict(d: dict, max_length: Union[int, None] = 6) -> bytes:

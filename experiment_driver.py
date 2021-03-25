@@ -130,10 +130,7 @@ def run_hyperopt_exp(
 
         hyperopt_results = hyperopt(
             new_model_config,
-            dataset=experiment_attr["combined_ds"],
-            training_set=experiment_attr["train_set"],
-            validation_set=experiment_attr["val_set"],
-            test_set=experiment_attr["test_set"],
+            dataset=experiment_attr["dataset_path"],
             model_name=experiment_attr["model_name"],
             gpus=gpu_list,
             output_directory=experiment_attr["output_dir"],
@@ -208,7 +205,7 @@ def run_experiments(
     for dataset_name, file_path in data_file_paths.items():
         logging.info("Dataset: {}".format(dataset_name))
         
-        combined_ds, train_set, val_set, test_set = None, None, None, None        
+        """combined_ds, train_set, val_set, test_set = None, None, None, None        
         combined_ds, train_set, val_set, test_set = process_dataset(
            file_path 
         )
@@ -217,7 +214,7 @@ def run_experiments(
             combined_ds = ray.put(combined_ds)
             train_set = ray.put(train_set)
             val_set = ray.put(val_set)
-            test_set = ray.put(test_set)
+            test_set = ray.put(test_set)"""
         
         for model_config_path in config_files[dataset_name]:
             config_name = model_config_path.split("/")[-1].split(".")[0]
@@ -251,10 +248,10 @@ def run_experiments(
                     "encoder": encoder,
                     "dataset": dataset,
                     "elastic_config": elastic_config,
-                    "combined_ds" : combined_ds,
-                    "train_set" : train_set,
-                    "test_set" : test_set,
-                    "val_set" : val_set
+                    #"combined_ds" : combined_ds,
+                    #"train_set" : train_set,
+                    #"test_set" : test_set,
+                    #"val_set" : val_set
                 }
                 if run_environment == "local":
                     completed_runs.append(

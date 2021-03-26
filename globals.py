@@ -9,7 +9,7 @@ ENCODER_HYPEROPT_FILENAMES = {
     "distilbert": "distilbert_hyperopt.yaml",
     "electra": "electra_hyperopt.yaml",
     "roberta": "roberta_hyperopt.yaml",
-    "stackedparallelcnn": "stackedparallelcnn_hyperopt.yaml",
+    "stacked_parallel_cnn": "stackedparallelcnn_hyperopt.yaml",
     "t5": "t5_hyperopt.yaml",
 }
 

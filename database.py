@@ -69,8 +69,9 @@ def save_results_to_es(
         formatted_document["sampled_run_config"] = new_config
         ds = experiment_attr["dataset"]
         enc = experiment_attr["encoder"]
+        doc_key = run["hyperopt_results"]["eval_stats"]
         try:
-            es_db.upload_document(hash_dict(new_config), formatted_document)
+            es_db.upload_document(hash_dict(doc_key), formatted_document)
             logging.info(f"{ds} x {enc}" f"uploaded to elastic.")
         except:
             logging.warning(

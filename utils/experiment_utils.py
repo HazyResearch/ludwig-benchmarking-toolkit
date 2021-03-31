@@ -86,6 +86,16 @@ def download_dataset(dataset_class: str, cache_dir: str) -> str:
 
         data = AmazonReviews(cache_dir)
         data.load()
+    elif dataset_class == "HateSpeech":
+        from ludwig.datasets.hate_speech import HateSpeech
+
+        data = HateSpeech(cache_dir)
+        data.load()
+    elif dataset_class == "SocialBiasFrames":
+        from ludwig.datasets.social_bias_frames import SocialBiasFrames
+
+        data = SocialBiasFrames(cache_dir)
+        data.load()
     else:
         return None
     return os.path.join(

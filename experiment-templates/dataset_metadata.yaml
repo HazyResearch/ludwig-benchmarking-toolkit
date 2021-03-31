@@ -70,4 +70,17 @@ yelp_reviews:
   output_name: label
   output_type: category
 
+hate_speech:
+  data_class: HateSpeech
+  input_name: tweet
+  output_name: class
+  output_type: category
+
+social_bias_frames:
+  data_class: SocialBiasFrames
+  input_name: post
+  output_name: sexYN
+  output_type: category
+
+
 

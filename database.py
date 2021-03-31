@@ -107,6 +107,9 @@ class Database:
     def upload_document(self, id, document):
         self.es_connection.index(index=self.index, id=id, body=document)
 
+    def remove_document(self, id):
+        self.es_connection.delete(index=self.index, id=id)
+
     def upload_document_from_outputdir(
         self,
         dir_path,

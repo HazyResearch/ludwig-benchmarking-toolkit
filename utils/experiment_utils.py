@@ -116,10 +116,8 @@ def process_dataset(dataset_path: str):
             train_df = train_df.drop(val_df.index)
 
         concat_df = pd.concat([train_df, val_df, test_df], ignore_index=True)
-        concat_df.to_csv(
-            dataset_path,
-            index=False)
-    return 
+        concat_df.to_csv(dataset_path, index=False)
+    return
 
 
 def hash_dict(d: dict, max_length: Union[int, None] = 6) -> bytes:
@@ -282,15 +280,16 @@ def get_ray_tune_trial_dirs(base_dir: str, trial_dirs):
         return trial_dirs
 
 
-def get_lastest_checkpoint(trial_dir: str):
+def get_lastest_checkpoint(trial_dir: str, idx: int = -1):
     checkpoints = [
         ckpt_dir
         for ckpt_dir in os.scandir(trial_dir)
         if os.path.isdir(ckpt_dir) and "checkpoint" in ckpt_dir.path
     ]
-
     sorted_cps = sorted(checkpoints, key=lambda d: d.path)
-    return sorted_cps[-1]
+    if idx >= len(sorted_cps):
+        idx = -1
+    return sorted_cps[idx]
 
 
 def get_model_ckpt_paths(
@@ -318,17 +317,36 @@ def get_model_ckpt_paths(
                 }
             )
 
-        for hyperopt_run in hyperopt_run_metadata:
-            hyperopt_params = hyperopt_run["hyperopt_results"]["parameters"]
-            for path in trial_dirs:
-                config_json = json.load(
-                    open(os.path.join(path, "params.json"))
+        for path in trial_dirs:
+            if os.path.getsize(os.path.join(path, "progress.csv")) > 0:
+                training_progress = pd.read_csv(
+                    os.path.join(path, "progress.csv")
                 )
-                if compare_json_enc_configs(hyperopt_params, config_json):
-                    model_path = get_lastest_checkpoint(path)
-                    hyperopt_run["model_path"] = os.path.join(
-                        model_path, "model"
-                    )
+                output_total_time = training_progress.iloc[-1]["time_total_s"]
+                for hyperopt_run in hyperopt_run_metadata:
+                    run_total_time = hyperopt_run["hyperopt_results"][
+                        "time_total_s"
+                    ]
+                    if abs(run_total_time - output_total_time) < 1e-04:
+                        best_ckpt_idx = training_progress[
+                            abs(
+                                training_progress["metric_score"]
+                                - hyperopt_run["hyperopt_results"][
+                                    "metric_score"
+                                ]
+                            )
+                            < 1e-04
+                        ].iloc[0]["training_iteration"]
+                        best_ckpt_idx -= 1
+                        model_path = get_lastest_checkpoint(
+                            path, best_ckpt_idx
+                        )
+                        if hyperopt_run["model_path"] is None:
+                            hyperopt_run["model_path"] = os.path.join(
+                                model_path, "model"
+                            )
+                            break
+
     else:
         hyperopt_run_metadata = []
         for run_dir in os.scandir(output_dir):

@@ -1,6 +1,7 @@
 import logging
 import os
 import pdb
+
 from copy import deepcopy
 
 import yaml
@@ -34,7 +35,7 @@ def build_config_files():
 
     # select relevant datasets
     selected_datasets = {}
-    for dataset_name in globals.DATASET_LIST:
+    for dataset_name in globals.DATASETS_LIST:
         if dataset_name in dataset_metadata.keys():
             selected_datasets[dataset_name] = dataset_metadata[dataset_name]
         else:
@@ -50,12 +51,29 @@ def build_config_files():
         # each dataset will have a model specific config file
         config_fps[dataset] = []
 
-        config["input_features"][0]["name"] = metadata["input_name"]
-        config["output_features"][0]["name"] = metadata["output_name"]
-        config["output_features"][0]["type"] = metadata["output_type"]
-        config["hyperopt"]["output_feature"] = metadata["output_name"]
-        input_feature_name = metadata["input_name"]
-        output_feature_name = metadata["output_name"]
+        for idx, input_feature_name in enumerate(metadata["input_name"]):
+            ipt_feat = deepcopy(config["input_features"][0])
+            ipt_feat["name"] = input_feature_name
+            if idx == 0:
+                config["input_features"] = [ipt_feat]
+            else:
+                config["input_features"].append(ipt_feat)
+        for idx, output_feature_info in enumerate(metadata["output_name"]):
+            out_feat = deepcopy(config["output_features"][0])
+            out_feat["name"] = output_feature_info["name"]
+            out_feat["type"] = output_feature_info["type"]
+            if idx == 0:
+                config["output_features"] = [out_feat]
+            else:
+                config["output_features"].append(out_feat)
+
+        if len(metadata["output_name"]) > 1:
+            config["hyperopt"]["output_feature"] = "combined"
+        else:
+            config["hyperopt"]["output_feature"] = metadata["output_name"]
+
+        input_feature_names = metadata["input_name"]
+        output_feature_names = metadata["output_name"]
 
         for encoder_hyperopt_params in encoder_hyperopt_vals:
             curr_config = deepcopy(config)
@@ -64,23 +82,28 @@ def build_config_files():
             ]
 
             # update input and output parameters (not preprocessing)
-            curr_config["input_features"][0].update(
-                encoder_hyperopt_params["input_features"][0]
-            )
-            insert_global_vars(curr_config["input_features"][0])
-
-            if "output_features" in encoder_hyperopt_params.keys():
-                curr_config["output_features"][0].update(
-                    encoder_hyperopt_params["output_features"][0]
+            for idx in range(len(curr_config["input_features"])):
+                curr_config["input_features"][idx].update(
+                    encoder_hyperopt_params["input_features"][idx]
                 )
-                insert_global_vars(curr_config["output_features"][0])
+                insert_global_vars(curr_config["input_features"][idx])
+
+            for idx in range(len(curr_config["output_features"])):
+                if "output_features" in encoder_hyperopt_params.keys():
+                    curr_config["output_features"][idx].update(
+                        encoder_hyperopt_params["output_features"][idx]
+                    )
+                    insert_global_vars(curr_config["output_features"][idx])
 
             # handle encoder specific preprocessing
-            preprocessing = curr_config["input_features"][0]["preprocessing"]
-            for key, _ in preprocessing.items():
-                preprocessing[key] = encoder_hyperopt_params["input_features"][
-                    0
-                ]["preprocessing"][key]
+            for idx in range(len(curr_config["input_features"])):
+                preprocessing = curr_config["input_features"][idx][
+                    "preprocessing"
+                ]
+                for key, _ in preprocessing.items():
+                    preprocessing[key] = encoder_hyperopt_params[
+                        "input_features"
+                    ][idx]["preprocessing"][key]
 
             # handle encoder specific training params
             if "training" in encoder_hyperopt_params.keys():
@@ -90,19 +113,39 @@ def build_config_files():
 
             def input_or_output_feature(param_key):
                 if param_key.split(".")[0] == "input_features":
-                    return input_feature_name
-                return output_feature_name
+                    return True
+                return False
 
             # handle encoder specific hyperopt
-            ds_encoder_hyperopt_params = {
+            input_encoder_hyperopt_params = {
                 "parameters": {
-                    input_or_output_feature(key)
-                    + "."
-                    + key.split(".")[-1]: value
+                    input_feat + "." + key.split(".")[-1]: value
+                    for input_feat in input_feature_names:
                     for key, value in encoder_hyperopt_params[
                         "parameters"
                     ].items()
                     if key.split(".")[-1] != "encoder"
+                    and input_or_output_feature(key)
+                }
+            }
+
+            # handle encoder specific hyperopt
+            output_encoder_hyperopt_params = {
+                "parameters": {
+                    output_feat["name"] + "." + key.split(".")[-1]: value
+                    for output_feat in output_feature_names
+                    for key, value in encoder_hyperopt_params[
+                        "parameters"
+                    ].items()
+                    if key.split(".")[-1] != "encoder"
+                    and not input_or_output_feature(key)
+                }
+            }
+
+            ds_encoder_hyperopt_params = {
+                "parameters": {
+                    **output_encoder_hyperopt_params["parameters"],
+                    **input_encoder_hyperopt_params["parameters"],
                 }
             }
             curr_config["input_features"][0]["encoder"] = encoder_name

@@ -1,5 +1,5 @@
 agnews:
-  data_class: AGNews 
+  data_class: AGNews
   input_name: description
   output_name: class_index
   output_type: category
@@ -53,7 +53,7 @@ sst5:
   output_type: category
 
 yahoo_answers:
-  data_class: YahooAnswers 
+  data_class: YahooAnswers
   input_name: question
   output_name: label
   output_type: category
@@ -78,9 +78,11 @@ hate_speech:
 
 social_bias_frames:
   data_class: SocialBiasFrames
-  input_name: post
-  output_name: sexYN
+  input_name:
+    - post
+  output_name:
+    - name: sexYN
+      type: category
+    - name: offensiveYN
+      type: category
   output_type: category
-
-
-

@@ -85,4 +85,8 @@ social_bias_frames:
       type: category
     - name: offensiveYN
       type: category
+    - name: intentYN
+      type: category
+    - name: speakerMinorityYN
+      type: category
   output_type: category

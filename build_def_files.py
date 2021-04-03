@@ -120,7 +120,7 @@ def build_config_files():
             input_encoder_hyperopt_params = {
                 "parameters": {
                     input_feat + "." + key.split(".")[-1]: value
-                    for input_feat in input_feature_names:
+                    for input_feat in input_feature_names
                     for key, value in encoder_hyperopt_params[
                         "parameters"
                     ].items()
@@ -169,3 +169,4 @@ def build_config_files():
             config_fps[dataset].append(config_fp)
 
     return config_fps
+

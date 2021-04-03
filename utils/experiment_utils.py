@@ -155,7 +155,7 @@ def set_globals(args):
             globals.DATASET_LIST = list(globals.SMOKE_DATASETS.keys())
             logging.info("Setting global datasets list to smoke datasets...")
         else:
-            globals.DATASET_LIST = args.datasets
+            globals.DATASETS_LIST = args.datasets
             logging.info(f"Setting global datasets list to {args.datasets}")
 
     if "all" not in args.custom_encoders_list:

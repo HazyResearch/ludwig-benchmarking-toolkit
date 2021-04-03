@@ -70,7 +70,7 @@ def build_config_files():
         if len(metadata["output_name"]) > 1:
             config["hyperopt"]["output_feature"] = "combined"
         else:
-            config["hyperopt"]["output_feature"] = metadata["output_name"]
+            config["hyperopt"]["output_feature"] = metadata["output_name"][0]["name"]
 
         input_feature_names = metadata["input_name"]
         output_feature_names = metadata["output_name"]

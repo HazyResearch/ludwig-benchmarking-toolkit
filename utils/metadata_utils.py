@@ -72,11 +72,11 @@ def get_inference_latency(
     full_dataset = pd.read_csv(dataset_path)
     # Note: split == 1 indicates the dev set
     if "split" in full_dataset:
-        if len(full_dataset[full_dataset["split"]] == 1) > 0:
+        if len(full_dataset[full_dataset["split"] == 1]) > 0:
             sampled_dataset = full_dataset[full_dataset["split"] == 1].sample(
                 n=num_samples
             )
-        elif len(full_dataset[full_dataset["split"]] == 2) > 0:
+        elif len(full_dataset[full_dataset["split"] == 2]) > 0:
             sampled_dataset = full_dataset[full_dataset["split"] == 2].sample(
                 n=num_samples
             )

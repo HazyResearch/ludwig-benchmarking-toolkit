@@ -53,7 +53,7 @@ def get_hardware_metadata(**kwargs) -> dict:
 
 @ray.remote(num_gpus=1, num_returns=1, max_calls=1)
 def get_inference_latency(
-    model_path: str, dataset_path: str, num_samples: int = 10, **kwargs
+    model_path: str, dataset_path: str, num_samples: int = 20, **kwargs
 ) -> str:
     """
     Returns avg. time to perform inference on 1 sample

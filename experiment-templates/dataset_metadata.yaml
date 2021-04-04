@@ -90,3 +90,12 @@ social_bias_frames:
     - name: speakerMinorityYN
       type: category
   output_type: category
+
+md_gender_bias:
+  data_class: MDGenderBias
+  input_name:
+    - text
+  output_name:
+    - name: gender
+      type: category
+  output_type: category

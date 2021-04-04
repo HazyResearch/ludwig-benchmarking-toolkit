@@ -70,7 +70,7 @@ def build_config_files():
         if len(metadata["output_name"]) > 1:
             config["hyperopt"]["output_feature"] = "combined"
         else:
-            config["hyperopt"]["output_feature"] = metadata["output_name"]
+            config["hyperopt"]["output_feature"] = metadata["output_name"][0]["name"]
 
         input_feature_names = metadata["input_name"]
         output_feature_names = metadata["output_name"]
@@ -120,7 +120,7 @@ def build_config_files():
             input_encoder_hyperopt_params = {
                 "parameters": {
                     input_feat + "." + key.split(".")[-1]: value
-                    for input_feat in input_feature_names:
+                    for input_feat in input_feature_names
                     for key, value in encoder_hyperopt_params[
                         "parameters"
                     ].items()
@@ -169,3 +169,4 @@ def build_config_files():
             config_fps[dataset].append(config_fp)
 
     return config_fps
+

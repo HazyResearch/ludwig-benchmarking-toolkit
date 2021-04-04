@@ -96,6 +96,11 @@ def download_dataset(dataset_class: str, cache_dir: str) -> str:
 
         data = SocialBiasFrames(cache_dir)
         data.load()
+    elif dataset_class == "MDGenderBias":
+        from ludwig.datasets.md_gender_bias import MDGenderBias
+
+        data = MDGenderBias(cache_dir, task="wizard")
+        data.load()
     else:
         return None
     return os.path.join(

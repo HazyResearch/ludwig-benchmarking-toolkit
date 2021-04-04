@@ -47,6 +47,10 @@ def save_results_to_es(
         )
         del new_config["hyperopt"]
 
+        if es_db.document_exists(hash_dict(new_config)):
+            print("REMOVING DOCUMENT...")
+            es_db.remove_document(hash_dict(new_config))
+
         # do some accounting of duplicate hyperparam configs (this count will
         # be added to the dict which will be hashed for the elastic document
         # id
@@ -83,13 +87,10 @@ def save_results_to_es(
         enc = experiment_attr["encoder"]
         # doc_key = run["hyperopt_results"]["eval_stats"]
 
-        if reupload:
-            es_db.remove_document(id=hash_dict(new_config))
-
         trial_count = sampled_params[param_hash]
 
         doc_key = copy.deepcopy(new_config)
-        new_config["trial"] = trial_count
+        doc_key["trial"] = trial_count
         try:
             es_db.upload_document(hash_dict(doc_key), formatted_document)
             logging.info(f"{ds} x {enc}" f"uploaded to elastic.")
@@ -130,6 +131,9 @@ class Database:
 
     def remove_document(self, id):
         self.es_connection.delete(index=self.index, id=id)
+
+    def document_exists(self, id):
+        return self.es_connection.exists(index=self.index, id=id)
 
     def upload_document_from_outputdir(
         self,

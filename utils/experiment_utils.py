@@ -321,15 +321,14 @@ def get_model_ckpt_paths(
                     "model_path": None,
                 }
             )
-
+        pdb.set_trace()
         for path in trial_dirs:
             if os.path.getsize(os.path.join(path, "progress.csv")) > 0:
                 training_progress = pd.read_csv(
                     os.path.join(path, "progress.csv")
                 )
-                out_parameters = json.load(
-                    open(os.path.join(path, "params.json"))
-                )
+                out_parameters = json.loads(training_progress.iloc[-1]["parameters"])
+                out_eval_stats = json.loads(training_progress.iloc[-1]["eval_stats"])
                 # compare total time, metric score, and parameters
                 output_total_time = training_progress.iloc[-1]["time_total_s"]
                 output_metric_score = training_progress.iloc[-1][
@@ -342,13 +341,10 @@ def get_model_ckpt_paths(
                     run_metric_score = hyperopt_run["hyperopt_results"][
                         "metric_score"
                     ]
-                    run_params = ["hyperopt_results"]["parameters"]
+                    run_params = hyperopt_run["hyperopt_results"]["parameters"]
+                    run_eval_stats = hyperopt_run["hyperopt_results"]["eval_stats"]
                     if (
-                        abs(run_total_time - output_total_time) < 1e-04
-                        and abs(output_metric_score - run_metric_score) < 1e-04
-                        and compare_json_enc_configs(
-                            out_parameters, run_params
-                        )
+                        hash_dict(run_eval_stats) == hash_dict(out_eval_stats)
                     ):
                         best_ckpt_idx = training_progress[
                             abs(

@@ -322,12 +322,29 @@ def get_model_ckpt_paths(
                 training_progress = pd.read_csv(
                     os.path.join(path, "progress.csv")
                 )
+                out_parameters = json.load(
+                    open(os.path.join(path, "params.json"))
+                )
+                # compare total time, metric score, and parameters
                 output_total_time = training_progress.iloc[-1]["time_total_s"]
+                output_metric_score = training_progress.iloc[-1][
+                    "metric_score"
+                ]
                 for hyperopt_run in hyperopt_run_metadata:
                     run_total_time = hyperopt_run["hyperopt_results"][
                         "time_total_s"
                     ]
-                    if abs(run_total_time - output_total_time) < 1e-04:
+                    run_metric_score = hyperopt_run["hyperopt_results"][
+                        "metric_score"
+                    ]
+                    run_params = ["hyperopt_results"]["parameters"]
+                    if (
+                        abs(run_total_time - output_total_time) < 1e-04
+                        and abs(output_metric_score - run_metric_score) < 1e-04
+                        and compare_json_enc_configs(
+                            out_parameters, run_params
+                        )
+                    ):
                         best_ckpt_idx = training_progress[
                             abs(
                                 training_progress["metric_score"]

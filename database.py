@@ -18,6 +18,7 @@ def save_results_to_es(
     hyperopt_results: list,
     tune_executor: str,
     top_n_trials: int = None,
+    reupload=False,
 ):
     elastic_config = experiment_attr["elastic_config"]
 
@@ -35,6 +36,8 @@ def save_results_to_es(
         hyperopt_results, experiment_attr["output_dir"], executor=tune_executor
     )
 
+    sampled_params = {}
+
     # ensures that all numerical values are of type float
     format_fields_float(hyperopt_results)
     for run in hyperopt_run_data:
@@ -43,6 +46,15 @@ def save_results_to_es(
             parameters=run["hyperopt_results"]["parameters"],
         )
         del new_config["hyperopt"]
+
+        # do some accounting of duplicate hyperparam configs (this count will
+        # be added to the dict which will be hashed for the elastic document
+        # id
+        param_hash = hash_dict(run["hyperopt_results"]["parameters"])
+        if param_hash in sampled_params:
+            sampled_params[param_hash] += 1
+        else:
+            sampled_params[param_hash] = 1
 
         document = {
             "hyperopt_results": run["hyperopt_results"],
@@ -69,7 +81,15 @@ def save_results_to_es(
         formatted_document["sampled_run_config"] = new_config
         ds = experiment_attr["dataset"]
         enc = experiment_attr["encoder"]
-        doc_key = run["hyperopt_results"]["eval_stats"]
+        # doc_key = run["hyperopt_results"]["eval_stats"]
+
+        if reupload:
+            es_db.remove_document(id=hash_dict(new_config))
+
+        trial_count = sampled_params[param_hash]
+
+        doc_key = copy.deepcopy(new_config)
+        new_config["trial"] = trial_count
         try:
             es_db.upload_document(hash_dict(doc_key), formatted_document)
             logging.info(f"{ds} x {enc}" f"uploaded to elastic.")

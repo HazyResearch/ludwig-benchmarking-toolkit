@@ -12,7 +12,11 @@ from utils.experiment_utils import (
 )
 from utils.metadata_utils import append_experiment_metadata
 
-
+@conditional_decorator(
+    ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001}),
+    lambda runtime_env: runtime_env != "local",
+    globals.RUNTIME_ENV,
+)
 def save_results_to_es(
     experiment_attr: dict,
     hyperopt_results: list,
@@ -48,7 +52,7 @@ def save_results_to_es(
         del new_config["hyperopt"]
 
         if es_db.document_exists(hash_dict(new_config)):
-            print("REMOVING DOCUMENT...")
+            print("REMOVING DOCUMENT w/OLD FORMATTING...")
             es_db.remove_document(hash_dict(new_config))
 
         # do some accounting of duplicate hyperparam configs (this count will
@@ -98,7 +102,7 @@ def save_results_to_es(
             logging.warning(
                 f"error uploading" f"{ds} x {enc}" f"to elastic..."
             )
-
+    return 1
 
 class Database:
     def __init__(self, host, http_auth, user_id, index):
@@ -134,6 +138,9 @@ class Database:
 
     def document_exists(self, id):
         return self.es_connection.exists(index=self.index, id=id)
+
+    def search(self, query, size=1000):
+        return self.es_connection.search(index=self.index, body=query, size=size)
 
     def upload_document_from_outputdir(
         self,

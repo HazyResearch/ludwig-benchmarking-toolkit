@@ -2,6 +2,8 @@ import copy
 import json
 import logging
 import os
+import ray
+import socket
 from elasticsearch import Elasticsearch
 
 from utils.experiment_utils import (
@@ -12,11 +14,10 @@ from utils.experiment_utils import (
 )
 from utils.metadata_utils import append_experiment_metadata
 
-@conditional_decorator(
-    ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001}),
-    lambda runtime_env: runtime_env != "local",
-    globals.RUNTIME_ENV,
-)
+hostname = socket.gethostbyname(socket.gethostname())
+
+
+@ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})
 def save_results_to_es(
     experiment_attr: dict,
     hyperopt_results: list,
@@ -104,6 +105,7 @@ def save_results_to_es(
             )
     return 1
 
+
 class Database:
     def __init__(self, host, http_auth, user_id, index):
         self.host = host
@@ -140,7 +142,9 @@ class Database:
         return self.es_connection.exists(index=self.index, id=id)
 
     def search(self, query, size=1000):
-        return self.es_connection.search(index=self.index, body=query, size=size)
+        return self.es_connection.search(
+            index=self.index, body=query, size=size
+        )
 
     def upload_document_from_outputdir(
         self,

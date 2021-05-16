@@ -1,86 +1,126 @@
 agnews:
   data_class: AGNews
-  input_name: description
-  output_name: class_index
-  output_type: category
+  input_features:
+    - name: description
+      type: text
+  output_features:
+    - name: class_index
+      type: category
 
 amazon_review_polarity:
   data_class: AmazonPolarity
-  input_name: review_text
-  output_name: label
-  output_type: category
+  input_features:
+    - name: review_text
+      type: text
+  output_features:
+    - name: label
+      type: category
 
 amazon_reviews:
   data_class: AmazonReviews
-  input_name: review_text
-  output_name: label
-  output_type: category
+  input_features:
+    - name: review_text
+      type: text
+  output_features:
+    - name: label
+      type: category
 
 dbpedia:
   data_class: DBPedia
-  input_name: content
-  output_name: label
-  output_type: category
+  input_features:
+    - name: content
+      type: text
+  output_features:
+    - name: label
+      type: category
 
 ethos_binary:
   data_class: EthosBinary
-  input_name: comment
-  output_name: isHate
-  output_type: category
+  input_features:
+    - name: comment
+      type: text
+  output_features: isHate
+  type: category
 
 goemotions:
   data_class: GoEmotions
-  input_name: text
-  output_name: emotion_ids
-  output_type: set
+  input_features:
+    - name: text
+      type: text
+  output_features:
+    - name: emotion_ids
+      type: set
 
 irony:
   data_class: Irony
-  input_name: comment_text
-  output_name: label
-  output_type: category
+  input_features:
+    - name: comment_text
+      type: text
+  output_features:
+    - name: label
+      type: category
 
 sst2:
   data_class: SST2
-  input_name: sentence
-  output_name: label
-  output_type: category
+  input_features:
+    - name: sentence
+      type: text
+  output_features:
+    - name: label
+      type: category
 
 sst5:
   data_class: SST5
-  input_name: sentence
-  output_name: label
-  output_type: category
+  input_features:
+    - name: sentence
+      type: text
+  output_features:
+    - name: label
+      type: category
 
 yahoo_answers:
   data_class: YahooAnswers
-  input_name: question
-  output_name: label
-  output_type: category
+  input_features:
+    - name: question
+      type: text
+  output_features:
+    - name: label
+      type: category
 
 yelp_review_polarity:
   data_class: YelpPolarity
-  input_name: text
-  output_name: label
-  output_type: category
+  input_features:
+    - name: text
+      type: text
+
+  output_features:
+    - name: label
+      type: category
 
 yelp_reviews:
   data_class: YelpReviews
-  input_name: text
-  output_name: label
-  output_type: category
+  input_features:
+    - name: text
+      type: text
+  output_features:
+    - name: label
+      type: category
 
 hate_speech:
   data_class: HateSpeech
-  input_name: tweet
-  output_name: class
-  output_type: category
+  input_features:
+    - name: tweet
+      type: text
+  output_features:
+    - name: class
+      type: category
 
 social_bias_frames:
   data_class: SocialBiasFrames
-  input_name:
-    - post
-  output_name:
+  input_features:
+    - name: post
+      type: text
+  output_features:
     - name: sexYN
       type: category
     - name: offensiveYN
@@ -89,13 +129,14 @@ social_bias_frames:
       type: category
     - name: speakerMinorityYN
       type: category
-  output_type: category
+  type: category
 
 md_gender_bias:
   data_class: MDGenderBias
-  input_name:
-    - text
-  output_name:
+  input_features:
+    - name: text
+      type: text
+  output_features:
     - name: gender
       type: category
-  output_type: category
+  type: category

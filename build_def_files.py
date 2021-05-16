@@ -51,14 +51,15 @@ def build_config_files():
         # each dataset will have a model specific config file
         config_fps[dataset] = []
 
-        for idx, input_feature_name in enumerate(metadata["input_name"]):
+        for idx, input_feature_name in enumerate(metadata["input_features"]):
             ipt_feat = deepcopy(config["input_features"][0])
-            ipt_feat["name"] = input_feature_name
+            ipt_feat["name"] = input_feature_name["name"]
+            ipt_feat["type"] = input_feature_name["type"]
             if idx == 0:
                 config["input_features"] = [ipt_feat]
             else:
                 config["input_features"].append(ipt_feat)
-        for idx, output_feature_info in enumerate(metadata["output_name"]):
+        for idx, output_feature_info in enumerate(metadata["output_features"]):
             out_feat = deepcopy(config["output_features"][0])
             out_feat["name"] = output_feature_info["name"]
             out_feat["type"] = output_feature_info["type"]
@@ -70,7 +71,9 @@ def build_config_files():
         if len(metadata["output_name"]) > 1:
             config["hyperopt"]["output_feature"] = "combined"
         else:
-            config["hyperopt"]["output_feature"] = metadata["output_name"][0]["name"]
+            config["hyperopt"]["output_feature"] = metadata["output_features"][
+                0
+            ]["name"]
 
         input_feature_names = metadata["input_name"]
         output_feature_names = metadata["output_name"]
@@ -119,7 +122,7 @@ def build_config_files():
             # handle encoder specific hyperopt
             input_encoder_hyperopt_params = {
                 "parameters": {
-                    input_feat + "." + key.split(".")[-1]: value
+                    input_feat["name"] + "." + key.split(".")[-1]: value
                     for input_feat in input_feature_names
                     for key, value in encoder_hyperopt_params[
                         "parameters"
@@ -169,4 +172,3 @@ def build_config_files():
             config_fps[dataset].append(config_fp)
 
     return config_fps
-

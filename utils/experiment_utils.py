@@ -7,6 +7,7 @@ import math
 import os
 import pdb
 from typing import Union
+from lbt.datasets import build_dataset
 
 import globals
 import pandas as pd
@@ -21,88 +22,26 @@ def get_gpu_list():
 
 
 def download_dataset(dataset_class: str, cache_dir: str) -> str:
-    if dataset_class == "GoEmotions":
-        from ludwig.datasets.goemotions import GoEmotions
-
-        data = GoEmotions(cache_dir)
-        data.load()
-    elif dataset_class == "Fever":
-        from ludwig.datasets.fever import Fever
-
-        data = Fever(cache_dir)
-        data.load()
-    elif dataset_class == "SST2":
-        from ludwig.datasets.sst2 import SST2
-
-        data = SST2(cache_dir, include_subtrees=True, remove_duplicates=True)
-        data.load()
-    elif dataset_class == "AGNews":
-        from ludwig.datasets.agnews import AGNews
-
-        data = AGNews(cache_dir)
-        data.load()
+    data = build_dataset(dataset_name=dataset_class, cache_dir=cache_dir)
+    if dataset_class == "SST2":
+        data = build_dataset(
+            dataset_name=dataset_class,
+            cache_dir=cache_dir,
+            include_subtrees=True,
+            remove_duplicates=True,
+        )
     elif dataset_class == "SST5":
-        from ludwig.datasets.sst5 import SST5
-
-        data = SST5(cache_dir, include_subtrees=True)
-        data.load()
-    elif dataset_class == "EthosBinary":
-        from ludwig.datasets.ethos_binary import EthosBinary
-
-        data = EthosBinary(cache_dir)
-        data.load()
-    elif dataset_class == "YelpPolarity":
-        from ludwig.datasets.yelp_review_polarity import YelpPolarity
-
-        data = YelpPolarity(cache_dir)
-        data.load()
-    elif dataset_class == "DBPedia":
-        from ludwig.datasets.dbpedia import DBPedia
-
-        data = DBPedia(cache_dir)
-        data.load()
-    elif dataset_class == "Irony":
-        from ludwig.datasets.irony import Irony
-
-        data = Irony(cache_dir)
-        data.load()
-    elif dataset_class == "YelpReviews":
-        from ludwig.datasets.yelp_reviews import YelpReviews
-
-        data = YelpReviews(cache_dir)
-        data.load()
-    elif dataset_class == "YahooAnswers":
-        from ludwig.datasets.yahoo_answers import YahooAnswers
-
-        data = YahooAnswers(cache_dir)
-        data.load()
-    elif dataset_class == "AmazonPolarity":
-        from ludwig.datasets.amazon_review_polarity import AmazonPolarity
-
-        data = AmazonPolarity(cache_dir)
-        data.load()
-    elif dataset_class == "AmazonReviews":
-        from ludwig.datasets.amazon_reviews import AmazonReviews
-
-        data = AmazonReviews(cache_dir)
-        data.load()
-    elif dataset_class == "HateSpeech":
-        from ludwig.datasets.hate_speech import HateSpeech
-
-        data = HateSpeech(cache_dir)
-        data.load()
-    elif dataset_class == "SocialBiasFrames":
-        from ludwig.datasets.social_bias_frames import SocialBiasFrames
-
-        data = SocialBiasFrames(cache_dir)
-        data.load()
+        data = build_dataset(
+            dataset_name=dataset_class,
+            cache_dir=cache_dir,
+            include_subtrees=True,
+        )
     elif dataset_class == "MDGenderBias":
-        from ludwig.datasets.md_gender_bias import MDGenderBias
-
-        data = MDGenderBias(cache_dir, task="wizard")
-        data.load()
-    else:
-        return None
+        data = build_dataset(
+            dataset_name=dataset_class,
+            cache_dir=cache_dir,
+            task="wizard",
+        )
     return os.path.join(
         data.processed_dataset_path, data.config["csv_filename"]
     )
@@ -327,8 +266,12 @@ def get_model_ckpt_paths(
                 training_progress = pd.read_csv(
                     os.path.join(path, "progress.csv")
                 )
-                out_parameters = json.loads(training_progress.iloc[-1]["parameters"])
-                out_eval_stats = json.loads(training_progress.iloc[-1]["eval_stats"])
+                out_parameters = json.loads(
+                    training_progress.iloc[-1]["parameters"]
+                )
+                out_eval_stats = json.loads(
+                    training_progress.iloc[-1]["eval_stats"]
+                )
                 # compare total time, metric score, and parameters
                 output_total_time = training_progress.iloc[-1]["time_total_s"]
                 output_metric_score = training_progress.iloc[-1][
@@ -342,10 +285,10 @@ def get_model_ckpt_paths(
                         "metric_score"
                     ]
                     run_params = hyperopt_run["hyperopt_results"]["parameters"]
-                    run_eval_stats = hyperopt_run["hyperopt_results"]["eval_stats"]
-                    if (
-                        hash_dict(run_eval_stats) == hash_dict(out_eval_stats)
-                    ):
+                    run_eval_stats = hyperopt_run["hyperopt_results"][
+                        "eval_stats"
+                    ]
+                    if hash_dict(run_eval_stats) == hash_dict(out_eval_stats):
                         best_ckpt_idx = training_progress[
                             abs(
                                 training_progress["metric_score"]

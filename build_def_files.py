@@ -68,15 +68,15 @@ def build_config_files():
             else:
                 config["output_features"].append(out_feat)
 
-        if len(metadata["output_name"]) > 1:
+        if len(metadata["output_features"]) > 1:
             config["hyperopt"]["output_feature"] = "combined"
         else:
             config["hyperopt"]["output_feature"] = metadata["output_features"][
                 0
             ]["name"]
 
-        input_feature_names = metadata["input_name"]
-        output_feature_names = metadata["output_name"]
+        input_feature_names = metadata["input_features"]
+        output_feature_names = metadata["output_features"]
 
         for encoder_hyperopt_params in encoder_hyperopt_vals:
             curr_config = deepcopy(config)

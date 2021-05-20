@@ -12,11 +12,14 @@ from utils.experiment_utils import (
     hash_dict,
     substitute_dict_parameters,
 )
-from utils.metadata_utils import append_experiment_metadata
+
+# from utils.metadata_utils import append_experiment_metadata
+from lbt.metrics import get_experiment_metadata
 
 hostname = socket.gethostbyname(socket.gethostname())
 
 
+# TODO: ASN --> DECOUPLE BUILDING ES DOCUMENT W/SAVING
 @ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})
 def save_results_to_es(
     experiment_attr: dict,
@@ -52,10 +55,6 @@ def save_results_to_es(
         )
         del new_config["hyperopt"]
 
-        if es_db.document_exists(hash_dict(new_config)):
-            print("REMOVING DOCUMENT w/OLD FORMATTING...")
-            es_db.remove_document(hash_dict(new_config))
-
         # do some accounting of duplicate hyperparam configs (this count will
         # be added to the dict which will be hashed for the elastic document
         # id
@@ -71,7 +70,7 @@ def save_results_to_es(
         }
 
         try:
-            append_experiment_metadata(
+            get_experiment_metadata(
                 document,
                 model_path=run["model_path"],
                 data_path=experiment_attr["dataset_path"],

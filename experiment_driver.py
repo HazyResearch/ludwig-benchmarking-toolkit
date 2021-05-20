@@ -5,7 +5,6 @@ import logging
 import os
 import pickle
 import socket
-import sys
 from collections import defaultdict
 from copy import deepcopy
 from multiprocessing import Pool
@@ -13,14 +12,13 @@ from multiprocessing import Pool
 import GPUtil
 import numpy as np
 import ray
-import yaml
 
 import globals
 from build_def_files import *
 from database import Database, save_results_to_es
 from ludwig.hyperopt.run import hyperopt
 from utils.experiment_utils import *
-from utils.metadata_utils import append_experiment_metadata
+from lbt.datasets import DATASET_REGISTRY
 
 logging.basicConfig(
     format=logging.basicConfig(
@@ -37,7 +35,8 @@ def download_data(cache_dir=None, datasets: list = None):
     """ Returns files paths for all datasets """
     data_file_paths = {}
     for dataset in datasets:
-        if dataset in dataset_metadata.keys():
+        # if dataset in dataset_metadata.keys():
+        if dataset in list(DATASET_REGISTRY.keys()):
             data_class = dataset_metadata[dataset]["data_class"]
             data_path = download_dataset(data_class, cache_dir)
             data_file_paths[dataset] = data_path
@@ -63,6 +62,7 @@ def resume_training(model_config: dict, output_dir):
     model_config["hyperopt"]["sampler"]["num_samples"] = new_num_samples
     return model_config, results
 
+
 @conditional_decorator(
     ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001}),
     lambda runtime_env: runtime_env != "local",
@@ -84,7 +84,7 @@ def run_hyperopt_exp(
         os.environ["TUNE_PLACEMENT_GROUP_AUTO_DISABLED"] = "1"
     os.environ["TUNE_PLACEMENT_GROUP_CLEANUP_DISABLED"] = "1"
 
-    #try:
+    # try:
     start = datetime.datetime.now()
 
     tune_executor = model_config["hyperopt"]["executor"]["type"]
@@ -150,10 +150,26 @@ def run_hyperopt_exp(
     except:
         pass
 
-    # create .completed file to indicate that experiment is completed
-    _ = open(
-        os.path.join(experiment_attr["output_dir"], ".completed"), "wb"
+    # save lbt output w/additional metrics computed locall
+    results_w_additional_metrics = compute_additional_metadata(
+        experiment_attr, hyperopt_results, tune_executor
     )
+    try:
+        pickle.dump(
+            results_w_additional_metrics,
+            open(
+                os.path.join(
+                    experiment_attr["output_dir"],
+                    f"{dataset}_{encoder}_hyperopt_results_w_lbt_metrics.pkl",
+                ),
+                "wb",
+            ),
+        )
+    except:
+        pass
+
+    # create .completed file to indicate that experiment is completed
+    _ = open(os.path.join(experiment_attr["output_dir"], ".completed"), "wb")
 
     logging.info(
         "time to complete: {}".format(datetime.datetime.now() - start)
@@ -195,7 +211,7 @@ def run_experiments(
     completed_runs, experiment_queue = [], []
     for dataset_name, file_path in data_file_paths.items():
         logging.info("Dataset: {}".format(dataset_name))
-        
+
         for model_config_path in config_files[dataset_name]:
             config_name = model_config_path.split("/")[-1].split(".")[0]
             dataset = config_name.split("_")[1]
@@ -227,7 +243,7 @@ def run_experiments(
                     "output_dir": output_dir,
                     "encoder": encoder,
                     "dataset": dataset,
-                    "elastic_config": elastic_config
+                    "elastic_config": elastic_config,
                 }
                 if run_environment == "local":
                     completed_runs.append(
@@ -237,7 +253,7 @@ def run_experiments(
                             run_environment,
                         )
                     )
-                
+
                 experiment_queue.append(experiment_attr)
             else:
                 logging.info(
@@ -296,25 +312,7 @@ def main():
         "--datasets",
         help="list of datasets to run experiemnts on",
         nargs="+",
-        choices=[
-            "all",
-            "agnews",
-            "amazon_reviews",
-            "amazon_review_polarity",
-            "dbpedia",
-            "ethos_binary",
-            "goemotions",
-            "irony",
-            "sst2",
-            "sst5",
-            "yahoo_answers",
-            "yelp_review_polarity",
-            "yelp_reviews",
-            "hate_speech",
-            "social_bias_frames",
-            "md_gender_bias",
-            "smoke",
-        ],
+        choices=list(DATASET_REGISTRY.keys()),
         default=None,
         required=True,
     )

@@ -1,5 +1,6 @@
 import importlib
 import sys
+import pdb
 
 import ray
 from lbt.metrics.base_metric import BaseMetric
@@ -39,18 +40,19 @@ def get_experiment_metadata(
     run_stats: dict,
     train_batch_size: int = 16,
 ):
-    for key, metrics_func in METRIC_REGISTERY.items():
+    for key, metrics_class in METRIC_REGISTERY.items():
         try:
-            output = metrics_func.run.remote(
+            remote_class = ray.remote(metrics_class).remote()
+            output = remote_class.run.remote(
                 model_path=model_path,
                 dataset_path=data_path,
                 train_batch_size=train_batch_size,
                 run_stats=run_stats,
             )
             document.update({key: ray.get(output)})
+
         except:
             print(f"failure processing: {key}")
-            pass
 
 
 PRE_BUILT_METRICS = {

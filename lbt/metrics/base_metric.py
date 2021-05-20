@@ -10,8 +10,8 @@ class BaseMetric(ABC):
     def __init__(self):
         super().__init__()
 
-    @abstractmethod
-    def run(self, model_path, dataset_path, train_batch_size, run_stats):
+    @classmethod
+    def run(cls, model_path, dataset_path, train_batch_size, run_stats):
         pass
 
     def load_model(self, model_path: str) -> LudwigModel:

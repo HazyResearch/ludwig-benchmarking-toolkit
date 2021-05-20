@@ -1,13 +1,21 @@
 import datetime
+import os
+import shutil
+import tempfile
 
 import GPUtil
 import ludwig
+import numpy as np
 import pandas as pd
 import psutil
 import ray
-from lbt.metrics.utils import scale_bytes
+from experiment_impact_tracker.compute_tracker import ImpactTracker
+from experiment_impact_tracker.data_interface import DataInterface
+from globals import ENERGY_LOGGING_DIR
 from lbt.metrics import register_metric
 from lbt.metrics.base_metric import BaseMetric
+from lbt.metrics.utils import scale_bytes
+from ludwig.api import LudwigModel
 from ludwig.collect import collect_weights
 
 # TODO: ASN --> Add check to see if available GPUs before seting num_gpus=1
@@ -15,16 +23,17 @@ from ludwig.collect import collect_weights
 
 @register_metric("ludwig_version")
 class LudwigVersion(BaseMetric):
-    @ray.remote
+    def __init__(self):
+        pass
+
     def run(cls, **kwargs):
         return ludwig.__version__
 
 
 @register_metric("hardware_metadata")
 class HardwareMetadata(BaseMetric):
-    num_gpus = 1
+    num_gpus = 0
 
-    @ray.remote(num_gpus=num_gpus, num_returns=1)
     def run(cls, **kwargs):
         machine_info = {}
         # GPU
@@ -49,13 +58,9 @@ class HardwareMetadata(BaseMetric):
 
 @register_metric("inference_latency")
 class InferenceLatencyMetric(BaseMetric):
-    num_samples = 20
-    num_gpus = 1
+    num_samples = 1
+    num_gpus = 0
 
-    def __init__(self):
-        pass
-
-    @ray.remote(num_gpus=num_gpus, num_returns=1, max_calls=1)
     def run(cls, model_path, dataset_path, **kwargs):
         """
         Returns avg. time to perform inference on 1 sample
@@ -87,7 +92,7 @@ class InferenceLatencyMetric(BaseMetric):
                 ].sample(n=cls.num_samples)
         else:
             sampled_dataset = full_dataset.sample(n=cls.num_samples)
-        ludwig_model = cls.load_model(model_path)
+        ludwig_model = LudwigModel.load(model_path)
         start = datetime.datetime.now()
         _, _ = ludwig_model.predict(
             dataset=sampled_dataset,
@@ -103,7 +108,6 @@ class InferenceLatencyMetric(BaseMetric):
 class TrainingCost(BaseMetric):
     gpu_cost_per_hr = 0.35  # GCP cost for Tesla T4
 
-    @ray.remote(num_returns=1)
     def run(cls, run_stats: dict, **kwargs) -> float:
         """
         Return total cost to train model using GCP compute resource
@@ -115,9 +119,8 @@ class TrainingCost(BaseMetric):
 
 @register_metric("training_speed")
 class TrainingSpeed(BaseMetric):
-    num_gpus = 1
+    num_gpus = 0
 
-    @ray.remote(num_gpus=1, num_returns=1, max_calls=1)
     def run(
         cls,
         dataset_path: str,
@@ -156,9 +159,8 @@ class TrainingSpeed(BaseMetric):
 
 @register_metric("model_size")
 class ModelSize(BaseMetric):
-    num_gpus = 1
+    num_gpus = 0
 
-    @ray.remote(num_gpus=num_gpus, num_returns=1, max_calls=1)
     def run(cls, model_path: str, **kwargs):
         """
         Computes minimum bytes required to store model to memory
@@ -183,3 +185,46 @@ class ModelSize(BaseMetric):
         scaled_bytes = scale_bytes(total_bytes)
         model_size = {"total_bytes": total_bytes, "scaled_bytes": scaled_bytes}
         return model_size
+
+
+@register_metric("carbon_footprint")
+class Energy(BaseMetric):
+    num_gpus = 0
+
+    def run(cls, model_path: str, dataset_path, train_batch_size, run_stats):
+        """
+        Computes energy metrics for one training epoch
+
+        # Inputs
+        :param model_path: (str) filepath to pre-trained model.
+
+        # Return
+        :return: (int) total bytes
+        :return: (str) total bytes scaled in string format
+        """
+        # First copy model_path to temp directory
+        tempdir = tempfile.gettempdir()
+        shutil.copytree(model_path, tempdir)
+        model = LudwigModel.load(tempdir)
+        with ImpactTracker(ENERGY_LOGGING_DIR):
+            (
+                training_statistics,
+                preprocessed_data,
+                output_directory,
+            ) = model.train(
+                dataset=dataset_path,
+                training_set_metadat=os.path.join(
+                    model_path, "training_set_metadata.json"
+                ),
+            )
+        data_interface = DataInterface([ENERGY_LOGGING_DIR])
+        carbon_output = {
+            "kg_carbon": data_interface.kg_carbon,
+            "total_power": data_interface.total_power,
+            "PUE": data_interface.PUE,
+            "duration_of_train_step": data_interface.exp_len_hours,
+        }
+
+        shutil.rmtree(tempdir)
+
+        return carbon_output

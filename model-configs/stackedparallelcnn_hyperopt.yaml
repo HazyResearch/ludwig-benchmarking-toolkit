@@ -1,0 +1,173 @@
+input_features:
+  - type: sequence
+    encoder: stacked_parallel_cnn
+    pretrained_embeddings: PATH_TO_PRETRAINED_EMBEDDINGS
+    dropout: 0.5
+    preprocessing:
+      word_tokenizer: space
+
+training:
+  early_stop: 7
+  eval_batch_size: 256
+  batch_size: 128
+
+parameters:
+  input_features.name.encoder: stacked_parallel_cnn
+
+  input_features.name.stacked_layers:
+    space: choice
+    type: category
+    categories:
+      [
+        [[{ filter_size: 1 }, { filter_size: 2 }, { filter_size: 3 }]],
+        [
+          [{ filter_size: 1 }, { filter_size: 2 }, { filter_size: 3 }],
+          [{ filter_size: 1 }, { filter_size: 2 }, { filter_size: 3 }],
+        ],
+        [
+          [{ filter_size: 1 }, { filter_size: 2 }, { filter_size: 3 }],
+          [{ filter_size: 1 }, { filter_size: 2 }, { filter_size: 3 }],
+          [{ filter_size: 1 }, { filter_size: 2 }, { filter_size: 3 }],
+        ],
+        [
+          [{ filter_size: 1 }, { filter_size: 2 }, { filter_size: 3 }],
+          [{ filter_size: 1 }, { filter_size: 2 }, { filter_size: 3 }],
+          [{ filter_size: 1 }, { filter_size: 2 }, { filter_size: 3 }],
+          [{ filter_size: 1 }, { filter_size: 2 }, { filter_size: 3 }],
+        ],
+        [[{ filter_size: 2 }, { filter_size: 3 }, { filter_size: 4 }]],
+        [
+          [{ filter_size: 2 }, { filter_size: 3 }, { filter_size: 4 }],
+          [{ filter_size: 2 }, { filter_size: 3 }, { filter_size: 4 }],
+        ],
+        [
+          [{ filter_size: 2 }, { filter_size: 3 }, { filter_size: 4 }],
+          [{ filter_size: 2 }, { filter_size: 3 }, { filter_size: 4 }],
+          [{ filter_size: 2 }, { filter_size: 3 }, { filter_size: 4 }],
+        ],
+        [
+          [{ filter_size: 2 }, { filter_size: 3 }, { filter_size: 4 }],
+          [{ filter_size: 2 }, { filter_size: 3 }, { filter_size: 4 }],
+          [{ filter_size: 2 }, { filter_size: 3 }, { filter_size: 4 }],
+          [{ filter_size: 2 }, { filter_size: 3 }, { filter_size: 4 }],
+        ],
+        [[{ filter_size: 3 }, { filter_size: 4 }, { filter_size: 5 }]],
+        [
+          [{ filter_size: 3 }, { filter_size: 4 }, { filter_size: 5 }],
+          [{ filter_size: 3 }, { filter_size: 4 }, { filter_size: 5 }],
+        ],
+        [
+          [{ filter_size: 3 }, { filter_size: 4 }, { filter_size: 5 }],
+          [{ filter_size: 3 }, { filter_size: 4 }, { filter_size: 5 }],
+          [{ filter_size: 3 }, { filter_size: 4 }, { filter_size: 5 }],
+        ],
+        [
+          [{ filter_size: 3 }, { filter_size: 4 }, { filter_size: 5 }],
+          [{ filter_size: 3 }, { filter_size: 4 }, { filter_size: 5 }],
+          [{ filter_size: 3 }, { filter_size: 4 }, { filter_size: 5 }],
+          [{ filter_size: 3 }, { filter_size: 4 }, { filter_size: 5 }],
+        ],
+        [[{ filter_size: 4 }, { filter_size: 5 }, { filter_size: 6 }]],
+        [
+          [{ filter_size: 4 }, { filter_size: 5 }, { filter_size: 6 }],
+          [{ filter_size: 4 }, { filter_size: 5 }, { filter_size: 6 }],
+        ],
+        [
+          [{ filter_size: 4 }, { filter_size: 5 }, { filter_size: 6 }],
+          [{ filter_size: 4 }, { filter_size: 5 }, { filter_size: 6 }],
+          [{ filter_size: 4 }, { filter_size: 5 }, { filter_size: 6 }],
+        ],
+        [
+          [{ filter_size: 4 }, { filter_size: 5 }, { filter_size: 6 }],
+          [{ filter_size: 4 }, { filter_size: 5 }, { filter_size: 6 }],
+          [{ filter_size: 4 }, { filter_size: 5 }, { filter_size: 6 }],
+          [{ filter_size: 4 }, { filter_size: 5 }, { filter_size: 6 }],
+        ],
+        [[{ filter_size: 5 }, { filter_size: 6 }, { filter_size: 7 }]],
+        [
+          [{ filter_size: 5 }, { filter_size: 6 }, { filter_size: 7 }],
+          [{ filter_size: 5 }, { filter_size: 6 }, { filter_size: 7 }],
+        ],
+        [
+          [{ filter_size: 5 }, { filter_size: 6 }, { filter_size: 7 }],
+          [{ filter_size: 5 }, { filter_size: 6 }, { filter_size: 7 }],
+          [{ filter_size: 5 }, { filter_size: 6 }, { filter_size: 7 }],
+        ],
+        [
+          [{ filter_size: 5 }, { filter_size: 6 }, { filter_size: 7 }],
+          [{ filter_size: 5 }, { filter_size: 6 }, { filter_size: 7 }],
+          [{ filter_size: 5 }, { filter_size: 6 }, { filter_size: 7 }],
+          [{ filter_size: 5 }, { filter_size: 6 }, { filter_size: 7 }],
+        ],
+        [[{ filter_size: 6 }, { filter_size: 7 }, { filter_size: 8 }]],
+        [
+          [{ filter_size: 6 }, { filter_size: 7 }, { filter_size: 8 }],
+          [{ filter_size: 6 }, { filter_size: 7 }, { filter_size: 8 }],
+        ],
+        [
+          [{ filter_size: 6 }, { filter_size: 7 }, { filter_size: 8 }],
+          [{ filter_size: 6 }, { filter_size: 7 }, { filter_size: 8 }],
+          [{ filter_size: 6 }, { filter_size: 7 }, { filter_size: 8 }],
+        ],
+        [
+          [{ filter_size: 6 }, { filter_size: 7 }, { filter_size: 8 }],
+          [{ filter_size: 6 }, { filter_size: 7 }, { filter_size: 8 }],
+          [{ filter_size: 6 }, { filter_size: 7 }, { filter_size: 8 }],
+          [{ filter_size: 6 }, { filter_size: 7 }, { filter_size: 8 }],
+        ],
+        [[{ filter_size: 7 }, { filter_size: 8 }, { filter_size: 9 }]],
+        [
+          [{ filter_size: 7 }, { filter_size: 8 }, { filter_size: 9 }],
+          [{ filter_size: 7 }, { filter_size: 8 }, { filter_size: 9 }],
+        ],
+        [
+          [{ filter_size: 7 }, { filter_size: 8 }, { filter_size: 9 }],
+          [{ filter_size: 7 }, { filter_size: 8 }, { filter_size: 9 }],
+          [{ filter_size: 7 }, { filter_size: 8 }, { filter_size: 9 }],
+        ],
+        [
+          [{ filter_size: 7 }, { filter_size: 8 }, { filter_size: 9 }],
+          [{ filter_size: 7 }, { filter_size: 8 }, { filter_size: 9 }],
+          [{ filter_size: 7 }, { filter_size: 8 }, { filter_size: 9 }],
+          [{ filter_size: 7 }, { filter_size: 8 }, { filter_size: 9 }],
+        ],
+        [[{ filter_size: 8 }, { filter_size: 9 }, { filter_size: 10 }]],
+        [
+          [{ filter_size: 8 }, { filter_size: 9 }, { filter_size: 10 }],
+          [{ filter_size: 8 }, { filter_size: 9 }, { filter_size: 10 }],
+        ],
+        [
+          [{ filter_size: 8 }, { filter_size: 9 }, { filter_size: 10 }],
+          [{ filter_size: 8 }, { filter_size: 9 }, { filter_size: 10 }],
+          [{ filter_size: 8 }, { filter_size: 9 }, { filter_size: 10 }],
+        ],
+        [
+          [{ filter_size: 8 }, { filter_size: 9 }, { filter_size: 10 }],
+          [{ filter_size: 8 }, { filter_size: 9 }, { filter_size: 10 }],
+          [{ filter_size: 8 }, { filter_size: 9 }, { filter_size: 10 }],
+          [{ filter_size: 8 }, { filter_size: 9 }, { filter_size: 10 }],
+        ],
+      ]
+
+  input_features.name.num_filters:
+    space: qrandint
+    type: int
+    lower: 100
+    upper: 600
+    steps: 100
+    scale: linear
+
+  input_features.name.activation:
+    space: choice
+    type: category
+    categories: [tanh, relu]
+
+  input_features.name.fc_layers:
+    space: choice
+    type: category
+    categories:
+      [
+        [{ fc_size: 512 }, { fc_size: 256 }],
+        [{ fc_size: 512 }],
+        [{ fc_size: 256 }],
+      ]

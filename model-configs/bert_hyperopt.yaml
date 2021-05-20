@@ -1,25 +1,25 @@
 input_features:
-  - 
-    preprocessing:
+  - preprocessing:
       word_tokenizer: hf_tokenizer
     pretrained_model_name_or_path: bert-base-uncased
 
 training:
   batch_size: 16
   early_stop: 3
-  
+
 parameters:
   input_features.name.encoder: bert
-  input_features.name.reduced_output: 
-    space: choice 
+  input_features.name.reduced_output:
+    space: choice
     type: category
-    categories: ['cls_pooled', 'sum', 'avg']
+    categories: ["cls_pooled", "sum", "avg"]
   output_features.name.fc_layers:
     # if space is grid_search, change 'categories' to 'values'
     space: choice
     type: category
-    categories: [
-      [{fc_size: 512}, {fc_size: 256}],
-      [{fc_size: 512}],
-      [{fc_size: 256}]
-    ]
+    categories:
+      [
+        [{ fc_size: 512 }, { fc_size: 256 }],
+        [{ fc_size: 512 }],
+        [{ fc_size: 256 }],
+      ]

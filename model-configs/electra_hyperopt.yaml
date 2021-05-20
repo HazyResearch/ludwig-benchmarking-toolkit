@@ -1,6 +1,5 @@
 input_features:
-  - 
-    preprocessing:
+  - preprocessing:
       word_tokenizer: hf_tokenizer
     pretrained_model_name_or_path: google/electra-base-generator
 
@@ -13,8 +12,9 @@ parameters:
   output_features.name.fc_layers:
     space: choice
     type: category
-    categories: [
-      [{fc_size: 512}, {fc_size: 256}],
-      [{fc_size: 512}],
-      [{fc_size: 256}]
-    ]
+    categories:
+      [
+        [{ fc_size: 512 }, { fc_size: 256 }],
+        [{ fc_size: 512 }],
+        [{ fc_size: 256 }],
+      ]

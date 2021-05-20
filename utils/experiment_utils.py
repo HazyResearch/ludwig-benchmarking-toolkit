@@ -5,9 +5,9 @@ import json
 import logging
 import math
 import os
-import pdb
 from typing import Union
 from lbt.datasets import build_dataset
+from lbt.metrics import get_experiment_metadata
 
 import globals
 import pandas as pd
@@ -19,6 +19,60 @@ def get_gpu_list():
         return os.environ["CUDA_VISIBLE_DEVICES"]
     except KeyError:
         return None
+
+
+def compute_additional_metadata(
+    experiment_attr: dict,
+    hyperopt_results: list,
+    tune_executor: str,
+):
+    hyperopt_run_data = get_model_ckpt_paths(
+        hyperopt_results, experiment_attr["output_dir"], executor=tune_executor
+    )
+    sampled_params = {}
+    all_experiment_results = []
+    # ensures that all numerical values are of type float
+    format_fields_float(hyperopt_results)
+    for run in hyperopt_run_data:
+        new_config = substitute_dict_parameters(
+            copy.deepcopy(experiment_attr["model_config"]),
+            parameters=run["hyperopt_results"]["parameters"],
+        )
+        del new_config["hyperopt"]
+
+        # do some accounting of duplicate hyperparam configs (this count will
+        # be added to the dict which will be hashed for the elastic document
+        # id
+        param_hash = hash_dict(run["hyperopt_results"]["parameters"])
+        if param_hash in sampled_params:
+            sampled_params[param_hash] += 1
+        else:
+            sampled_params[param_hash] = 1
+
+        document = {
+            "hyperopt_results": run["hyperopt_results"],
+            "model_path": run["model_path"],
+        }
+
+        get_experiment_metadata(
+            document,
+            model_path=run["model_path"],
+            data_path=experiment_attr["dataset_path"],
+            run_stats=run,
+        )
+
+        formatted_document = {
+            "encoder": experiment_attr["encoder"],
+            "dataset": experiment_attr["dataset"],
+        }
+        formatted_document.update(document)
+        formatted_document.update(
+            {"hyperopt_exp_config": experiment_attr["model_config"]}
+        )
+
+        formatted_document["sampled_run_config"] = new_config
+        all_experiment_results.append(formatted_document)
+    return all_experiment_results
 
 
 def download_dataset(dataset_class: str, cache_dir: str) -> str:
@@ -42,6 +96,7 @@ def download_dataset(dataset_class: str, cache_dir: str) -> str:
             cache_dir=cache_dir,
             task="wizard",
         )
+
     return os.path.join(
         data.processed_dataset_path, data.config["csv_filename"]
     )
@@ -116,6 +171,7 @@ def set_globals(args):
         globals.EXPERIMENT_CONFIGS_DIR,
         globals.EXPERIMENT_OUTPUT_DIR,
         globals.DATASET_CACHE_DIR,
+        globals.ENERGY_LOGGING_DIR,
     ]:
         if not os.path.isdir(exp_dir):
             os.mkdir(exp_dir)
@@ -260,7 +316,6 @@ def get_model_ckpt_paths(
                     "model_path": None,
                 }
             )
-        pdb.set_trace()
         for path in trial_dirs:
             if os.path.getsize(os.path.join(path, "progress.csv")) > 0:
                 training_progress = pd.read_csv(

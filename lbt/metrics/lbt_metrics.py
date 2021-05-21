@@ -203,10 +203,15 @@ class Energy(BaseMetric):
         :return: (str) total bytes scaled in string format
         """
         # First copy model_path to temp directory
-        tempdir = tempfile.gettempdir()
+        # tempdir = tempfile.gettempdir()
+        logging_path = os.path.join(
+            ENERGY_LOGGING_DIR, run_stats["hyperopt_results"]["experiment_id"]
+        )
+        tempdir = os.path.join(logging_path, "temp_model")
         shutil.copytree(model_path, tempdir)
         model = LudwigModel.load(tempdir)
-        with ImpactTracker(ENERGY_LOGGING_DIR):
+
+        with ImpactTracker(logging_path):
             (
                 training_statistics,
                 preprocessed_data,
@@ -214,10 +219,10 @@ class Energy(BaseMetric):
             ) = model.train(
                 dataset=dataset_path,
                 training_set_metadat=os.path.join(
-                    model_path, "training_set_metadata.json"
+                    tempdir, "training_set_metadata.json"
                 ),
             )
-        data_interface = DataInterface([ENERGY_LOGGING_DIR])
+        data_interface = DataInterface([logging_path])
         carbon_output = {
             "kg_carbon": data_interface.kg_carbon,
             "total_power": data_interface.total_power,

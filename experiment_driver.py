@@ -63,11 +63,6 @@ def resume_training(model_config: dict, output_dir):
     return model_config, results
 
 
-@conditional_decorator(
-    ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001}),
-    lambda runtime_env: runtime_env != "local",
-    globals.RUNTIME_ENV,
-)
 def run_hyperopt_exp(
     experiment_attr: dict,
     is_resume_training: bool = False,
@@ -260,15 +255,14 @@ def run_experiments(
                     f"The {dataset} x {encoder} exp. has already completed!"
                 )
 
-    if run_environment != "local":
-        completed_runs = ray.get(
-            [
-                run_hyperopt_exp.remote(
-                    exp, resume_existing_exp, run_environment
-                )
-                for exp in experiment_queue
-            ]
-        )
+    completed_runs = ray.get(
+        [
+            ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})(
+                run_hyperopt_exp
+            ).remote(exp, resume_existing_exp, run_environment)
+            for exp in experiment_queue
+        ]
+    )
 
     if len(completed_runs) == len(experiment_queue):
         # create .completed file to indicate that entire hyperopt experiment

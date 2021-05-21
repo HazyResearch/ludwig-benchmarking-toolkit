@@ -1,4 +1,4 @@
-ENCODER_CONFIG_DIR = "./encoder-configs"
+ENCODER_CONFIG_DIR = "./model-configs"
 # EXPERIMENT_CONFIGS_DIR = '/experiments/ludwig-bench-textclassification/experiment-configs'
 EXPERIMENT_CONFIGS_DIR = "./hyperopt-experiment-configs"
 DATASET_CACHE_DIR = "./datasets"

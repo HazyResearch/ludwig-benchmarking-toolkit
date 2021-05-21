@@ -140,3 +140,12 @@ md_gender_bias:
     - name: gender
       type: category
   type: category
+
+toy_agnews:
+  data_class: toy_agnews
+  input_features:
+    - name: description
+      type: text
+  output_features:
+    - name: class_index
+      type: category

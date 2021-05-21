@@ -41,18 +41,18 @@ def get_experiment_metadata(
     train_batch_size: int = 16,
 ):
     for key, metrics_class in METRIC_REGISTERY.items():
-        try:
-            remote_class = ray.remote(metrics_class).remote()
-            output = remote_class.run.remote(
-                model_path=model_path,
-                dataset_path=data_path,
-                train_batch_size=train_batch_size,
-                run_stats=run_stats,
-            )
-            document.update({key: ray.get(output)})
+        # try:
+        remote_class = ray.remote(num_cpus=1)(metrics_class).remote()
+        output = remote_class.run.remote(
+            model_path=model_path,
+            dataset_path=data_path,
+            train_batch_size=train_batch_size,
+            run_stats=run_stats,
+        )
+        document.update({key: ray.get(output)})
 
-        except:
-            print(f"failure processing: {key}")
+        """except:
+            print(f"failure processing: {key}")"""
 
 
 PRE_BUILT_METRICS = {

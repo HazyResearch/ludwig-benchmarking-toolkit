@@ -27,6 +27,7 @@ def save_results_to_es(
     tune_executor: str,
     top_n_trials: int = None,
     reupload=False,
+    num_gpus=0,
 ):
     elastic_config = experiment_attr["elastic_config"]
 
@@ -75,6 +76,7 @@ def save_results_to_es(
                 model_path=run["model_path"],
                 data_path=experiment_attr["dataset_path"],
                 run_stats=run,
+                num_gpus=num_gpus,
             )
         except:
             pass

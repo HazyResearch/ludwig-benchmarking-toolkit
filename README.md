@@ -1,5 +1,5 @@
 # Ludwig Benchmarking Toolkit
-LBT is a personalized benchmarking toolkit for running end-to-end benchmark studies across an extensible set of tasks, deep learning models, standard datasets and evaluation metrics.
+The Ludwig Benchmarking Toolkit is a personalized benchmarking toolkit for running end-to-end benchmark studies across an extensible set of tasks, deep learning models, standard datasets and evaluation metrics.
 
 # Getting set-up
 To get started, use the following commands to set-up your conda environment. 
@@ -138,13 +138,13 @@ hyperopt_viz(
 
 Adding custom dataset requires creating a new `LBTDataset` class and adding it
 to the dataset registry. Creating an `LBTDataset` object requires implementing
-three class methods: download, process and load. Please see the the [`ToyAGNews`](.lbt/datasets/toy_datasets.py) dataset as an example.
+three class methods: download, process and load. Please see the the [`ToyAGNews`](lbt/datasets/toy_datasets.py) dataset as an example.
 
 ### **Adding new metrics**
 
 Adding custom evaluation metrics requires creating a new `LBTMetric` class and adding it
 to the metrics registry. Creating an `LBTMetric` object requires implementing
-the run class method which takes as potential inputs a path to a model directory, path to a dataset, training batch size, and training statistics. Please see the [`pre-built LBT metrics`](.lbt/metrics/lbt_metrics.py) for examples.
+the run class method which takes as potential inputs a path to a model directory, path to a dataset, training batch size, and training statistics. Please see the [`pre-built LBT metrics`](lbt/metrics/lbt_metrics.py) for examples.
 
 
 

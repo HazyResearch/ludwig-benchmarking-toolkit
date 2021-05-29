@@ -13,7 +13,7 @@ from lbt.build_def_files import build_config_files
 
 logging.basicConfig(
     format=logging.basicConfig(
-        format="[\N{books} LUDWIG-BENCH \N{books}] => %(levelname)s::%(message)s",
+        format="[\N{books} LUDWIG-BENCHMARKING-TOOLKIT \N{books}] => %(levelname)s::%(message)s",
         level=logging.DEBUG,
     ),
     level=logging.DEBUG,
@@ -22,7 +22,7 @@ logging.basicConfig(
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Ludwig-Bench experiment driver script",
+        description="Ludwig Benchmarking Toolkit experiment driver script",
     )
 
     parser.add_argument(
@@ -82,8 +82,8 @@ def main():
     # list of encoders to run hyperopt search over :
     # default is 23 ludwig encoders
     parser.add_argument(
-        "-cel",
-        "--custom_encoders_list",
+        "-mel",
+        "--custom_model_list",
         help="list of encoders to run hyperopt experiments on. \
             The default setting is to use all 23 Ludwig encoders",
         nargs="+",

@@ -5,7 +5,7 @@ input_features:
     encoder: rnn
     preprocessing:
       word_tokenizer: space
-      pretrained_model_name_or_path: None
+    pretrained_model_name_or_path: None
 
 output_features:
   - name: ~
@@ -18,9 +18,9 @@ training:
   early_stop: 3
   epochs: 25
   validation_metric: accuracy
-  
+
 hyperopt:
-  output_feature: ${output_features.name}
+  output_feature:
   metric: ~
   strategy:
     type: ~

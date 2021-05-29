@@ -3,7 +3,7 @@ import sys
 import pdb
 
 import ray
-from lbt.metrics.base_metric import BaseMetric
+from lbt.metrics.base_metric import LBTMetric
 
 METRIC_REGISTERY = {}
 
@@ -21,7 +21,7 @@ def register_metric(name):
     """
 
     def register_metric_cls(cls):
-        if not issubclass(cls, BaseMetric):
+        if not issubclass(cls, LBTMetric):
             raise ValueError(
                 "Metric ({}: {}) must extend lbt.metrics.base_metric".format(
                     name, cls.__name__
@@ -39,20 +39,22 @@ def get_experiment_metadata(
     data_path: str,
     run_stats: dict,
     train_batch_size: int = 16,
+    num_gpus=0,
 ):
     for key, metrics_class in METRIC_REGISTERY.items():
-        # try:
-        remote_class = ray.remote(num_cpus=1)(metrics_class).remote()
-        output = remote_class.run.remote(
-            model_path=model_path,
-            dataset_path=data_path,
-            train_batch_size=train_batch_size,
-            run_stats=run_stats,
-        )
-        document.update({key: ray.get(output)})
-
-        """except:
-            print(f"failure processing: {key}")"""
+        try:
+            remote_class = ray.remote(num_cpus=1, num_gpus=num_gpus)(
+                metrics_class
+            ).remote()
+            output = remote_class.run.remote(
+                model_path=model_path,
+                dataset_path=data_path,
+                train_batch_size=train_batch_size,
+                run_stats=run_stats,
+            )
+            document.update({key: ray.get(output)})
+        except:
+            print(f"FAILURE PROCESSING: {key}")
 
 
 PRE_BUILT_METRICS = {

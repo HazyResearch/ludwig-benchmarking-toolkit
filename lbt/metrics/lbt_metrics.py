@@ -13,7 +13,7 @@ from experiment_impact_tracker.compute_tracker import ImpactTracker
 from experiment_impact_tracker.data_interface import DataInterface
 from globals import ENERGY_LOGGING_DIR
 from lbt.metrics import register_metric
-from lbt.metrics.base_metric import BaseMetric
+from lbt.metrics.base_metric import LBTMetric
 from lbt.metrics.utils import scale_bytes
 from ludwig.api import LudwigModel
 from ludwig.collect import collect_weights
@@ -22,7 +22,7 @@ from ludwig.collect import collect_weights
 
 
 @register_metric("ludwig_version")
-class LudwigVersion(BaseMetric):
+class LudwigVersion(LBTMetric):
     def __init__(self):
         pass
 
@@ -31,7 +31,7 @@ class LudwigVersion(BaseMetric):
 
 
 @register_metric("hardware_metadata")
-class HardwareMetadata(BaseMetric):
+class HardwareMetadata(LBTMetric):
     num_gpus = 0
 
     def run(cls, **kwargs):
@@ -57,7 +57,7 @@ class HardwareMetadata(BaseMetric):
 
 
 @register_metric("inference_latency")
-class InferenceLatencyMetric(BaseMetric):
+class InferenceLatencyMetric(LBTMetric):
     num_samples = 1
     num_gpus = 0
 
@@ -105,7 +105,7 @@ class InferenceLatencyMetric(BaseMetric):
 
 
 @register_metric("training_cost")
-class TrainingCost(BaseMetric):
+class TrainingCost(LBTMetric):
     gpu_cost_per_hr = 0.35  # GCP cost for Tesla T4
 
     def run(cls, run_stats: dict, **kwargs) -> float:
@@ -118,7 +118,7 @@ class TrainingCost(BaseMetric):
 
 
 @register_metric("training_speed")
-class TrainingSpeed(BaseMetric):
+class TrainingSpeed(LBTMetric):
     num_gpus = 0
 
     def run(
@@ -158,7 +158,7 @@ class TrainingSpeed(BaseMetric):
 
 
 @register_metric("model_size")
-class ModelSize(BaseMetric):
+class ModelSize(LBTMetric):
     num_gpus = 0
 
     def run(cls, model_path: str, **kwargs):
@@ -188,7 +188,7 @@ class ModelSize(BaseMetric):
 
 
 @register_metric("carbon_footprint")
-class Energy(BaseMetric):
+class Energy(LBTMetric):
     num_gpus = 0
 
     def run(cls, model_path: str, dataset_path, train_batch_size, run_stats):
@@ -203,7 +203,6 @@ class Energy(BaseMetric):
         :return: (str) total bytes scaled in string format
         """
         # First copy model_path to temp directory
-        # tempdir = tempfile.gettempdir()
         logging_path = os.path.join(
             ENERGY_LOGGING_DIR, run_stats["hyperopt_results"]["experiment_id"]
         )

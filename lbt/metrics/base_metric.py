@@ -6,7 +6,7 @@ import pandas as pd
 from ludwig.api import LudwigModel
 
 
-class BaseMetric(ABC):
+class LBTMetric(ABC):
     def __init__(self):
         super().__init__()
 

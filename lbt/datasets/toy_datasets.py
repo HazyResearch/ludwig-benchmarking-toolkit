@@ -5,7 +5,6 @@ from lbt.datasets import register_dataset
 from lbt.datasets.base_dataset import LBTDataset
 
 
-# TODO: ASN --> FIGURE OUT PLACEMENT OF TOY-DATASETS DIRECTORY
 @register_dataset("toy_agnews")
 class ToyAGNews(LBTDataset):
     def __init__(

@@ -90,12 +90,10 @@ from lbt.tools.robustnessgym import RG
 from lbt.tools.textattack import attack, augment
 
 # Robustness Gym API Usage
-RG( 
-    dataset_name="AGNews",
+RG( dataset_name="AGNews",
     models=["bert", "rnn"],
     path_to_dataset="agnews.csv", 
-    subpopulations=[ "entities", "positive_words", "negative_words"])
-)
+    subpopulations=[ "entities", "positive_words", "negative_words"]))
 
 # TextAttack API Usage
 attack(dataset_name="AGNews", path_to_model="agnews/model/rnn_model",

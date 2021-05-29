@@ -157,9 +157,9 @@ def set_globals(args):
             globals.DATASETS_LIST = args.datasets
             logging.info(f"Setting global datasets list to {args.datasets}")
 
-    if "all" not in args.custom_encoders_list:
+    if "all" not in args.custom_model_list:
         encoders_list = []
-        for enc_name in args.custom_encoders_list:
+        for enc_name in args.custom_model_list:
             if enc_name in globals.ENCODER_HYPEROPT_FILENAMES.keys():
                 encoders_list.append(
                     globals.ENCODER_HYPEROPT_FILENAMES[enc_name]

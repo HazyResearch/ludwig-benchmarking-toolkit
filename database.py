@@ -6,7 +6,7 @@ import ray
 import socket
 from elasticsearch import Elasticsearch
 
-from utils.experiment_utils import (
+from lbt.utils.experiment_utils import (
     format_fields_float,
     get_model_ckpt_paths,
     hash_dict,

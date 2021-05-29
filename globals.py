@@ -24,8 +24,4 @@ EXPERIMENT_OUTPUT_DIR = "./experiment-outputs"
 
 PATH_TO_PRETRAINED_EMBEDDINGS = None
 
-SMOKE_DATASETS = {
-    "agnews": "./smoke-datasets/agnews.csv",
-}
-
 RUNTIME_ENV = "local"

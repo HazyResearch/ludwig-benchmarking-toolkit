@@ -17,7 +17,7 @@ ENCODER_HYPEROPT_FILENAMES = {
 ENCODER_FILE_LIST = ENCODER_HYPEROPT_FILENAMES.values()
 DATASETS_LIST = None
 
-CONFIG_TEMPLATE_FILE = "./experiment-templates/config_template.yaml"
+CONFIG_TEMPLATE_FILE = "./experiment-templates/task_template.yaml"
 DATASET_METADATA_FILE = "./experiment-templates/dataset_metadata.yaml"
 HYPEROPT_CONFIG_FILE = "./experiment-templates/hyperopt_config.yaml"
 EXPERIMENT_OUTPUT_DIR = "./experiment-outputs"

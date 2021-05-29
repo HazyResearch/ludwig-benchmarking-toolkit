@@ -27,6 +27,7 @@ def register_dataset(name):
                 )
             )
         DATASET_REGISTRY[name] = cls
+        return cls
 
     return register_dataset_cls
 
@@ -40,7 +41,10 @@ def build_dataset(dataset_name: str, cache_dir: str, **kwargs):
                 "Dataset ({}) is not supported by LBT".format(dataset_name)
             )
             exit(1)
-    return DATASET_REGISTRY[dataset_name](cache_dir=cache_dir, **kwargs)
+
+    dataset = DATASET_REGISTRY[dataset_name](cache_dir=cache_dir, **kwargs)
+    dataset.load()
+    return dataset
 
 
 PRE_BUILT_DATASETS = {

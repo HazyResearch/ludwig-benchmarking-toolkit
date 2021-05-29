@@ -169,7 +169,6 @@ def attack(
     return results_df
 
 
-# TODO (ASN) : fix manual input/output feature dependence
 def augment(
     dataset_name: str,
     path_to_dataset: str,

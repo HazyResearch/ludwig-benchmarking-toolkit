@@ -1,4 +1,4 @@
-from utils.experiment_utils import load_yaml
+from lbt.utils.experiment_utils import load_yaml
 from globals import DATASET_METADATA_FILE
 from lbt.datasets import DATASET_REGISTRY
 

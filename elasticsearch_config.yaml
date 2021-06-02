@@ -1,4 +1,0 @@
-host : "https://4616368f814a4d52bd9d54c9e639c9ee.us-west1.gcp.cloud.es.io:9243"
-username : "elastic"
-password : "GGwqkL3nWJiLjyILAlp6644E"
-index : "ludwig-benchmark-textclassification"

@@ -1,4 +1,4 @@
-agnews:
+AGNews:
   data_class: AGNews
   input_features:
     - name: description
@@ -7,7 +7,7 @@ agnews:
     - name: class_index
       type: category
 
-amazon_review_polarity:
+AmazonPolarity:
   data_class: AmazonPolarity
   input_features:
     - name: review_text
@@ -16,7 +16,7 @@ amazon_review_polarity:
     - name: label
       type: category
 
-amazon_reviews:
+AmazonReviews:
   data_class: AmazonReviews
   input_features:
     - name: review_text
@@ -25,7 +25,7 @@ amazon_reviews:
     - name: label
       type: category
 
-dbpedia:
+DBPedia:
   data_class: DBPedia
   input_features:
     - name: content
@@ -34,7 +34,7 @@ dbpedia:
     - name: label
       type: category
 
-ethos_binary:
+EthosBinary:
   data_class: EthosBinary
   input_features:
     - name: comment
@@ -42,7 +42,7 @@ ethos_binary:
   output_features: isHate
   type: category
 
-goemotions:
+GoEmotions:
   data_class: GoEmotions
   input_features:
     - name: text
@@ -51,7 +51,7 @@ goemotions:
     - name: emotion_ids
       type: set
 
-irony:
+Irony:
   data_class: Irony
   input_features:
     - name: comment_text
@@ -60,7 +60,7 @@ irony:
     - name: label
       type: category
 
-sst2:
+SST2:
   data_class: SST2
   input_features:
     - name: sentence
@@ -69,7 +69,7 @@ sst2:
     - name: label
       type: category
 
-sst5:
+SST5:
   data_class: SST5
   input_features:
     - name: sentence
@@ -78,7 +78,7 @@ sst5:
     - name: label
       type: category
 
-yahoo_answers:
+YahooAnswers:
   data_class: YahooAnswers
   input_features:
     - name: question
@@ -87,7 +87,7 @@ yahoo_answers:
     - name: label
       type: category
 
-yelp_review_polarity:
+YelpPolarity:
   data_class: YelpPolarity
   input_features:
     - name: text
@@ -97,7 +97,7 @@ yelp_review_polarity:
     - name: label
       type: category
 
-yelp_reviews:
+YelpReviews:
   data_class: YelpReviews
   input_features:
     - name: text
@@ -106,7 +106,7 @@ yelp_reviews:
     - name: label
       type: category
 
-hate_speech:
+HateSpeech:
   data_class: HateSpeech
   input_features:
     - name: tweet
@@ -115,7 +115,7 @@ hate_speech:
     - name: class
       type: category
 
-social_bias_frames:
+SocialBiasFrames:
   data_class: SocialBiasFrames
   input_features:
     - name: post
@@ -131,7 +131,7 @@ social_bias_frames:
       type: category
   type: category
 
-md_gender_bias:
+MDGenderBias:
   data_class: MDGenderBias
   input_features:
     - name: text

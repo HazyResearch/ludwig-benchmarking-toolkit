@@ -80,7 +80,7 @@ def run_hyperopt_exp(
             ]
         except:
             pass
-        
+
         if tune_executor == "ray" and runtime_env == "gcp":
 
             if (
@@ -277,6 +277,46 @@ def run_experiments(
         )
     else:
         logging.warning("Not all experiments completed!")
+
+
+def reproduce_experiment(
+    model,
+    dataset,
+    data_file_paths,
+    elastic_config=None,
+    experiment_to_replicate=None,
+    run_environment: str = "local",
+):
+    experiment_config = load_yaml(experiment_to_replicate)
+    experiment_name = dataset + "_" + model
+    for dataset_name, file_path in data_file_paths.items():
+
+        output_dir = os.path.join(
+            globals.EXPERIMENT_OUTPUT_DIR, experiment_name
+        )
+
+        if not os.path.isdir(output_dir):
+            os.mkdir(output_dir)
+
+        output_dir = os.path.join(
+            globals.EXPERIMENT_OUTPUT_DIR, experiment_name
+        )
+
+        experiment_attr = defaultdict()
+        experiment_attr = {
+            "model_config": experiment_config,
+            "dataset_path": file_path,
+            "model_name": model,
+            "output_dir": output_dir,
+            "encoder": model,
+            "dataset": dataset,
+            "elastic_config": elastic_config,
+        }
+        run_hyperopt_exp(
+            experiment_attr,
+            False,
+            run_environment,
+        )
 
 
 def experiment(

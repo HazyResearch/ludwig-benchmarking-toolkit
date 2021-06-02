@@ -6,8 +6,17 @@ import ray
 import globals
 
 from lbt.utils.experiment_utils import set_globals, load_yaml
+from lbt.experiments import (
+    run_experiments,
+    reproduce_experiment,
+    download_data,
+)
 from lbt.datasets import DATASET_REGISTRY
-from lbt.experiments import run_experiments, download_data
+from lbt.experiments import (
+    run_experiments,
+    reproduce_experiment,
+    download_data,
+)
 import lbt.build_def_files
 from lbt.build_def_files import build_config_files
 
@@ -108,6 +117,13 @@ def main():
         default=None,
     )
 
+    parser.add_argument(
+        "--experiment_to_replicate",
+        help="path to LBT experiment config to reproduce and experiment",
+        type=str,
+        default=None,
+    )
+
     args = parser.parse_args()
     set_globals(args)
 
@@ -121,17 +137,30 @@ def main():
     if args.elasticsearch_config is not None:
         elastic_config = load_yaml(args.elasticsearch_config)
 
+    experiment_config = None
+    if args.experiment_to_replicate is not None:
+        experiment_config = load_yaml(args.experiment_to_replicate)
+
     if args.run_environment == "gcp":
         ray.init(address="auto")
 
-    run_experiments(
-        data_file_paths,
-        config_files,
-        top_n_trials=args.top_n_trials,
-        elastic_config=elastic_config,
-        run_environment=args.run_environment,
-        resume_existing_exp=args.resume_existing_exp,
-    )
+    if experiment_config:
+        reproduce_experiment(
+            model=args.custom_model_list[0],
+            dataset=args.datasets[0],
+            data_file_paths=data_file_paths,
+            experiment_to_replicate=args.experiment_to_replicate,
+            run_environment=args.run_environment,
+        )
+    else:
+        run_experiments(
+            data_file_paths,
+            config_files,
+            top_n_trials=args.top_n_trials,
+            elastic_config=elastic_config,
+            run_environment=args.run_environment,
+            resume_existing_exp=args.resume_existing_exp,
+        )
 
 
 if __name__ == "__main__":

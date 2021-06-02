@@ -64,7 +64,7 @@ dependencies:
       - jsonschema==3.2.0
       - keras-preprocessing==1.1.2
       - kubernetes==12.0.1
-      - git+https://github.com/ANarayan/ludwig.git@fb259b02ac9456f8ed1147c0130f892c540c2be9
+      - git+https://github.com/ludwig-ai/ludwig.git@ed5ae805a6fb28f7ba02a50fffebdd24ab52d436
       - git+https://github.com/Breakend/experiment-impact-tracker.git
       - git+https://github.com/robustness-gym/robustness-gym.git@8be2b1124e1a4fecdad15d73da073b9115f0f289
       - lxml==4.6.2
@@ -73,7 +73,7 @@ dependencies:
       - multidict==5.1.0
       - nnpy-bundle==1.4.2.post1
       - numexpr==2.7.3
-      - numpy==1.19.5
+      - numpy>=1.18.0
       - nvidia-ml-py3==7.352.0
       - oauthlib==3.1.0
       - opencensus==0.7.12
@@ -103,14 +103,14 @@ dependencies:
       - python-dateutil==2.8.1
       - pytz==2021.1
       - pyyaml==5.4.1
-      - https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-2.0.0.dev0-cp37-cp37m-macosx_10_13_intel.whl
+      - https://s3-us-west-2.amazonaws.com/ray-wheels/latest/ray-2.0.0.dev0-cp38-cp38-macosx_10_13_x86_64.whl
       - redis==3.5.3
       - requests==2.25.1
       - requests-oauthlib==1.3.0
       - rsa==4.7.2
       - scikit-learn==0.24.1
       - scikit-optimize==0.8.1
-      - scipy==1.6.1
+      - scipy==1.4.1
       - six==1.15.0
       - smmap==3.0.5
       - tables==3.6.1
@@ -118,14 +118,14 @@ dependencies:
       - tensorboard==2.4.1
       - tensorboard-plugin-wit==1.8.0
       - tensorboardx==2.1
-      - tensorflow==2.4.1
+      - tensorflow==2.3.1
       - textattack==0.2.15
-      - tensorflow-estimator==2.4.0
+      - tensorflow-estimator<2.4.0
       - termcolor==1.1.0
       - tfa-nightly==0.12.0.dev20201215223743
       - threadpoolctl==2.1.0
       - toml==0.10.2
-      - tqdm==4.59.0
+      - tqdm>=4.27.0
       - transformers==4.2.1
       - typeguard==2.11.1
       - typing-extensions==3.7.4.3

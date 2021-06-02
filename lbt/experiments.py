@@ -74,15 +74,19 @@ def run_hyperopt_exp(
         tune_executor = model_config["hyperopt"]["executor"]["type"]
 
         num_gpus = 0
+        try:
+            num_gpus = model_config["hyperopt"]["executor"][
+                "gpu_resources_per_trial"
+            ]
+        except:
+            pass
+        
         if tune_executor == "ray" and runtime_env == "gcp":
 
             if (
                 "kubernetes_namespace"
                 not in model_config["hyperopt"]["executor"].keys()
             ):
-                num_gpus = model_config["hyperopt"]["executor"][
-                    "gpu_resources_per_trial"
-                ]
                 raise ValueError(
                     "Please specify the kubernetes namespace of the Ray cluster"
                 )

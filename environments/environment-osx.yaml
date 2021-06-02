@@ -2,18 +2,17 @@ name: lbt
 channels:
   - defaults
 dependencies:
-  - ca-certificates=2021.1.19
-  - certifi=2020.12.5
+  - ca-certificates=2021.5.25
+  - certifi=2021.5.30
   - libcxx=10.0.0
-  - libedit=3.1.20191231
   - libffi=3.3
   - ncurses=6.2
-  - openssl=1.1.1j
-  - pip=21.0.1
-  - python=3.8
+  - openssl=1.1.1k
+  - pip=21.1.1
+  - python=3.8.10
   - readline=8.1
   - setuptools=52.0.0
-  - sqlite=3.33.0
+  - sqlite=3.35.4
   - tk=8.6.10
   - wheel=0.36.2
   - xz=5.2.5
@@ -64,7 +63,7 @@ dependencies:
       - jsonschema==3.2.0
       - keras-preprocessing==1.1.2
       - kubernetes==12.0.1
-      - git+https://github.com/ludwig-ai/ludwig.git@ed5ae805a6fb28f7ba02a50fffebdd24ab52d436
+      - git+https://github.com/ANarayan/ludwig.git@fb259b02ac9456f8ed1147c0130f892c540c2be9
       - git+https://github.com/Breakend/experiment-impact-tracker.git
       - git+https://github.com/robustness-gym/robustness-gym.git@8be2b1124e1a4fecdad15d73da073b9115f0f289
       - lxml==4.6.2

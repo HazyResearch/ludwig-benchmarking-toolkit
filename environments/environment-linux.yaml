@@ -2,17 +2,16 @@ name: lbt
 channels:
   - defaults
 dependencies:
-  - ca-certificates=2021.1.19
-  - certifi=2020.12.5
-  - libedit=3.1.20191231
+  - ca-certificates=2021.5.25
+  - certifi=2020.5.30
   - libffi=3.3
   - ncurses=6.2
-  - openssl=1.1.1j
-  - pip=21.0.1
-  - python=3.8
+  - openssl=1.1.1k
+  - pip=21.1.1
+  - python=3.8.10
   - readline=8.1
   - setuptools=52.0.0
-  - sqlite=3.33.0
+  - sqlite=3.35.4
   - tk=8.6.10
   - wheel=0.36.2
   - xz=5.2.5

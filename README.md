@@ -7,7 +7,7 @@ To get started, use the following commands to set-up your conda environment.
 git clone https://github.com/HazyResearch/ludwig-benchmark.git
 cd ludwig-benchmark
 conda env create -f environments/{environment-osx.yaml, environment-linux.yaml}
-conda activate ludwig-bench
+conda activate lbt
 ```
 
 # Relevant files and directories

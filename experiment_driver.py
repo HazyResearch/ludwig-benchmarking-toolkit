@@ -118,7 +118,8 @@ def main():
     )
 
     parser.add_argument(
-        "--experiment_to_replicate",
+        "-reproduce",
+        "--experiment_to_reproduce",
         help="path to LBT experiment config to reproduce and experiment",
         type=str,
         default=None,
@@ -138,8 +139,8 @@ def main():
         elastic_config = load_yaml(args.elasticsearch_config)
 
     experiment_config = None
-    if args.experiment_to_replicate is not None:
-        experiment_config = load_yaml(args.experiment_to_replicate)
+    if args.experiment_to_reproduce is not None:
+        experiment_config = load_yaml(args.experiment_to_reproduce)
 
     if args.run_environment == "gcp":
         ray.init(address="auto")
@@ -149,7 +150,7 @@ def main():
             model=args.custom_model_list[0],
             dataset=args.datasets[0],
             data_file_paths=data_file_paths,
-            experiment_to_replicate=args.experiment_to_replicate,
+            experiment_to_replicate=args.experiment_to_reproduce,
             run_environment=args.run_environment,
         )
     else:

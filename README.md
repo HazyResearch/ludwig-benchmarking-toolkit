@@ -4,8 +4,8 @@ The Ludwig Benchmarking Toolkit is a personalized benchmarking toolkit for runni
 # Getting set-up
 To get started, use the following commands to set-up your conda environment. 
 ```
-git clone https://github.com/HazyResearch/ludwig-benchmark.git
-cd ludwig-benchmark
+git clone https://github.com/HazyResearch/ludwig-benchmarking-toolkit.git
+cd ludwig-benchmarking-toolkit
 conda env create -f environments/{environment-osx.yaml, environment-linux.yaml}
 conda activate lbt
 ```

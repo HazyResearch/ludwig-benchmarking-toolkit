@@ -55,7 +55,7 @@ Steps for configuring + running an experiment:
             --run_environment {local, gcp}
             --elasticsearch_config <path to config file>
             --dataset_cache_dir <path to dir to save downloaded datasets>
-            --custom_encoders_list <list of encoders>
+            --custom_model_list <list of models>
             --datasets <list of datasets>
             --resume_existing_exp bool
 

@@ -217,7 +217,7 @@ class Energy(LBTMetric):
                 output_directory,
             ) = model.train(
                 dataset=dataset_path,
-                training_set_metadat=os.path.join(
+                training_set_metadata=os.path.join(
                     tempdir, "training_set_metadata.json"
                 ),
             )

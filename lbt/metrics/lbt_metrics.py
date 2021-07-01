@@ -215,7 +215,7 @@ class Energy(LBTMetric):
                 training_statistics,
                 preprocessed_data,
                 output_directory,
-            ) = model.train(
+            ) = model.train_online(
                 dataset=dataset_path,
                 training_set_metadata=os.path.join(
                     tempdir, "training_set_metadata.json"

@@ -211,16 +211,8 @@ class Energy(LBTMetric):
         model = LudwigModel.load(tempdir)
 
         with ImpactTracker(logging_path):
-            (
-                training_statistics,
-                preprocessed_data,
-                output_directory,
-            ) = model.train_online(
-                dataset=dataset_path,
-                training_set_metadata=os.path.join(
-                    tempdir, "training_set_metadata.json"
-                ),
-            )
+            model.train_online(dataset=dataset_path)
+            
         data_interface = DataInterface([logging_path])
         carbon_output = {
             "kg_carbon": data_interface.kg_carbon,

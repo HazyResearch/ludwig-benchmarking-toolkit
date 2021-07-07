@@ -58,7 +58,7 @@ class HardwareMetadata(LBTMetric):
 
 @register_metric("inference_latency")
 class InferenceLatencyMetric(LBTMetric):
-    num_samples = 1
+    num_samples = 25
     num_gpus = 0
 
     def run(cls, model_path, dataset_path, **kwargs):

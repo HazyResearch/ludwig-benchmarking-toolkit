@@ -18,8 +18,6 @@ from lbt.metrics.utils import scale_bytes
 from ludwig.api import LudwigModel
 from ludwig.collect import collect_weights
 
-# TODO: ASN --> Add check to see if available GPUs before seting num_gpus=1
-
 
 @register_metric("ludwig_version")
 class LudwigVersion(LBTMetric):

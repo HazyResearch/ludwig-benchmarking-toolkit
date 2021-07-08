@@ -5,6 +5,7 @@ import json
 import logging
 import math
 import os
+import GPUtil
 from typing import Union
 from lbt.datasets import build_dataset
 from lbt.metrics import get_experiment_metadata
@@ -53,12 +54,16 @@ def compute_additional_metadata(
             "hyperopt_results": run["hyperopt_results"],
             "model_path": run["model_path"],
         }
+        
 
+        num_gpus = len(GPUtil.getGPUs())
+        
         get_experiment_metadata(
             document,
             model_path=run["model_path"],
             data_path=experiment_attr["dataset_path"],
             run_stats=run,
+            num_gpus=num_gpus
         )
 
         formatted_document = {

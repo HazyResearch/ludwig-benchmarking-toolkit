@@ -3,9 +3,12 @@ metric: accuracy
 parameters:
   training.learning_rate:
     type: float
-    lower: 0.00002
+    lower: 0.0001
     upper: 0.01
     space: loguniform
+  training.batch_size:
+    space: choice
+    categories: [16, 32, 64, 128, 256, 512, 1024]
 sampler:
   type: ray
   search_alg:
@@ -15,5 +18,5 @@ sampler:
 executor:
   type: ray
   cpu_resources_per_trial: 1
-  gpu_resources_per_trial: 0
+  gpu_resources_per_trial: 1
   #kubernetes_namespace: "ray"

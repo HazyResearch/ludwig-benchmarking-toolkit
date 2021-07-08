@@ -1,11 +1,7 @@
 input_features:
   - name: ~
-    type: text
-    level: word
-    encoder: rnn
-    preprocessing:
-      word_tokenizer: space
-    pretrained_model_name_or_path: None
+    type: image
+    encoder: resnet
 
 output_features:
   - name: ~
@@ -16,7 +12,7 @@ training:
   batch_size: 16
   eval_batch_size: 64
   early_stop: 3
-  epochs: 25
+  epochs: 15
   validation_metric: accuracy
 
 hyperopt:

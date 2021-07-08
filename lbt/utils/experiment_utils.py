@@ -113,6 +113,8 @@ def process_dataset(dataset_path: str):
         if len(val_df) == 0:
             val_df = train_df.sample(frac=0.1, replace=False)
             train_df = train_df.drop(val_df.index)
+        
+        val_df.split = 1
 
         concat_df = pd.concat([train_df, val_df, test_df], ignore_index=True)
         concat_df.to_csv(dataset_path, index=False)

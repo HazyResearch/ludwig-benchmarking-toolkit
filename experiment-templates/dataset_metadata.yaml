@@ -141,6 +141,26 @@ MDGenderBias:
       type: category
   type: category
 
+CIFAR10:
+  data_class: CIFAR10
+  input_features:
+    - name: image_path
+      type: image
+  output_features:
+    - name: label
+      type: category
+  type: category
+
+Mnist:
+  data_class: Mnist
+  input_features:
+    - name: image_path
+      type: image
+  output_features:
+    - name: label
+      type: category
+  type: category
+
 toy_agnews:
   data_class: toy_agnews
   input_features:

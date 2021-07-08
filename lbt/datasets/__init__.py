@@ -64,6 +64,8 @@ PRE_BUILT_DATASETS = {
     "HateSpeech": "ludwig.datasets.hate_speech",
     "MDGenderBias": "ludwig.datasets.md_gender_bias",
     "toyAGNews": "lbt.datasets.toy_datasets",
+    "Mnist" : "ludwig.datasets.mnist",
+    "CIFAR10" : "ludwig.datasets.cifar10",
 }
 
 # TODO: ASN -> CHECK PLACEMENT

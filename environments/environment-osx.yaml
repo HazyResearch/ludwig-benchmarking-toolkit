@@ -63,7 +63,7 @@ dependencies:
       - jsonschema==3.2.0
       - keras-preprocessing==1.1.2
       - kubernetes==12.0.1
-      - git+https://github.com/ANarayan/ludwig.git@fb259b02ac9456f8ed1147c0130f892c540c2be9
+      - git+https://github.com/ANarayan/ludwig.git@09dfe62a389226e9a125f2a66bb6eb6569f25130
       - git+https://github.com/Breakend/experiment-impact-tracker.git
       - git+https://github.com/robustness-gym/robustness-gym.git@8be2b1124e1a4fecdad15d73da073b9115f0f289
       - lxml==4.6.2

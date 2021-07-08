@@ -100,14 +100,17 @@ def build_config_files():
 
             # handle encoder specific preprocessing
             for idx in range(len(curr_config["input_features"])):
-                preprocessing = curr_config["input_features"][idx][
-                    "preprocessing"
-                ]
-                for key, _ in preprocessing.items():
-                    preprocessing[key] = encoder_hyperopt_params[
-                        "input_features"
-                    ][idx]["preprocessing"][key]
+                try:
+                    preprocessing = curr_config["input_features"][idx][
+                        "preprocessing"
+                    ]
+                    for key, _ in preprocessing.items():
+                        preprocessing[key] = encoder_hyperopt_params[
+                            "input_features"
+                        ][idx]["preprocessing"][key]
 
+                except:
+                    pass #no preprocessing param
             # handle encoder specific training params
             if "training" in encoder_hyperopt_params.keys():
                 curr_config["training"].update(

@@ -104,6 +104,8 @@ def main():
             "roberta",
             "distilbert",
             "electra",
+            "resnet",
+            "stacked_cnn",
             "t5",
         ],
         default="all",

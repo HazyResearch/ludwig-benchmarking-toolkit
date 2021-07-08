@@ -70,7 +70,7 @@ class InferenceLatencyMetric(LBTMetric):
         :param dataset_path: (int) number of dev samples to randomly sample
 
         # Return
-        :return: (str) avg. time per training step
+        :return: (str) avg. time per inference step
         """
         # Create smaller datasets w/10 samples from original dev set
         full_dataset = pd.read_csv(dataset_path)

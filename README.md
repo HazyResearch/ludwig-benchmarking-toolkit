@@ -144,6 +144,7 @@ Adding custom evaluation metrics requires creating a new `LBTMetric` class and a
 to the metrics registry. Creating an `LBTMetric` object requires implementing
 the run class method which takes as potential inputs a path to a model directory, path to a dataset, training batch size, and training statistics. Please see the [`pre-built LBT metrics`](lbt/metrics/lbt_metrics.py) for examples.
 
-
+# ELASTICSEARCH RESEARCH DATABASE
+To get credentials to upload experiments to the shared Elasticsearch research database, please fill out this [form](https://forms.gle/rSQqQ3gAtTAURsxKA).
 
 

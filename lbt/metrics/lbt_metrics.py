@@ -13,6 +13,7 @@ from experiment_impact_tracker.compute_tracker import ImpactTracker
 from experiment_impact_tracker.data_interface import DataInterface
 from globals import ENERGY_LOGGING_DIR
 from lbt.metrics import register_metric
+from lbt.metrics import INSTANCE_PRICES
 from lbt.metrics.base_metric import LBTMetric
 from lbt.metrics.utils import scale_bytes
 from ludwig.api import LudwigModel
@@ -104,15 +105,24 @@ class InferenceLatencyMetric(LBTMetric):
 
 @register_metric("training_cost")
 class TrainingCost(LBTMetric):
-    gpu_cost_per_hr = 0.35  # GCP cost for Tesla T4
+    default_gpu_cost_per_hr = 0.35  # GCP cost for Tesla T4
 
     def run(cls, run_stats: dict, **kwargs) -> float:
         """
         Return total cost to train model using GCP compute resource
         """
+        get_GPUS = GPUtil.getGPUs()
+        instance_cost = None
+        if len(get_GPUS) > 0:
+            gpu_type = get_GPUS[0].name
+            if gpu_type in INSTANCE_PRICES.keys():
+                instance_cost = INSTANCE_PRICES[gpu_type]
+        if instance_cost is None:
+            instance_cost = cls.default_gpu_cost_per_hr
+
         total_time_s = int(run_stats["hyperopt_results"]["time_total_s"])
         total_time_hr = total_time_s / 3600
-        return float(total_time_hr * cls.gpu_cost_per_hr)
+        return float(total_time_hr * instance_cost)
 
 
 @register_metric("training_speed")
@@ -210,7 +220,7 @@ class Energy(LBTMetric):
 
         with ImpactTracker(logging_path):
             model.train_online(dataset=dataset_path)
-            
+
         data_interface = DataInterface([logging_path])
         carbon_output = {
             "kg_carbon": data_interface.kg_carbon,

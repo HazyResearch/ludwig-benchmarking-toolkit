@@ -1,11 +1,14 @@
+from lbt.metrics.base_metric import LBTMetric
+import ray
 import importlib
 import sys
-import pdb
+import json
+import os
 
-import ray
-from lbt.metrics.base_metric import LBTMetric
-
+LOCATION = os.path.abspath(os.path.dirname(__file__))
+INSTANCE_PRICES_FILEPATH = os.path.join(LOCATION, "instance_prices.json")
 METRIC_REGISTERY = {}
+INSTANCE_PRICES = {}
 
 
 def register_metric(name):
@@ -56,6 +59,8 @@ def get_experiment_metadata(
         except:
             print(f"FAILURE PROCESSING: {key}")
 
+
+INSTANCE_PRICES = json.load(open(INSTANCE_PRICES_FILEPATH, "rb"))
 
 PRE_BUILT_METRICS = {
     "lbt_metrics": "lbt.metrics.lbt_metrics",

@@ -28,6 +28,7 @@ def download_data(cache_dir=None, datasets: list = None):
         if dataset in list(DATASET_REGISTRY.keys()):
             data_class = dataset_metadata[dataset]["data_class"]
             data_path = download_dataset(data_class, cache_dir)
+            process_dataset(data_path)
             data_file_paths[dataset] = data_path
         else:
             raise ValueError(

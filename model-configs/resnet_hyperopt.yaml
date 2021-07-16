@@ -1,0 +1,19 @@
+input_features:
+  - encoder: resnet
+    resnet_size: 14
+
+training:
+  batch_size: 32
+  early_stop: 5
+
+parameters:
+  input_features.name.encoder: resnet
+  output_features.name.fc_layers:
+    # if space is grid_search, change 'categories' to 'values'
+    space: choice
+    categories:
+      [
+        [{ fc_size: 512 }, { fc_size: 256 }],
+        [{ fc_size: 512 }],
+        [{ fc_size: 256 }],
+      ]

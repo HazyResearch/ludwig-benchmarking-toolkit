@@ -151,6 +151,77 @@ CIFAR10:
       type: category
   type: category
 
+RossmannStoreSales:
+  data_class: RossmannStoreSales
+  input_features:
+    - name: Store
+      type: category
+    - name: DayOfWeek
+      type: category
+    - name: Customers
+      type: numerical
+    - name: Open
+      type: category
+    - name: Promo
+      type: category
+    - name: StateHoliday
+      type: category
+    - name: SchoolHoliday
+      type: category
+    - name: Year
+      type: numerical
+    - name: Month
+      type: numerical
+    - name: StoreType
+      type: category
+    - name: Day
+      type: numerical
+    - name: StoreType
+      type: category
+    - name: Assortment
+      type: category
+    - name: CompetitionDistance
+      type: numerical
+    - name: CompetitionOpenSinceMonth
+      type: numerical
+    - name: CompetitionOpenSinceYear
+      type: numerical
+    - name: Promo2
+      type: binary
+    - name: Promo2SinceWeek
+      type: numerical
+    - name: Promo2SinceYear
+      type: numerical
+    - name: Promo2Start_Jan
+      type: binary
+    - name: Promo2Start_Feb
+      type: binary
+    - name: Promo2Start_Mar
+      type: binary
+    - name: Promo2Start_Apr
+      type: binary
+    - name: Promo2Start_May
+      type: text
+    - name: Promo2Start_Jun
+      type: binary
+    - name: Promo2Start_Jul
+      type: binary
+    - name: Promo2Start_Aug
+      type: binary
+    - name: Promo2Start_Sept
+      type: binary
+    - name: Promo2Start_Oct
+      type: binary
+    - name: Promo2Start_Nov
+      type: binary
+    - name: Promo2Start_Dec
+      type: binary
+  output_features:
+    - name: Sales
+      type: numerical
+      loss:
+        type: root_mean_squared_percentage_error
+
 Mnist:
   data_class: Mnist
   input_features:

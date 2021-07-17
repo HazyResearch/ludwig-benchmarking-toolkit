@@ -7,6 +7,9 @@ input_features:
       word_tokenizer: space
     pretrained_model_name_or_path: None
 
+combiner:
+  type: concat
+
 output_features:
   - name: ~
     type: category

@@ -1,0 +1,97 @@
+model_name: tabtransformer
+# specify which encoder this model will use for each input feature type
+# default values have been provided -- populate only the input types you want
+# to modify
+input_features:
+  - type: text # custom
+    encoder: rnn
+    preprocessing:
+      word_tokenizer: space
+      pretrained_model_name_or_path: None
+    dropout: 0.5
+  - type: binary
+    encoder: passthrough # default
+  - type: numerical
+    encoder: passthrough # default
+  - type: category
+    encoder: dense # default
+  - type: set
+    encoder: dense # default
+  - type: sequence
+    encoder: parallel_cnn # default
+  - type: image
+    encoder: stacked_cnn # default
+
+# specify which combiner the model will use (concat by default)
+combiner:
+  type: transformer # custom
+  num_layers: 6
+  num_heads: 8
+  hidden_size: 32
+  dropout: 0.1
+  fc_dropout: 0.2
+  num_fc_layers: 1
+
+# specify which decoder this model will use for each output feature type
+output_features:
+  - type: text
+    decoder: generator # default
+  - type: category
+  - type: numerical
+  - type: sequence
+  - type: image
+  - type: set
+
+training:
+  batch_size: 256
+  learning_rate: 0.0001
+
+parameters:
+  input_features.text.embedding_size:
+    space: choice
+    categories: [128, 256, 512]
+  input_features.text.cell_type:
+    space: choice
+    type: category
+    categories: [rnn, gru, lstm]
+  input_features.text.state_size:
+    space: choice
+    type: category
+    categories: [256, 512]
+  input_features.text.fc_layers:
+    space: choice
+    type: category
+    categories:
+      [
+        [{ fc_size: 512 }, { fc_size: 256 }],
+        [{ fc_size: 512 }],
+        [{ fc_size: 256 }],
+      ]
+  training.learning_rate:
+    space: loguniform
+    lower: 0.00001
+    upper: 0.01
+  training.batch_size:
+    space: choice
+    categories: [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]
+  combiner.num_heads:
+    space: choice
+    categories: [2, 4, 8]
+  combiner.dropout:
+    space: uniform
+    type: float
+    lower: 0.1
+    upper: 0.5
+  combiner.num_layers:
+    space: randint
+    type: int
+    lower: 1
+    upper: 6
+  combiner.num_fc_layers:
+    space: choice
+    categories: [1, 2]
+  combiner.fc_dropout:
+    space: uniform
+    type: float
+    lower: 0.1
+    upper: 0.5

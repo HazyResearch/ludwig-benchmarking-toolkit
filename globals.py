@@ -17,7 +17,9 @@ MODEL_HYPEROPT_FILENAMES = {
     "t5": "t5_hyperopt.yaml",
     "resnet": "resnet_hyperopt.yaml",
     "stacked_cnn": "stackedcnn_hyperopt.yaml",
-    "tabnet": "tabtransformer_hyperopt.yaml"
+    "tabtrans": "tabtransformer_hyperopt.yaml",
+    "tabconcat": "tabconcat_hyperopt.yaml",
+    "tabnet": "tabnet_hyperopt.yaml"
 }
 
 MODEL_FILE_LIST = MODEL_HYPEROPT_FILENAMES.values()

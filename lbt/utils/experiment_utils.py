@@ -165,11 +165,11 @@ def set_globals(args):
     if "all" not in args.custom_model_list:
         encoders_list = []
         for enc_name in args.custom_model_list:
-            if enc_name in globals.ENCODER_HYPEROPT_FILENAMES.keys():
+            if enc_name in globals.MODEL_HYPEROPT_FILENAMES.keys():
                 encoders_list.append(
-                    globals.ENCODER_HYPEROPT_FILENAMES[enc_name]
+                    globals.MODEL_HYPEROPT_FILENAMES[enc_name]
                 )
-        globals.ENCODER_FILE_LIST = encoders_list
+        globals.MODEL_FILE_LIST = encoders_list
 
     # create experiment output directories (if they don't already exist)
     for exp_dir in [

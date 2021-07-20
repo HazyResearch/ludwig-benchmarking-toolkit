@@ -1,5 +1,5 @@
 goal: maximize
-metric: accuracy
+metric: root_mean_squared_percentage_error # accuracy for classification
 parameters:
   training.learning_rate:
     type: float
@@ -11,7 +11,10 @@ sampler:
   search_alg:
     type: skopt
     max_concurrent: 1
-  num_samples: 1
+    # type: async_hyperband
+    # max_t: 3000
+    # grace_period: 900
+  num_samples: 50
 executor:
   type: ray
   cpu_resources_per_trial: 1

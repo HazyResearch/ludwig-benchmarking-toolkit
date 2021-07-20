@@ -107,6 +107,9 @@ def main():
             "resnet",
             "stacked_cnn",
             "t5",
+            "tabtrans",
+            "tabconcat",
+            "tabnet"
         ],
         default="all",
     )

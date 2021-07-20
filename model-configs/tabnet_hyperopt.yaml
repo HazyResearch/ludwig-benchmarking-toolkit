@@ -1,0 +1,91 @@
+model_name: tabnet
+# specify which encoder this model will use for each input feature type
+# default values have been provided -- populate only the input types you want
+# to modify
+input_features:
+  - type: text # custom
+    encoder: rnn
+    preprocessing:
+      word_tokenizer: space
+      pretrained_model_name_or_path: None
+    dropout: 0.5
+  - type: binary
+    encoder: passthrough # default
+  - type: numerical
+    encoder: passthrough # default
+  - type: category
+    encoder: dense # default
+  - type: set
+    encoder: dense # default
+  - type: sequence
+    encoder: parallel_cnn # default
+  - type: image
+    encoder: stacked_cnn # default
+
+# specify which decoder this model will use for each output feature type
+output_features:
+  - type: text
+    decoder: generator # default
+  - type: category
+  - type: numerical
+  - type: sequence
+  - type: image
+  - type: set
+
+combiner:
+  type: tabnet
+  size: 32 # n_a
+  output_size: 32 # n_d
+  num_steps: 5
+  sparsity: 0.0001 # lambda_sparse
+  bn_virtual_bs: 512 # b_v
+  bn_momentum: 0.7 # m_b
+  relaxation_factor: 1.5 # gamma
+
+training:
+  # validation_metric: accuracy
+  batch_size: 2048
+  learning_rate: 0.02
+  decay: true
+  decay_steps: 500
+  decay_rate: 0.95
+  epochs: 3000
+  early_stop: 300
+  regularization_lambda: 1
+  optimizer:
+    type: adam
+
+parameters:
+  training.learning_rate:
+    space: choice
+    categories: [0.005, 0.01, 0.02, 0.025]
+  training.batch_size:
+    space: choice
+    categories: [256, 512, 1024, 2048, 4096, 8192, 16384, 32768]
+  training.decay_rate:
+    space: choice
+    categories: [0.4, 0.8, 0.9, 0.95]
+  training.decay_steps:
+    space: choice
+    categories: [500, 2000, 8000, 10000, 20000]
+  combiner.size:
+    space: choice
+    categories: [8, 16, 24, 32, 64, 128]
+  combiner.output_size:
+    space: choice
+    categories: [8, 16, 24, 32, 64, 128]
+  combiner.num_steps:
+    space: choice
+    categories: [3, 4, 5, 6, 7, 8, 9, 10]
+  combiner.relaxation_factor:
+    space: choice
+    categories: [1.0, 1.2, 1.5, 2.0]
+  combiner.sparsity:
+    space: choice
+    categories: [0.0, 0.000001, 0.0001, 0.001, 0.01, 0.1]
+  combiner.bn_virtual_bs:
+    space: choice
+    categories: [256, 512, 1024, 2048, 4096]
+  combiner.bn_momentum:
+    space: choice
+    categories: [0.6, 0.7, 0.8, 0.9, 0.95, 0.98]

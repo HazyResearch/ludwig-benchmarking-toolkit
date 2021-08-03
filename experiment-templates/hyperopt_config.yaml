@@ -1,4 +1,4 @@
-goal: maximize
+goal: minimize
 metric: root_mean_squared_error # (or accuracy for classification)
 parameters:
   training.learning_rate:

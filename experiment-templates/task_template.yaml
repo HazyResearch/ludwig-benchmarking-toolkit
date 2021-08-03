@@ -18,8 +18,8 @@ training:
   learning_rate: 0.01
   batch_size: 16
   eval_batch_size: 64
-  early_stop: 300
-  epochs: 3000
+  early_stop: 3
+  epochs: 30
   #validation_metric: accuracy
 
 hyperopt:

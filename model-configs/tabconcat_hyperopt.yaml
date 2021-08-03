@@ -51,7 +51,7 @@ parameters:
     upper: 8
   combiner.fc_size:
     space: choice
-    categories: [128, 256, 512, 1024]
+    categories: [128, 256]
   combiner.dropout:
     space: uniform
     type: float

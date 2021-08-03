@@ -1,24 +1,20 @@
-import argparse
-import datetime
-import logging
-
-import ray
-import globals
-
-from lbt.utils.experiment_utils import set_globals, load_yaml
-from lbt.experiments import (
-    run_experiments,
-    reproduce_experiment,
-    download_data,
-)
+from lbt.build_def_files import build_config_files
+import lbt.build_def_files
 from lbt.datasets import DATASET_REGISTRY
 from lbt.experiments import (
     run_experiments,
     reproduce_experiment,
     download_data,
 )
-import lbt.build_def_files
-from lbt.build_def_files import build_config_files
+from lbt.utils.experiment_utils import set_globals, load_yaml
+import globals
+import argparse
+import datetime
+import logging
+
+import ray
+ray.init(address="auto")
+
 
 logging.basicConfig(
     format=logging.basicConfig(
@@ -69,7 +65,7 @@ def main():
         "-re",
         "--run_environment",
         help="environment in which experiment will be run",
-        choices=["local", "gcp"],
+        choices=["local", "gcp", "aws"],
         default="local",
     )
     parser.add_argument(
@@ -147,8 +143,8 @@ def main():
     if args.experiment_to_reproduce is not None:
         experiment_config = load_yaml(args.experiment_to_reproduce)
 
-    if args.run_environment == "gcp":
-        ray.init(address="auto")
+    if args.run_environment == "gcp" or args.run_environment == "aws":
+        ray.init(address="auto", ignore_reinit_error=True)
 
     if experiment_config:
         reproduce_experiment(

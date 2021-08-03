@@ -2,6 +2,9 @@ import argparse
 import datetime
 import logging
 import os
+import fsspec
+from fsspec.core import split_protocol
+
 import pickle
 import socket
 from typing import Union
@@ -16,6 +19,7 @@ from database import save_results_to_es
 from ludwig.hyperopt.run import hyperopt
 from lbt.utils.experiment_utils import *
 from lbt.datasets import DATASET_REGISTRY
+from ludwig.utils.fs_utils import makedirs
 
 hostname = socket.gethostbyname(socket.gethostname())
 
@@ -53,6 +57,7 @@ def resume_training(model_config: dict, output_dir):
     return model_config, results
 
 
+@ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})
 def run_hyperopt_exp(
     experiment_attr: dict,
     is_resume_training: bool = False,
@@ -69,7 +74,7 @@ def run_hyperopt_exp(
         os.environ["TUNE_PLACEMENT_GROUP_AUTO_DISABLED"] = "1"
     os.environ["TUNE_PLACEMENT_GROUP_CLEANUP_DISABLED"] = "1"
 
-    #try:
+    # try:
     start = datetime.datetime.now()
 
     tune_executor = model_config["hyperopt"]["executor"]["type"]
@@ -110,19 +115,20 @@ def run_hyperopt_exp(
 
     new_model_config = copy.deepcopy(experiment_attr["model_config"])
     existing_results = None
-    if is_resume_training:
+    """if is_resume_training:
         new_model_config, existing_results = resume_training(
             new_model_config, experiment_attr["output_dir"]
-        )
+        )"""
 
+    # dataset = "s3://experiments.us-west-2.predibase.com/tabular-experiments/datasets/sarcos_1.0/processed/sarcos.csv"
     hyperopt_results = hyperopt(
         new_model_config,
-        dataset=experiment_attr["dataset_path"],
+        dataset=experiment_attr["dataset"],
         model_name=experiment_attr["model_name"],
         gpus=gpu_list,
         output_directory=experiment_attr["output_dir"],
     )
-
+    hyperopt_results = hyperopt_results.experiment_analysis.results_df.values.tolist()
     if existing_results is not None:
         hyperopt_results.extend(existing_results)
         hyperopt_results.sort(key=lambda result: result["metric_score"])
@@ -147,10 +153,10 @@ def run_hyperopt_exp(
         pass
 
     # save lbt output w/additional metrics computed locall
-    results_w_additional_metrics = compute_additional_metadata(
-        experiment_attr, hyperopt_results, tune_executor
-    )
     try:
+        results_w_additional_metrics = compute_additional_metadata(
+            experiment_attr, hyperopt_results, tune_executor
+        )
         pickle.dump(
             results_w_additional_metrics,
             open(
@@ -187,7 +193,7 @@ def run_hyperopt_exp(
         except:
             logging.warning("Not all files were uploaded to elastic db!")
     return 1
-    #except:
+    # except:
     #    logging.warning("Error running experiment...not completed")
     #    return 0
 
@@ -224,8 +230,14 @@ def run_experiments(
                 globals.EXPERIMENT_OUTPUT_DIR, experiment_name
             )
 
-            if not os.path.isdir(output_dir):
-                os.mkdir(output_dir)
+            protocol, _ = split_protocol(output_dir)
+            if protocol is not None:
+                # makedirs(output_dir)
+                with fsspec.open(output_dir, mode="wb") as f:
+                    pass
+            else:
+                if not os.path.isdir(output_dir):
+                    os.mkdir(output_dir)
 
             output_dir = os.path.join(
                 globals.EXPERIMENT_OUTPUT_DIR, experiment_name
@@ -263,9 +275,9 @@ def run_experiments(
     if run_environment != "local":
         completed_runs = ray.get(
             [
-                ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})(
-                    run_hyperopt_exp
-                ).remote(exp, resume_existing_exp, run_environment)
+                # ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})(
+                run_hyperopt_exp.remote(
+                    exp, resume_existing_exp, run_environment)
                 for exp in experiment_queue
             ]
         )

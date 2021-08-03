@@ -4,7 +4,8 @@ PATH_HERE = os.path.abspath(os.path.dirname(__file__))
 MODEL_CONFIG_DIR = os.path.join(PATH_HERE, "model-configs")
 # EXPERIMENT_CONFIGS_DIR = '/experiments/ludwig-bench-textclassification/experiment-configs'
 EXPERIMENT_CONFIGS_DIR = os.path.join(PATH_HERE, "hyperopt-experiment-configs")
-DATASET_CACHE_DIR = os.path.join(PATH_HERE, "datasets")
+#DATASET_CACHE_DIR = os.path.join(PATH_HERE, "datasets")
+DATASET_CACHE_DIR = "s3://experiments.us-west-2.predibase.com/tabular-experiments/test-datasets"
 ENERGY_LOGGING_DIR = os.path.join(PATH_HERE, "energy_logging")
 
 MODEL_HYPEROPT_FILENAMES = {
@@ -28,7 +29,7 @@ DATASETS_LIST = ["RossmannStoreSales"]
 CONFIG_TEMPLATE_FILE = "./experiment-templates/task_template.yaml"
 DATASET_METADATA_FILE = "./experiment-templates/dataset_metadata.yaml"
 HYPEROPT_CONFIG_FILE = "./experiment-templates/hyperopt_config.yaml"
-EXPERIMENT_OUTPUT_DIR = "./experiment-outputs"
+EXPERIMENT_OUTPUT_DIR = "s3://experiments.us-west-2.predibase.com/tabular-experiments/test-exp-2"
 
 PATH_TO_PRETRAINED_EMBEDDINGS = None
 

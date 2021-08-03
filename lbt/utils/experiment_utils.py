@@ -6,8 +6,12 @@ import logging
 import math
 import os
 from typing import Union
+import fsspec
+from fsspec.core import split_protocol
 from lbt.datasets import build_dataset
 from lbt.metrics import get_experiment_metadata
+from ludwig.utils.fs_utils import makedirs
+
 
 import globals
 import pandas as pd
@@ -53,7 +57,7 @@ def compute_additional_metadata(
             "hyperopt_results": run["hyperopt_results"],
             "model_path": run["model_path"],
         }
-        
+
         num_gpus = len(GPUtil.getGPUs())
 
         get_experiment_metadata(
@@ -178,8 +182,15 @@ def set_globals(args):
         globals.DATASET_CACHE_DIR,
         globals.ENERGY_LOGGING_DIR,
     ]:
-        if not os.path.isdir(exp_dir):
-            os.mkdir(exp_dir)
+        protocol, _ = split_protocol(exp_dir)
+        if protocol is not None:  # remote fs
+            # makedirs(exp_dir)
+            # make dir on s3 bucket
+            with fsspec.open(exp_dir, mode="wb") as f:
+                pass
+        else:
+            if not os.path.isdir(exp_dir):
+                os.mkdir(exp_dir)
 
 
 def format_fields_float(field_list: list) -> list:

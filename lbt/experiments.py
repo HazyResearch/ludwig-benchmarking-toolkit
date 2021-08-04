@@ -123,7 +123,7 @@ def run_hyperopt_exp(
     # dataset = "s3://experiments.us-west-2.predibase.com/tabular-experiments/datasets/sarcos_1.0/processed/sarcos.csv"
     hyperopt_results = hyperopt(
         new_model_config,
-        dataset=experiment_attr["dataset"],
+        dataset=experiment_attr["dataset_path"],
         model_name=experiment_attr["model_name"],
         gpus=gpu_list,
         output_directory=experiment_attr["output_dir"],

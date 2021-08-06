@@ -58,7 +58,7 @@ def resume_training(model_config: dict, output_dir):
     return model_config, results
 
 
-#@ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})
+@ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})
 def run_hyperopt_exp(
     experiment_attr: dict,
     is_resume_training: bool = False,

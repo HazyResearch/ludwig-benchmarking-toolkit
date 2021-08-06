@@ -171,9 +171,12 @@ def run_hyperopt_exp(
         pass
 
     # create .completed file to indicate that experiment is completed
-    _ = open(
-        os.path.join(experiment_attr["output_dir"], ".completed"), "wb"
-    )
+    try:
+        _ = open(
+            os.path.join(experiment_attr["output_dir"], ".completed"), "wb"
+        )
+    except:
+        pass
 
     logging.info(
         "time to complete: {}".format(datetime.datetime.now() - start)

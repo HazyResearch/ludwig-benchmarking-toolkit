@@ -145,7 +145,8 @@ def run_hyperopt_exp(
                     experiment_attr["output_dir"],
                     f"{dataset}_{encoder}_hyperopt_results.pkl",
                 ) 
-        makedirs(hyperopt_results_url, exists_ok=True)
+        makedirs(hyperopt_results_url, exist_ok=True)
+        hyperopt_results = hyperopt_results.ordered_trials
         with upload_output_file(hyperopt_results_url) as local_file:
             pickle.dump(
                 hyperopt_results,

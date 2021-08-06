@@ -10,6 +10,7 @@ import socket
 from typing import Union
 from collections import defaultdict
 
+import pdb
 import numpy as np
 import ray
 
@@ -19,7 +20,7 @@ from database import save_results_to_es
 from ludwig.hyperopt.run import hyperopt
 from lbt.utils.experiment_utils import *
 from lbt.datasets import DATASET_REGISTRY
-from ludwig.utils.fs_utils import makedirs
+from ludwig.utils.fs_utils import makedirs, upload_output_file
 
 hostname = socket.gethostbyname(socket.gethostname())
 
@@ -57,7 +58,7 @@ def resume_training(model_config: dict, output_dir):
     return model_config, results
 
 
-@ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})
+#@ray.remote(num_cpus=0, resources={f"node:{hostname}": 0.001})
 def run_hyperopt_exp(
     experiment_attr: dict,
     is_resume_training: bool = False,
@@ -128,7 +129,8 @@ def run_hyperopt_exp(
         gpus=gpu_list,
         output_directory=experiment_attr["output_dir"],
     )
-    hyperopt_results = hyperopt_results.experiment_analysis.results_df.values.tolist()
+    #hyperopt_results = hyperopt_results.experiment_analysis.results_df.values.tolist()
+    
     if existing_results is not None:
         hyperopt_results.extend(existing_results)
         hyperopt_results.sort(key=lambda result: result["metric_score"])
@@ -137,18 +139,18 @@ def run_hyperopt_exp(
         "time to complete: {}".format(datetime.datetime.now() - start)
     )
 
-    # Save output locally
+    # Save hyperopt results tor remote fs
     try:
-        pickle.dump(
-            hyperopt_results,
-            open(
-                os.path.join(
+        hyperopt_results_url = os.path.join(
                     experiment_attr["output_dir"],
                     f"{dataset}_{encoder}_hyperopt_results.pkl",
-                ),
-                "wb",
-            ),
-        )
+                ) 
+        makedirs(hyperopt_results_url, exists_ok=True)
+        with upload_output_file(hyperopt_results_url) as local_file:
+            pickle.dump(
+                hyperopt_results,
+                open(local_file,"wb"),
+            )
     except:
         pass
 

@@ -290,9 +290,12 @@ def run_experiments(
     if len(completed_runs) == len(experiment_queue):
         # create .completed file to indicate that entire hyperopt experiment
         # is completed
-        _ = open(
-            os.path.join(globals.EXPERIMENT_OUTPUT_DIR, ".completed"), "wb"
-        )
+        try:
+            _ = open(
+                os.path.join(globals.EXPERIMENT_OUTPUT_DIR, ".completed"), "wb"
+            )
+        except:
+            pass
     else:
         logging.warning("Not all experiments completed!")
 

@@ -13671,7 +13671,7 @@ SantanderCustomerSatisfaction:
   data_class: SantanderCustomerSatisfaction
   output_features:
     - name: TARGET
-      type: numerical
+      type: binary
   input_features:
     - name: var3
       type: numerical

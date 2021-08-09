@@ -13198,7 +13198,7 @@ WalmartRecruiting:
   output_features:
     - column: TripType
       name: TripType
-      type: numerical
+      type: category
 
 OttoGroupProduct:
   data_class: OttoGroupProduct

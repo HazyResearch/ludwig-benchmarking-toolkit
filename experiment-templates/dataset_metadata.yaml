@@ -14413,8 +14413,585 @@ SantanderCustomerSatisfaction:
       type: numerical
 
 # TODO: Porto Seguro Safe Drivers Prediction
+PortoSeguroSafeDriver
+  data_class: PortoSeguroSafeDriver
+  input_features:
+    - column: ps_ind_01
+      name: ps_ind_01
+      type: category
+    - column: ps_ind_02_cat
+      name: ps_ind_02_cat
+      type: category
+    - column: ps_ind_03
+      name: ps_ind_03
+      type: category
+    - column: ps_ind_04_cat
+      name: ps_ind_04_cat
+      type: category
+    - column: ps_ind_05_cat
+      name: ps_ind_05_cat
+      type: category
+    - column: ps_ind_06_bin
+      name: ps_ind_06_bin
+      type: binary
+    - column: ps_ind_07_bin
+      name: ps_ind_07_bin
+      type: binary
+    - column: ps_ind_08_bin
+      name: ps_ind_08_bin
+      type: binary
+    - column: ps_ind_09_bin
+      name: ps_ind_09_bin
+      type: binary
+    - column: ps_ind_10_bin
+      name: ps_ind_10_bin
+      type: binary
+    - column: ps_ind_11_bin
+      name: ps_ind_11_bin
+      type: binary
+    - column: ps_ind_12_bin
+      name: ps_ind_12_bin
+      type: binary
+    - column: ps_ind_13_bin
+      name: ps_ind_13_bin
+      type: binary
+    - column: ps_ind_14
+      name: ps_ind_14
+      type: category
+    - column: ps_ind_15
+      name: ps_ind_15
+      type: category
+    - column: ps_ind_16_bin
+      name: ps_ind_16_bin
+      type: binary
+    - column: ps_ind_17_bin
+      name: ps_ind_17_bin
+      type: binary
+    - column: ps_ind_18_bin
+      name: ps_ind_18_bin
+      type: binary
+    - column: ps_reg_01
+      name: ps_reg_01
+      type: category
+    - column: ps_reg_02
+      name: ps_reg_02
+      type: category
+    - column: ps_reg_03
+      name: ps_reg_03
+      type: numerical
+    - column: ps_car_01_cat
+      name: ps_car_01_cat
+      type: category
+    - column: ps_car_02_cat
+      name: ps_car_02_cat
+      type: category
+    - column: ps_car_03_cat
+      name: ps_car_03_cat
+      type: category
+    - column: ps_car_04_cat
+      name: ps_car_04_cat
+      type: category
+    - column: ps_car_05_cat
+      name: ps_car_05_cat
+      type: category
+    - column: ps_car_06_cat
+      name: ps_car_06_cat
+      type: category
+    - column: ps_car_07_cat
+      name: ps_car_07_cat
+      type: category
+    - column: ps_car_08_cat
+      name: ps_car_08_cat
+      type: binary
+    - column: ps_car_09_cat
+      name: ps_car_09_cat
+      type: category
+    - column: ps_car_10_cat
+      name: ps_car_10_cat
+      type: category
+    - column: ps_car_11_cat
+      name: ps_car_11_cat
+      type: numerical
+    - column: ps_car_11
+      name: ps_car_11
+      type: category
+    - column: ps_car_12
+      name: ps_car_12
+      type: numerical
+    - column: ps_car_13
+      name: ps_car_13
+      type: numerical
+    - column: ps_car_14
+      name: ps_car_14
+      type: numerical
+    - column: ps_car_15
+      name: ps_car_15
+      type: category
+    - column: ps_calc_01
+      name: ps_calc_01
+      type: category
+    - column: ps_calc_02
+      name: ps_calc_02
+      type: category
+    - column: ps_calc_03
+      name: ps_calc_03
+      type: category
+    - column: ps_calc_04
+      name: ps_calc_04
+      type: category
+    - column: ps_calc_05
+      name: ps_calc_05
+      type: category
+    - column: ps_calc_06
+      name: ps_calc_06
+      type: category
+    - column: ps_calc_07
+      name: ps_calc_07
+      type: category
+    - column: ps_calc_08
+      name: ps_calc_08
+      type: category
+    - column: ps_calc_09
+      name: ps_calc_09
+      type: category
+    - column: ps_calc_10
+      name: ps_calc_10
+      type: numerical
+    - column: ps_calc_11
+      name: ps_calc_11
+      type: numerical
+    - column: ps_calc_12
+      name: ps_calc_12
+      type: category
+    - column: ps_calc_13
+      name: ps_calc_13
+      type: category
+    - column: ps_calc_14
+      name: ps_calc_14
+      type: numerical
+    - column: ps_calc_15_bin
+      name: ps_calc_15_bin
+      type: binary
+    - column: ps_calc_16_bin
+      name: ps_calc_16_bin
+      type: binary
+    - column: ps_calc_17_bin
+      name: ps_calc_17_bin
+      type: binary
+    - column: ps_calc_18_bin
+      name: ps_calc_18_bin
+      type: binary
+    - column: ps_calc_19_bin
+      name: ps_calc_19_bin
+      type: binary
+    - column: ps_calc_20_bin
+      name: ps_calc_20_bin
+      type: binary
+  output_features:
+    - column: target
+      name: target
+      type: binary
+  type: numerical
 
 # TODO: Allstate Claims Severity
+AllstateClaimsSeverity
+  data_class: AllstateClaimsSeverity
+  input_features:
+  - column: cat1
+    name: cat1
+    type: binary
+  - column: cat2
+    name: cat2
+    type: binary
+  - column: cat3
+    name: cat3
+    type: binary
+  - column: cat4
+    name: cat4
+    type: binary
+  - column: cat5
+    name: cat5
+    type: binary
+  - column: cat6
+    name: cat6
+    type: binary
+  - column: cat7
+    name: cat7
+    type: binary
+  - column: cat8
+    name: cat8
+    type: binary
+  - column: cat9
+    name: cat9
+    type: binary
+  - column: cat10
+    name: cat10
+    type: binary
+  - column: cat11
+    name: cat11
+    type: binary
+  - column: cat12
+    name: cat12
+    type: binary
+  - column: cat13
+    name: cat13
+    type: binary
+  - column: cat14
+    name: cat14
+    type: binary
+  - column: cat15
+    name: cat15
+    type: binary
+  - column: cat16
+    name: cat16
+    type: binary
+  - column: cat17
+    name: cat17
+    type: binary
+  - column: cat18
+    name: cat18
+    type: binary
+  - column: cat19
+    name: cat19
+    type: binary
+  - column: cat20
+    name: cat20
+    type: binary
+  - column: cat21
+    name: cat21
+    type: binary
+  - column: cat22
+    name: cat22
+    type: binary
+  - column: cat23
+    name: cat23
+    type: binary
+  - column: cat24
+    name: cat24
+    type: binary
+  - column: cat25
+    name: cat25
+    type: binary
+  - column: cat26
+    name: cat26
+    type: binary
+  - column: cat27
+    name: cat27
+    type: binary
+  - column: cat28
+    name: cat28
+    type: binary
+  - column: cat29
+    name: cat29
+    type: binary
+  - column: cat30
+    name: cat30
+    type: binary
+  - column: cat31
+    name: cat31
+    type: binary
+  - column: cat32
+    name: cat32
+    type: binary
+  - column: cat33
+    name: cat33
+    type: binary
+  - column: cat34
+    name: cat34
+    type: binary
+  - column: cat35
+    name: cat35
+    type: binary
+  - column: cat36
+    name: cat36
+    type: binary
+  - column: cat37
+    name: cat37
+    type: binary
+  - column: cat38
+    name: cat38
+    type: binary
+  - column: cat39
+    name: cat39
+    type: binary
+  - column: cat40
+    name: cat40
+    type: binary
+  - column: cat41
+    name: cat41
+    type: binary
+  - column: cat42
+    name: cat42
+    type: binary
+  - column: cat43
+    name: cat43
+    type: binary
+  - column: cat44
+    name: cat44
+    type: binary
+  - column: cat45
+    name: cat45
+    type: binary
+  - column: cat46
+    name: cat46
+    type: binary
+  - column: cat47
+    name: cat47
+    type: binary
+  - column: cat48
+    name: cat48
+    type: binary
+  - column: cat49
+    name: cat49
+    type: binary
+  - column: cat50
+    name: cat50
+    type: binary
+  - column: cat51
+    name: cat51
+    type: binary
+  - column: cat52
+    name: cat52
+    type: binary
+  - column: cat53
+    name: cat53
+    type: binary
+  - column: cat54
+    name: cat54
+    type: binary
+  - column: cat55
+    name: cat55
+    type: binary
+  - column: cat56
+    name: cat56
+    type: binary
+  - column: cat57
+    name: cat57
+    type: binary
+  - column: cat58
+    name: cat58
+    type: binary
+  - column: cat59
+    name: cat59
+    type: binary
+  - column: cat60
+    name: cat60
+    type: binary
+  - column: cat61
+    name: cat61
+    type: binary
+  - column: cat62
+    name: cat62
+    type: binary
+  - column: cat63
+    name: cat63
+    type: binary
+  - column: cat64
+    name: cat64
+    type: binary
+  - column: cat65
+    name: cat65
+    type: binary
+  - column: cat66
+    name: cat66
+    type: binary
+  - column: cat67
+    name: cat67
+    type: binary
+  - column: cat68
+    name: cat68
+    type: binary
+  - column: cat69
+    name: cat69
+    type: binary
+  - column: cat70
+    name: cat70
+    type: binary
+  - column: cat71
+    name: cat71
+    type: binary
+  - column: cat72
+    name: cat72
+    type: binary
+  - column: cat73
+    name: cat73
+    type: category
+  - column: cat74
+    name: cat74
+    type: category
+  - column: cat75
+    name: cat75
+    type: category
+  - column: cat76
+    name: cat76
+    type: category
+  - column: cat77
+    name: cat77
+    type: category
+  - column: cat78
+    name: cat78
+    type: category
+  - column: cat79
+    name: cat79
+    type: category
+  - column: cat80
+    name: cat80
+    type: category
+  - column: cat81
+    name: cat81
+    type: category
+  - column: cat82
+    name: cat82
+    type: category
+  - column: cat83
+    name: cat83
+    type: category
+  - column: cat84
+    name: cat84
+    type: category
+  - column: cat85
+    name: cat85
+    type: category
+  - column: cat86
+    name: cat86
+    type: category
+  - column: cat87
+    name: cat87
+    type: category
+  - column: cat88
+    name: cat88
+    type: category
+  - column: cat89
+    name: cat89
+    type: category
+  - column: cat90
+    name: cat90
+    type: category
+  - column: cat91
+    name: cat91
+    type: category
+  - column: cat92
+    name: cat92
+    type: category
+  - column: cat93
+    name: cat93
+    type: category
+  - column: cat94
+    name: cat94
+    type: category
+  - column: cat95
+    name: cat95
+    type: category
+  - column: cat96
+    name: cat96
+    type: category
+  - column: cat97
+    name: cat97
+    type: category
+  - column: cat98
+    name: cat98
+    type: category
+  - column: cat99
+    name: cat99
+    type: category
+  - column: cat100
+    name: cat100
+    type: category
+  - column: cat101
+    name: cat101
+    type: category
+  - column: cat102
+    name: cat102
+    type: category
+  - column: cat103
+    name: cat103
+    type: category
+  - column: cat104
+    name: cat104
+    type: category
+  - column: cat105
+    name: cat105
+    type: numerical
+  - column: cat106
+    name: cat106
+    type: category
+  - column: cat107
+    name: cat107
+    type: numerical
+  - column: cat108
+    name: cat108
+    type: category
+  - column: cat109
+    name: cat109
+    type: numerical
+  - column: cat110
+    name: cat110
+    type: numerical
+  - column: cat111
+    name: cat111
+    type: category
+  - column: cat112
+    name: cat112
+    type: numerical
+  - column: cat113
+    name: cat113
+    type: numerical
+  - column: cat114
+    name: cat114
+    type: category
+  - column: cat115
+    name: cat115
+    type: numerical
+  - column: cat116
+    name: cat116
+    type: numerical
+  - column: cont1
+    name: cont1
+    type: numerical
+  - column: cont2
+    name: cont2
+    type: numerical
+  - column: cont3
+    name: cont3
+    type: numerical
+  - column: cont4
+    name: cont4
+    type: numerical
+  - column: cont5
+    name: cont5
+    type: numerical
+  - column: cont6
+    name: cont6
+    type: numerical
+  - column: cont7
+    name: cont7
+    type: numerical
+  - column: cont8
+    name: cont8
+    type: numerical
+  - column: cont9
+    name: cont9
+    type: numerical
+  - column: cont10
+    name: cont10
+    type: numerical
+  - column: cont11
+    name: cont11
+    type: numerical
+  - column: cont12
+    name: cont12
+    type: numerical
+  - column: cont13
+    name: cont13
+    type: numerical
+  - column: cont14
+    name: cont14
+    type: numerical
+  output_features:
+  - column: loss
+    name: loss
+    type: numerical
+  type: numerical
 
 # Image Classification
 CIFAR10:

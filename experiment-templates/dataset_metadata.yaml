@@ -14413,7 +14413,7 @@ SantanderCustomerSatisfaction:
       type: numerical
 
 # TODO: Porto Seguro Safe Drivers Prediction
-PortoSeguroSafeDriver
+PortoSeguroSafeDriver:
   data_class: PortoSeguroSafeDriver
   input_features:
     - column: ps_ind_01
@@ -14594,7 +14594,7 @@ PortoSeguroSafeDriver
   type: numerical
 
 # TODO: Allstate Claims Severity
-AllstateClaimsSeverity
+AllstateClaimsSeverity:
   data_class: AllstateClaimsSeverity
   input_features:
   - column: cat1

@@ -151,7 +151,7 @@ def build_config_files():
                     parameters.update({key: value})
 
             # add `parameters` to curr_config
-             if "parameters" in hyperopt_config.keys():
+            if "parameters" in hyperopt_config.keys():
                 curr_config["hyperopt"].update(
                     {
                         "parameters": {

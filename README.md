@@ -33,7 +33,7 @@ For testing/setup purposes we have included a toy dataset called toy_agnews. Thi
 
 Before running a full-scale experiment, we recommend running an experiment locally on the toy dataset:
 ```
-python experiment_driver.py --run_environment local --datasets toy_agnews --custom_models_list rnn
+python experiment_driver.py --run_environment local --datasets toy_agnews
 ```
 
 ### *Running your first REAL experiment*:
@@ -55,7 +55,6 @@ Steps for configuring + running an experiment:
             --run_environment {local, gcp}
             --elasticsearch_config <path to config file>
             --dataset_cache_dir <path to dir to save downloaded datasets>
-            --custom_model_list <list of models>
             --datasets <list of datasets>
             --resume_existing_exp bool
 

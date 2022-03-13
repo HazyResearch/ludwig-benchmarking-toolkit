@@ -61,11 +61,8 @@ PRE_BUILT_DATASETS = {
     "YahooAnswers": "ludwig.datasets.yahoo_answers",
     "AmazonPolarity": "ludwig.datasets.amazon_review_polarity",
     "AmazonReviews": "ludwig.datasets.amazon_reviews",
-    "HateSpeech": "ludwig.datasets.hate_speech",
-    "MDGenderBias": "ludwig.datasets.md_gender_bias",
     "toyAGNews": "lbt.datasets.toy_datasets",
-    "Mnist" : "ludwig.datasets.mnist",
-    "CIFAR10" : "ludwig.datasets.cifar10",
+    "Mnist" : "ludwig.datasets.mnist"
 }
 
 # TODO: ASN -> CHECK PLACEMENT

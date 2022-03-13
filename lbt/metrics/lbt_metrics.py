@@ -8,9 +8,7 @@ import ludwig
 import numpy as np
 import pandas as pd
 import psutil
-import ray
 from experiment_impact_tracker.compute_tracker import ImpactTracker
-from experiment_impact_tracker.data_interface import DataInterface
 from globals import ENERGY_LOGGING_DIR
 from lbt.metrics import register_metric
 from lbt.metrics import INSTANCE_PRICES

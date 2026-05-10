@@ -4,13 +4,13 @@ Uses DuckDB for queries over Parquet files. Zero-server, analytical, cross-platf
 """
 from __future__ import annotations
 
+import dataclasses
 import json
 import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
@@ -58,12 +58,12 @@ class RunRecord:
     n_epochs: int = 0
     seed: int = 42
     status: str = "queued"
-    start_time: Optional[datetime] = None
-    end_time: Optional[datetime] = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
     wall_seconds: float = 0.0
     gpu_type: str = ""
     primary_metric: str = ""
-    primary_metric_value: Optional[float] = None
+    primary_metric_value: float | None = None
     secondary_metrics: str = "{}"      # JSON string
     error_message: str = ""
     checkpoint_path: str = ""
@@ -97,7 +97,8 @@ class RunRecord:
 
     @classmethod
     def from_dict(cls, d: dict) -> "RunRecord":
-        return cls(**{k: v for k, v in d.items() if k in cls.__dataclass_fields__})
+        valid_keys = {f.name for f in dataclasses.fields(cls)}
+        return cls(**{k: v for k, v in d.items() if k in valid_keys})
 
     @classmethod
     def from_series(cls, s: pd.Series) -> "RunRecord":
@@ -130,24 +131,10 @@ class BenchmarkDB:
     def _run_parquet_path(self, run_id: str) -> Path:
         return self.runs_dir / f"{run_id}.parquet"
 
-    def _acquire_file_lock(self) -> None:
-        """Busy-wait on a lock file (cross-process)."""
-        import time
-        deadline = time.monotonic() + 30.0
-        while True:
-            try:
-                fd = self.lock_path.open("x")
-                fd.close()
-                return
-            except FileExistsError:
-                if time.monotonic() > deadline:
-                    # Stale lock — remove and retry once
-                    self.lock_path.unlink(missing_ok=True)
-                    continue
-                time.sleep(0.05)
-
-    def _release_file_lock(self) -> None:
-        self.lock_path.unlink(missing_ok=True)
+    def _file_lock(self):
+        """Returns a filelock.FileLock context manager for the results directory."""
+        from filelock import FileLock
+        return FileLock(str(self.lock_path), timeout=30)
 
     def _rebuild_index(self) -> None:
         """Rebuild runs_index.parquet from all per-run Parquet files."""
@@ -192,18 +179,14 @@ class BenchmarkDB:
 
     def upsert_run(self, run: RunRecord) -> None:
         """Insert or update a run record."""
-        with self._lock:
-            self._acquire_file_lock()
-            try:
-                run_path = self._run_parquet_path(run.run_id)
-                df = pd.DataFrame([run.to_dict()])
-                df.to_parquet(run_path, index=False)
-                # Invalidate index so next query rebuilds it
-                self.index_path.unlink(missing_ok=True)
-            finally:
-                self._release_file_lock()
+        with self._lock, self._file_lock():
+            run_path = self._run_parquet_path(run.run_id)
+            df = pd.DataFrame([run.to_dict()])
+            df.to_parquet(run_path, index=False)
+            # Invalidate index so next query rebuilds it
+            self.index_path.unlink(missing_ok=True)
 
-    def get_run(self, run_id: str) -> Optional[RunRecord]:
+    def get_run(self, run_id: str) -> "RunRecord | None":
         """Retrieve a run by ID."""
         run_path = self._run_parquet_path(run_id)
         if not run_path.exists():
@@ -284,7 +267,7 @@ class BenchmarkDB:
     def export_dashboard(
         self,
         output_dir: str,
-        registry: dict | None = None,
+        registry: "dict | None" = None,
         export_run_details: bool = True,
     ) -> "Path":
         """Export all results into the structured JSON hierarchy for the dashboard.

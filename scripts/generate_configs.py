@@ -27,53 +27,13 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
-# Dataset loading helpers (reuse logic from runner.py)
+# Dataset loading
 # ---------------------------------------------------------------------------
 
 def _load_dataframe(entry) -> "pd.DataFrame":  # noqa: F821
     """Load a full (un-split) DataFrame for config generation."""
-    import pandas as pd
-
-    source = entry.source
-    if source == "path":
-        if not entry.local_path:
-            raise ValueError(f"[{entry.name}] source='path' but local_path is not set")
-        p = Path(entry.local_path)
-        return pd.read_parquet(p) if p.suffix == ".parquet" else pd.read_csv(p)
-
-    elif source == "openml":
-        if entry.openml_task_id is None:
-            raise ValueError(f"[{entry.name}] source='openml' but openml_task_id is not set")
-        import openml
-        task = openml.tasks.get_task(entry.openml_task_id)
-        dataset = task.get_dataset()
-        X, y, _, _ = dataset.get_data(task=task)
-        target_name = task.target_name
-        X[target_name] = y
-        return X
-
-    elif source == "ludwig":
-        from ludwig.datasets import get_dataset
-        loader = get_dataset(entry.name)
-        # load() without split=True returns (train+val+test) merged DataFrame
-        train, val, test = loader.load(split=True)
-        return _concat_splits(train, val, test)
-
-    elif source == "kaggle":
-        if not entry.local_path:
-            raise ValueError(
-                f"[{entry.name}] source='kaggle' but local_path is not set — download first"
-            )
-        p = Path(entry.local_path)
-        return pd.read_parquet(p) if p.suffix == ".parquet" else pd.read_csv(p)
-
-    else:
-        raise ValueError(f"Unknown source: {source!r}")
-
-
-def _concat_splits(*dfs: "pd.DataFrame") -> "pd.DataFrame":
-    import pandas as pd
-    return pd.concat([d for d in dfs if d is not None and len(d) > 0], ignore_index=True)
+    from benchmark.dataset_registry import load_dataframe_for_entry
+    return load_dataframe_for_entry(entry)
 
 
 # ---------------------------------------------------------------------------

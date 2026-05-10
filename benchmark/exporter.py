@@ -29,7 +29,6 @@ import logging
 import math
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional
 
 import pandas as pd
 
@@ -41,7 +40,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
-def _nan_safe(v: object) -> object:
+def _serializable(v: object) -> object:
     """Replace NaN/inf with None so json.dumps doesn't choke."""
     if isinstance(v, float) and (math.isnan(v) or math.isinf(v)):
         return None
@@ -68,13 +67,13 @@ def _row_to_run_summary(row: pd.Series) -> dict:
         "combiner": row["combiner"],
         "input_encoders": encoders,
         "output_decoder": row.get("output_decoder", ""),
-        "learning_rate": _nan_safe(row.get("learning_rate")),
-        "batch_size": _nan_safe(row.get("batch_size")),
-        "n_epochs": _nan_safe(row.get("n_epochs")),
+        "learning_rate": _serializable(row.get("learning_rate")),
+        "batch_size": _serializable(row.get("batch_size")),
+        "n_epochs": _serializable(row.get("n_epochs")),
         "primary_metric": row.get("primary_metric", ""),
-        "primary_metric_value": _nan_safe(row.get("primary_metric_value")),
-        "secondary_metrics": {k: _nan_safe(v) for k, v in secondary.items()},
-        "wall_seconds": _nan_safe(row.get("wall_seconds")),
+        "primary_metric_value": _serializable(row.get("primary_metric_value")),
+        "secondary_metrics": {k: _serializable(v) for k, v in secondary.items()},
+        "wall_seconds": _serializable(row.get("wall_seconds")),
         "status": row.get("status", ""),
         "error_message": row.get("error_message", "") or "",
     }
@@ -94,7 +93,7 @@ def _write_json(path: Path, obj: object) -> None:
 def _export_dataset(
     name: str,
     df_dataset: pd.DataFrame,
-    registry_entry: Optional[dict],
+    registry_entry: dict | None,
     out_dir: Path,
 ) -> dict:
     """Write data/datasets/{name}.json and return a summary row for datasets.json."""
@@ -126,7 +125,7 @@ def _export_dataset(
     baseline_scores: dict = {}
     for _, row in baseline_rows.iterrows():
         key = row["combiner"].replace("baseline_", "")
-        baseline_scores[key] = _nan_safe(row.get("primary_metric_value"))
+        baseline_scores[key] = _serializable(row.get("primary_metric_value"))
 
     # Combiner breakdown — win count for each combiner on this dataset
     combiner_best: dict[str, float] = {}
@@ -136,7 +135,7 @@ def _export_dataset(
         if c and not c.startswith("baseline_") and v is not None and not (isinstance(v, float) and math.isnan(v)):
             if c not in combiner_best or v > combiner_best[c]:
                 combiner_best[c] = float(v)
-    combiner_scores = [{"combiner": c, "best_score": _nan_safe(v)} for c, v in sorted(combiner_best.items(), key=lambda x: -(x[1] or 0))]
+    combiner_scores = [{"combiner": c, "best_score": _serializable(v)} for c, v in sorted(combiner_best.items(), key=lambda x: -(x[1] or 0))]
 
     reg = registry_entry or {}
     dataset_doc = {
@@ -147,7 +146,7 @@ def _export_dataset(
         "task_type": reg.get("task_type"),
         "target_column": reg.get("target_column"),
         "primary_metric": primary_metric,
-        "best_score": _nan_safe(best_score),
+        "best_score": _serializable(best_score),
         "best_config_hash": best_run["config_hash"] if best_run else None,
         "best_run_id": best_run["run_id"] if best_run else None,
         "n_runs_done": len(done),
@@ -168,7 +167,7 @@ def _export_dataset(
         "task_type": dataset_doc["task_type"],
         "target_column": dataset_doc["target_column"],
         "primary_metric": primary_metric,
-        "best_score": _nan_safe(best_score),
+        "best_score": _serializable(best_score),
         "best_combiner": best_run["combiner"] if best_run else None,
         "n_runs_done": len(done),
         "n_runs_total": len(df_dataset),
@@ -205,14 +204,14 @@ def _export_config(
     for _, row in done.iterrows():
         ds_name = row["dataset_name"]
         rank = dataset_ranks.get((ds_name, config_hash))
-        score = _nan_safe(row.get("primary_metric_value"))
+        score = _serializable(row.get("primary_metric_value"))
         dataset_scores.append({
             "dataset_name": ds_name,
             "run_id": row["run_id"],
             "primary_metric": row.get("primary_metric", ""),
             "primary_metric_value": score,
             "rank_on_dataset": rank,
-            "wall_seconds": _nan_safe(row.get("wall_seconds")),
+            "wall_seconds": _serializable(row.get("wall_seconds")),
             "status": row["status"],
         })
         if rank is not None:
@@ -231,9 +230,9 @@ def _export_config(
         "combiner": rep.get("combiner", ""),
         "input_encoders": encoders,
         "output_decoder": rep.get("output_decoder", ""),
-        "learning_rate": _nan_safe(rep.get("learning_rate")),
-        "batch_size": _nan_safe(rep.get("batch_size")),
-        "n_epochs": _nan_safe(rep.get("n_epochs")),
+        "learning_rate": _serializable(rep.get("learning_rate")),
+        "batch_size": _serializable(rep.get("batch_size")),
+        "n_epochs": _serializable(rep.get("n_epochs")),
         "n_datasets_tested": len(done["dataset_name"].unique()) if not done.empty else 0,
         "n_wins": n_wins,
         "win_rate": round(100.0 * n_wins / len(ranks), 2) if ranks else None,
@@ -332,23 +331,23 @@ def _export_run(row: pd.Series, out_dir: Path) -> None:
         "run_id": row["run_id"],
         "dataset_name": row["dataset_name"],
         "dataset_source": row.get("dataset_source", ""),
-        "dataset_n_rows": _nan_safe(row.get("dataset_n_rows")),
-        "dataset_n_features": _nan_safe(row.get("dataset_n_features")),
+        "dataset_n_rows": _serializable(row.get("dataset_n_rows")),
+        "dataset_n_features": _serializable(row.get("dataset_n_features")),
         "config_hash": row["config_hash"],
         "combiner": row.get("combiner", ""),
         "input_encoders": json.loads(row["input_encoders"]) if isinstance(row.get("input_encoders"), str) else (row.get("input_encoders") or []),
         "output_decoder": row.get("output_decoder", ""),
-        "learning_rate": _nan_safe(row.get("learning_rate")),
-        "batch_size": _nan_safe(row.get("batch_size")),
-        "n_epochs": _nan_safe(row.get("n_epochs")),
+        "learning_rate": _serializable(row.get("learning_rate")),
+        "batch_size": _serializable(row.get("batch_size")),
+        "n_epochs": _serializable(row.get("n_epochs")),
         "seed": row.get("seed"),
         "status": row.get("status", ""),
         "start_time": str(row["start_time"]) if row.get("start_time") is not None else None,
         "end_time": str(row["end_time"]) if row.get("end_time") is not None else None,
-        "wall_seconds": _nan_safe(row.get("wall_seconds")),
+        "wall_seconds": _serializable(row.get("wall_seconds")),
         "gpu_type": row.get("gpu_type", ""),
         "primary_metric": row.get("primary_metric", ""),
-        "primary_metric_value": _nan_safe(row.get("primary_metric_value")),
+        "primary_metric_value": _serializable(row.get("primary_metric_value")),
         "secondary_metrics": json.loads(row["secondary_metrics"]) if isinstance(row.get("secondary_metrics"), str) else (row.get("secondary_metrics") or {}),
         "error_message": row.get("error_message", "") or "",
         "checkpoint_path": row.get("checkpoint_path", "") or "",
@@ -364,7 +363,7 @@ def _export_run(row: pd.Series, out_dir: Path) -> None:
 def export_dashboard(
     db: "BenchmarkDB",  # noqa: F821
     output_dir: str | Path,
-    registry: Optional[dict] = None,
+    registry: dict | None = None,
     export_run_details: bool = True,
 ) -> Path:
     """Export all benchmark results into a structured JSON hierarchy.

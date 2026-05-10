@@ -33,109 +33,13 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Quality check
-# ---------------------------------------------------------------------------
-
-@dataclass
-class QualityCheckResult:
-    passed: bool
-    reason: str
 
 
-def check_dataset_quality(df: "pd.DataFrame", min_rows: int = 50, min_cols: int = 2) -> QualityCheckResult:
-    """Basic sanity checks on a DataFrame before generating configs.
-
-    Checks:
-    - Minimum row count (default 50)
-    - Minimum column count (default 2: at least one input + one output)
-    - Not all-NA (entire DataFrame)
-    - At least one column has more than 1 distinct non-null value
-
-    Returns QualityCheckResult with passed=True/False and a human-readable reason.
-    """
-    import pandas as pd
-
-    n_rows, n_cols = df.shape
-
-    if n_rows < min_rows:
-        return QualityCheckResult(passed=False, reason=f"Too few rows: {n_rows} < {min_rows}")
-
-    if n_cols < min_cols:
-        return QualityCheckResult(passed=False, reason=f"Too few columns: {n_cols} < {min_cols}")
-
-    # Check for entirely-empty DataFrame
-    if df.isnull().all(axis=None):
-        return QualityCheckResult(passed=False, reason="All values are NA")
-
-    # Check that at least one column is informative
-    max_distinct = max(df[c].nunique(dropna=True) for c in df.columns)
-    if max_distinct <= 1:
-        return QualityCheckResult(
-            passed=False,
-            reason=f"No column has more than 1 distinct non-null value (max={max_distinct})",
-        )
-
-    # Warn about extremely high missing-value rate but don't fail
-    na_frac = df.isnull().mean().mean()
-    if na_frac > 0.9:
-        logger.warning("Dataset has >90%% missing values (na_frac=%.2f) — proceeding anyway", na_frac)
-
-    return QualityCheckResult(passed=True, reason="OK")
-
-
-# ---------------------------------------------------------------------------
-# Dataset loading
-# ---------------------------------------------------------------------------
-
-def _load_dataframe_for_entry(entry) -> "pd.DataFrame":
-    """Load the full un-split DataFrame for a DatasetEntry."""
-    import pandas as pd
-
-    source = entry.source
-
-    if source == "path":
-        if not entry.local_path:
-            raise ValueError(f"[{entry.name}] source='path' but local_path is not set")
-        p = Path(entry.local_path)
-        return pd.read_parquet(p) if p.suffix == ".parquet" else pd.read_csv(p)
-
-    elif source == "openml":
-        if entry.openml_task_id is None:
-            raise ValueError(f"[{entry.name}] source='openml' but openml_task_id is not set")
-        import openml
-        task = openml.tasks.get_task(entry.openml_task_id)
-        dataset = task.get_dataset()
-        X, y, _, _ = dataset.get_data(task=task)
-        target_name = task.target_name
-        X[target_name] = y
-        # Store the task-provided target for later
-        entry._openml_target = target_name
-        return X
-
-    elif source == "ludwig":
-        from ludwig.datasets import get_dataset
-        loader = get_dataset(entry.name)
-        train, val, test = loader.load(split=True)
-        frames = [d for d in (train, val, test) if d is not None and len(d) > 0]
-        return pd.concat(frames, ignore_index=True)
-
-    elif source == "kaggle":
-        if not entry.local_path:
-            raise ValueError(
-                f"[{entry.name}] source='kaggle' but local_path is not set — download first"
-            )
-        p = Path(entry.local_path)
-        return pd.read_parquet(p) if p.suffix == ".parquet" else pd.read_csv(p)
-
-    else:
-        raise ValueError(f"Unknown source: {source!r}")
 
 
 # ---------------------------------------------------------------------------
@@ -270,14 +174,17 @@ def _prepare_entry(
 
     try:
         # 1. Load data
-        df = _load_dataframe_for_entry(entry)
+        from benchmark.dataset_registry import load_dataframe_for_entry
+        df = load_dataframe_for_entry(entry)
 
         # 2. Quality check
         if not skip_quality_check:
-            qr = check_dataset_quality(df)
+            from ludwig.utils.dataset_quality import check_dataset_quality
+            qr = check_dataset_quality(df, target_column=entry.target_column, dataset_name=entry.name)
             summary.quality = "PASS" if qr.passed else "FAIL"
             if not qr.passed:
-                logger.warning("[%s] Quality FAIL: %s — skipping", entry.name, qr.reason)
+                failures = "; ".join(c.message for c in qr.failures)
+                logger.warning("[%s] Quality FAIL: %s — skipping", entry.name, failures)
                 if not dry_run:
                     entry.quality_passed = False
                 summary.elapsed_s = time.monotonic() - t0

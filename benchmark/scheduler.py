@@ -362,8 +362,8 @@ class BenchmarkScheduler:
 # ---------------------------------------------------------------------------
 
 def _now() -> str:
-    from datetime import datetime
-    return datetime.utcnow().isoformat()
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _hash_config(cfg: dict) -> str:
@@ -411,7 +411,7 @@ def _job_to_run_config(job: BenchmarkJob, run_id: str, time_limit_s: int) -> "Ru
 
 def _result_to_record(result: "RunResult", job: BenchmarkJob, cfg: "RunConfig") -> "RunRecord":  # noqa: F821
     from benchmark.db import RunRecord
-    from datetime import datetime
+    from datetime import datetime, timezone
     import json
 
     config_dict = cfg.config_dict
@@ -441,7 +441,7 @@ def _result_to_record(result: "RunResult", job: BenchmarkJob, cfg: "RunConfig") 
         seed=job.seed,
         status=result.status,
         start_time=None,
-        end_time=datetime.utcnow(),
+        end_time=datetime.now(timezone.utc),
         wall_seconds=result.wall_seconds,
         gpu_type="",
         primary_metric=result.primary_metric or "",

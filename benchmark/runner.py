@@ -12,6 +12,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
+from typing import Literal
+
 import pandas as pd
 
 logger = logging.getLogger(__name__)
@@ -21,7 +23,7 @@ logger = logging.getLogger(__name__)
 class RunConfig:
     run_id: str
     dataset_name: str
-    dataset_source: str         # "openml" | "kaggle" | "ludwig" | "path"
+    dataset_source: Literal["openml", "kaggle", "ludwig", "path"]
     dataset_path: str | None    # Direct path if dataset_source == "path"
     openml_task_id: int | None
     config_dict: dict

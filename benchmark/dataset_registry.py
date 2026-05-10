@@ -9,8 +9,10 @@ import json
 import logging
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    import pandas as pd
 logger = logging.getLogger(__name__)
 
 
@@ -18,13 +20,13 @@ logger = logging.getLogger(__name__)
 class DatasetEntry:
     name: str
     source: str              # "openml" | "kaggle" | "ludwig" | "path"
-    openml_task_id: Optional[int] = None
-    kaggle_ref: Optional[str] = None   # e.g. "titanic" or "user/dataset"
-    local_path: Optional[str] = None   # absolute path for source="path"
-    target_column: Optional[str] = None
-    n_rows: Optional[int] = None
-    n_features: Optional[int] = None
-    task_type: Optional[str] = None    # "binary" | "multiclass" | "regression"
+    openml_task_id: int | None = None
+    kaggle_ref: str | None = None   # e.g. "titanic" or "user/dataset"
+    local_path: str | None = None   # absolute path for source="path"
+    target_column: str | None = None
+    n_rows: int | None = None
+    n_features: int | None = None
+    task_type: str | None = None    # "binary" | "multiclass" | "regression"
     priority: int = 0                  # higher = runs first
     seed: int = 42
     tags: list[str] = field(default_factory=list)
@@ -58,7 +60,7 @@ class DatasetRegistry:
             return
         self._entries[entry.name] = entry
 
-    def get(self, name: str) -> Optional[DatasetEntry]:
+    def get(self, name: str) -> DatasetEntry | None:
         return self._entries.get(name)
 
     def all(self) -> list[DatasetEntry]:
@@ -92,6 +94,54 @@ class DatasetRegistry:
 
     def __contains__(self, name: str) -> bool:
         return name in self._entries
+
+
+def load_dataframe_for_entry(entry: DatasetEntry) -> "pd.DataFrame":
+    """Load the full un-split DataFrame for a DatasetEntry.
+
+    Supports sources: ``path``, ``openml``, ``ludwig``, ``kaggle``.
+    For OpenML entries, sets ``entry._openml_target`` as a side-effect so the
+    caller can access the task-provided target column name.
+    """
+    import pandas as pd
+
+    source = entry.source
+
+    if source == "path":
+        if not entry.local_path:
+            raise ValueError(f"[{entry.name}] source='path' but local_path is not set")
+        p = Path(entry.local_path)
+        return pd.read_parquet(p) if p.suffix == ".parquet" else pd.read_csv(p)
+
+    elif source == "openml":
+        if entry.openml_task_id is None:
+            raise ValueError(f"[{entry.name}] source='openml' but openml_task_id is not set")
+        import openml
+        task = openml.tasks.get_task(entry.openml_task_id)
+        dataset = task.get_dataset()
+        X, y, _, _ = dataset.get_data(task=task)
+        target_name = task.target_name
+        X[target_name] = y
+        entry._openml_target = target_name  # type: ignore[attr-defined]
+        return X
+
+    elif source == "ludwig":
+        from ludwig.datasets import get_dataset
+        loader = get_dataset(entry.name)
+        train, val, test = loader.load(split=True)
+        frames = [d for d in (train, val, test) if d is not None and len(d) > 0]
+        return pd.concat(frames, ignore_index=True)
+
+    elif source == "kaggle":
+        if not entry.local_path:
+            raise ValueError(
+                f"[{entry.name}] source='kaggle' but local_path is not set — download first"
+            )
+        p = Path(entry.local_path)
+        return pd.read_parquet(p) if p.suffix == ".parquet" else pd.read_csv(p)
+
+    else:
+        raise ValueError(f"[{entry.name}] Unknown source: {source!r}")
 
 
 def register_openml_suite(

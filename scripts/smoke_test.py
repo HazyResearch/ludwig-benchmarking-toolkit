@@ -33,10 +33,68 @@ MINIMAL_CONFIG = {
 }
 
 
+
+def _check_kaggle_credentials() -> tuple[str, str] | None:
+    """Return (username, key) if Kaggle credentials are available, else None."""
+    username = os.environ.get("KAGGLE_USERNAME")
+    key = os.environ.get("KAGGLE_KEY")
+    if username and key:
+        return username, key
+
+    config_dir = os.environ.get("KAGGLE_CONFIG_DIR", os.path.expanduser("~/.kaggle"))
+    token_path = Path(config_dir) / "kaggle.json"
+    if token_path.exists():
+        import json
+        data = json.loads(token_path.read_text())
+        if data.get("username") and data.get("key"):
+            return data["username"], data["key"]
+
+    return None
+
+
+def _prompt_kaggle_setup():
+    """Print setup instructions and exit if credentials are missing."""
+    print(
+        "\n  Kaggle credentials not found.\n"
+        "\n"
+        "  To set up:\n"
+        "  1. Go to https://www.kaggle.com/settings\n"
+        "  2. Scroll to 'API' and click 'Create New Token'\n"
+        "  3. Save the downloaded kaggle.json to:  ~/.kaggle/kaggle.json\n"
+        "     (or set KAGGLE_USERNAME and KAGGLE_KEY environment variables)\n"
+        "  4. Run:  chmod 600 ~/.kaggle/kaggle.json\n"
+        "  5. Re-run this script\n"
+    )
+    sys.exit(1)
+
+
+def _kaggle_competition_for_dataset(name: str) -> str | None:
+    """Return the Kaggle competition slug for a Ludwig dataset, or None."""
+    try:
+        from ludwig.datasets import get_dataset
+        loader = get_dataset(name)
+        return loader.config.kaggle_competition
+    except Exception:
+        return None
+
+
+def _wait_for_competition_rules(competition: str, dataset_name: str):
+    """Print the competition rules URL and wait for the user to accept."""
+    rules_url = f"https://www.kaggle.com/competitions/{competition}/rules"
+    print(
+        f"\n  Competition rules not accepted for '{dataset_name}'.\n"
+        f"\n"
+        f"  1. Open this URL in your browser:\n"
+        f"     {rules_url}\n"
+        f"  2. Click 'I Understand and Accept'\n"
+    )
+    input("  Press Enter once you have accepted the rules... ")
+    print()
+
+
 def _load_df(name: str, meta: dict):
     """Load up to SAMPLE_ROWS rows for a dataset entry."""
     import pandas as pd
-    from sklearn.model_selection import train_test_split
 
     source = meta["source"]
 
@@ -55,7 +113,7 @@ def _load_df(name: str, meta: dict):
         import signal
 
         def _timeout(signum, frame):
-            raise TimeoutError("OpenML fetch timed out after 60s")
+            raise TimeoutError("OpenML fetch timed out after 120s")
 
         old = signal.signal(signal.SIGALRM, _timeout) if hasattr(signal, "SIGALRM") else None
         if old is not None:
@@ -108,7 +166,6 @@ def _make_config(df, target_column: str, task_type: str) -> dict:
         if pd.api.types.is_float_dtype(dtype) or pd.api.types.is_integer_dtype(dtype):
             feat_type = "number"
         else:
-            # Treat as category; Ludwig will handle strings
             feat_type = "category"
         input_features.append({"name": col, "type": feat_type})
 
@@ -170,7 +227,7 @@ _OUTPUT_TYPE_TO_TASK = {
     "number": "regression",
 }
 
-# Output types that are not suitable for the generic automl pipeline (generative tasks)
+# Output types not suitable for the generic automl pipeline (generative tasks)
 _SKIP_OUTPUT_TYPES = {"text", "image", "audio", "sequence", "set", "bag", "vector", "timeseries"}
 
 
@@ -202,6 +259,10 @@ def _discover_ludwig_datasets() -> dict:
     return meta
 
 
+def _is_403_error(err: str | None) -> bool:
+    return err is not None and ("403" in err or "Forbidden" in err)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Smoke-test all datasets: 1 epoch, minimal model")
     parser.add_argument("--metadata-yaml", default=None,
@@ -212,8 +273,12 @@ def main():
         help="Subset of dataset names to test. Default: all.",
     )
     parser.add_argument(
-        "--skip-sources", nargs="*", default=["kaggle"],
-        help="Skip datasets from these sources (default: kaggle).",
+        "--skip-sources", nargs="*", default=[],
+        help="Skip datasets from these sources. Default: none skipped.",
+    )
+    parser.add_argument(
+        "--skip-kaggle", action="store_true", default=False,
+        help="Skip all Kaggle competition datasets without attempting download.",
     )
     args = parser.parse_args()
 
@@ -226,6 +291,19 @@ def main():
 
     names = args.datasets if args.datasets else list(meta_all.keys())
     skip_sources = set(args.skip_sources or [])
+
+    # Kaggle datasets in this run (to check credentials once upfront)
+    kaggle_names = [
+        n for n in names
+        if "kaggle_credentials_required" in (meta_all.get(n, {}).get("tags") or [])
+    ]
+    has_kaggle = bool(kaggle_names) and not args.skip_kaggle
+
+    kaggle_creds = None
+    if has_kaggle:
+        kaggle_creds = _check_kaggle_credentials()
+        if not kaggle_creds:
+            _prompt_kaggle_setup()  # exits
 
     results: list[dict] = []
     passes = fails = skips = 0
@@ -247,8 +325,10 @@ def main():
             skips += 1
             continue
 
-        if "kaggle_credentials_required" in (meta.get("tags") or []):
-            print(f"{name:<{col_w}}  {'skip':<6}  {'':>6}  kaggle_credentials_required")
+        is_kaggle = "kaggle_credentials_required" in (meta.get("tags") or [])
+
+        if is_kaggle and args.skip_kaggle:
+            print(f"{name:<{col_w}}  {'skip':<6}  {'':>6}  --skip-kaggle")
             skips += 1
             continue
 
@@ -257,9 +337,16 @@ def main():
 
         status, elapsed, err = _run_one(name, meta, args.gpu_id)
 
+        # If competition download failed with 403: prompt for rule acceptance and retry
+        if status == "fail" and is_kaggle and _is_403_error(err):
+            competition = _kaggle_competition_for_dataset(name)
+            if competition:
+                while status == "fail" and _is_403_error(err):
+                    _wait_for_competition_rules(competition, name)
+                    status, elapsed, err = _run_one(name, meta, args.gpu_id)
+
         note = ""
         if status == "fail":
-            # Print only the last line of the traceback for brevity
             note = (err or "").strip().splitlines()[-1][:80]
             fails += 1
         elif status == "pass":

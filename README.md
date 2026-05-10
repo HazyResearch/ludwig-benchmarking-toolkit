@@ -263,6 +263,121 @@ ludwig-benchmark/
 
 ---
 
+## Kaggle Setup
+
+Some datasets (tagged `kaggle_credentials_required` in `dataset_metadata.yaml`) are hosted on
+Kaggle competitions and require two things: API credentials and accepted competition rules.
+
+### 1. Get API credentials
+
+1. Go to **https://www.kaggle.com/settings**
+2. Scroll to the **API** section and click **"Create New Token"**
+3. Save the downloaded `kaggle.json` to `~/.kaggle/kaggle.json`
+4. Restrict permissions: `chmod 600 ~/.kaggle/kaggle.json`
+
+Alternatively, export the two values as environment variables:
+
+```bash
+export KAGGLE_USERNAME=your_username
+export KAGGLE_KEY=your_api_key
+```
+
+### 2. Accept competition rules
+
+Each Kaggle competition requires you to read and accept its rules in the browser before the
+API allows downloads. The rules page is at:
+
+```
+https://www.kaggle.com/competitions/<competition-slug>/rules
+```
+
+**The smoke test handles this interactively.** When it encounters a dataset whose competition
+rules have not been accepted yet, it will:
+
+1. Print the rules URL in the terminal
+2. Wait for you to open the URL, click **"I Understand and Accept"**, and press Enter
+3. Retry the download — if it still fails (e.g. Kaggle propagation delay), it will prompt again
+
+Example session:
+
+```
+ieee_fraud    ...
+  Competition rules not accepted for 'ieee_fraud'.
+
+  1. Open this URL in your browser:
+     https://www.kaggle.com/competitions/ieee-fraud-detection/rules
+  2. Click 'I Understand and Accept'
+
+  Press Enter once you have accepted the rules...
+
+ieee_fraud    PASS    142.3s
+```
+
+### 3. Skip Kaggle datasets
+
+If you want to run only non-Kaggle datasets (e.g. in CI or headless environments), pass
+`--skip-kaggle`:
+
+```bash
+python scripts/smoke_test.py --metadata-yaml dataset_metadata.yaml --skip-kaggle
+```
+
+### Kaggle competition datasets in this benchmark
+
+The following datasets in `dataset_metadata.yaml` require Kaggle credentials + competition
+rule acceptance:
+
+| Dataset | Competition |
+|---|---|
+| `bbcnews` | `learn-ai-bbc` |
+| `ames_housing` | `house-prices-advanced-regression-techniques` |
+| `allstate_claims_severity` | `allstate-claims-severity` |
+| `ieee_fraud` | `ieee-fraud-detection` |
+| `otto_group_product` | `otto-group-product-classification-challenge` |
+| `porto_seguro_safe_driver` | `porto-seguro-safe-driver-prediction` |
+| `santander_customer_satisfaction` | `santander-customer-satisfaction` |
+| `santander_customer_transaction` | `santander-customer-transaction-prediction` |
+| `santander_value_prediction` | `santander-value-prediction-challenge` |
+| `mercedes_benz_greener` | `mercedes-benz-greener-manufacturing` |
+| `amazon_employee_access_challenge` | `amazon-employee-access-challenge` |
+| `walmart_recruiting` | `walmart-recruiting-trip-type-classification` |
+| `bnp_claims_management` | `bnp-paribas-cardif-claims-management` |
+| `customer_churn_prediction` | `customer-churn-prediction-2020` |
+
+---
+
+## Smoke Test
+
+`scripts/smoke_test.py` validates that every dataset in `dataset_metadata.yaml` can be loaded
+and trained end-to-end (1 epoch, minimal concat model, up to 1000 rows).
+
+```bash
+# Run all datasets (Kaggle competitions prompt interactively for rule acceptance)
+python scripts/smoke_test.py --metadata-yaml dataset_metadata.yaml --gpu-id 0
+
+# Run only a subset
+python scripts/smoke_test.py --metadata-yaml dataset_metadata.yaml \
+    --datasets titanic adult_census_income openml_task_37
+
+# Skip all Kaggle competition datasets (headless / CI mode)
+python scripts/smoke_test.py --metadata-yaml dataset_metadata.yaml --skip-kaggle
+
+# Auto-discover all Ludwig built-ins (no YAML required)
+python scripts/smoke_test.py
+```
+
+| Flag | Default | Description |
+|---|---|---|
+| `--metadata-yaml` | (auto-discover) | Path to `dataset_metadata.yaml`; if omitted, discovers all Ludwig built-ins |
+| `--datasets` | all | Space-separated list of dataset names to test |
+| `--gpu-id` | CPU | CUDA device index to use |
+| `--skip-kaggle` | off | Skip datasets tagged `kaggle_credentials_required` without prompting |
+| `--skip-sources` | none | Skip datasets whose `source` field matches any of these values |
+
+**Exit codes:** `0` = all tested datasets passed; `1` = at least one failure.
+
+---
+
 ## Output Format
 
 `benchmark.exporter.export_dashboard()` writes the following files under `{output_dir}/data/`:

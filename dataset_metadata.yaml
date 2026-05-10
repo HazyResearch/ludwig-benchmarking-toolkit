@@ -1281,14 +1281,6 @@ walmart_recruiting:
   priority: 3
   tags: [tabular, regression, kaggle, kaggle_credentials_required]
 
-talkingdata_adtrack_fraud:
-  source: ludwig
-  description: "TalkingData AdTracking fraud (Kaggle) [kaggle_credentials_required]"
-  target_column: is_attributed
-  task_type: binary
-  priority: 3
-  tags: [tabular, classification, fraud, kaggle, kaggle_credentials_required]
-
 bnp_claims_management:
   source: ludwig
   description: "BNP Paribas claims management (Kaggle) [kaggle_credentials_required]"

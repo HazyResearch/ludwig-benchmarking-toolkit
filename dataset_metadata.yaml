@@ -1275,9 +1275,9 @@ amazon_employee_access_challenge:
 
 walmart_recruiting:
   source: ludwig
-  description: "Walmart recruiting store sales (Kaggle) [kaggle_credentials_required]"
-  target_column: Weekly_Sales
-  task_type: regression
+  description: "Walmart trip type classification (Kaggle) [kaggle_credentials_required]"
+  target_column: TripType
+  task_type: multiclass
   priority: 3
   tags: [tabular, regression, kaggle, kaggle_credentials_required]
 
@@ -1292,7 +1292,7 @@ bnp_claims_management:
 customer_churn_prediction:
   source: ludwig
   description: "Customer churn prediction (Kaggle) [kaggle_credentials_required]"
-  target_column: Churn
+  target_column: churn
   task_type: binary
   priority: 3
   tags: [tabular, classification, kaggle, kaggle_credentials_required]

@@ -78,8 +78,8 @@ def _kaggle_competition_for_dataset(name: str) -> str | None:
         return None
 
 
-def _wait_for_competition_rules(competition: str, dataset_name: str):
-    """Print the competition rules URL and wait for the user to accept."""
+def _exit_competition_rules(competition: str, dataset_name: str):
+    """Print competition rules URL and exit with instructions."""
     rules_url = f"https://www.kaggle.com/competitions/{competition}/rules"
     print(
         f"\n  Competition rules not accepted for '{dataset_name}'.\n"
@@ -87,9 +87,9 @@ def _wait_for_competition_rules(competition: str, dataset_name: str):
         f"  1. Open this URL in your browser:\n"
         f"     {rules_url}\n"
         f"  2. Click 'I Understand and Accept'\n"
+        f"  3. Re-run this script\n"
     )
-    input("  Press Enter once you have accepted the rules... ")
-    print()
+    sys.exit(1)
 
 
 def _load_df(name: str, meta: dict):
@@ -337,13 +337,11 @@ def main():
 
         status, elapsed, err = _run_one(name, meta, args.gpu_id)
 
-        # If competition download failed with 403: prompt for rule acceptance and retry
+        # If competition download failed with 403: print rules URL and exit
         if status == "fail" and is_kaggle and _is_403_error(err):
             competition = _kaggle_competition_for_dataset(name)
             if competition:
-                while status == "fail" and _is_403_error(err):
-                    _wait_for_competition_rules(competition, name)
-                    status, elapsed, err = _run_one(name, meta, args.gpu_id)
+                _exit_competition_rules(competition, name)
 
         note = ""
         if status == "fail":

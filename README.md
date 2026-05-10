@@ -291,27 +291,21 @@ API allows downloads. The rules page is at:
 https://www.kaggle.com/competitions/<competition-slug>/rules
 ```
 
-**The smoke test handles this interactively.** When it encounters a dataset whose competition
-rules have not been accepted yet, it will:
-
-1. Print the rules URL in the terminal
-2. Wait for you to open the URL, click **"I Understand and Accept"**, and press Enter
-3. Retry the download — if it still fails (e.g. Kaggle propagation delay), it will prompt again
-
-Example session:
+**The smoke test exits with instructions** when it encounters a dataset whose competition
+rules have not been accepted yet:
 
 ```
 ieee_fraud    ...
+
   Competition rules not accepted for 'ieee_fraud'.
 
   1. Open this URL in your browser:
      https://www.kaggle.com/competitions/ieee-fraud-detection/rules
   2. Click 'I Understand and Accept'
-
-  Press Enter once you have accepted the rules...
-
-ieee_fraud    PASS    142.3s
+  3. Re-run this script
 ```
+
+Accept the rules in the browser, then re-run. Each competition only needs to be accepted once.
 
 ### 3. Skip Kaggle datasets
 

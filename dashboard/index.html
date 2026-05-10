@@ -1,0 +1,1644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ludwig AutoML Dashboard</title>
+<style>
+/* ─── Design: Academic/editorial — clean research paper aesthetic ─── */
+/* Typography: DM Mono for data/code, Instrument Serif for headings,  */
+/* IBM Plex Sans for body. Color: white bg, ink-dark text,            */
+/* Oxford-blue accent (#1a3a5c), warm amber for wins, red for fails.  */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Instrument+Serif:ital@0;1&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+/* ─── Reset & base ─── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink: #0f1923;
+  --ink-2: #2e3d4f;
+  --ink-3: #5a6e80;
+  --ink-4: #8a9db0;
+  --border: #d4dce5;
+  --border-light: #eaf0f5;
+  --bg: #ffffff;
+  --bg-2: #f7f9fb;
+  --bg-3: #eef2f6;
+  --accent: #1a3a5c;
+  --accent-light: #2a5a8c;
+  --accent-bg: #edf3fa;
+  --win: #1a7a4a;
+  --win-bg: #edfaf3;
+  --warn: #b56b00;
+  --warn-bg: #fff8ec;
+  --fail: #b52e00;
+  --fail-bg: #fff3ee;
+  --score-hi: #1a7a4a;
+  --score-hi-bg: #d4f5e4;
+  --score-mid: #7a6800;
+  --score-mid-bg: #fff5c0;
+  --score-lo: #b52e00;
+  --score-lo-bg: #ffe3d9;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'DM Mono', 'Cascadia Code', monospace;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  --radius: 4px;
+  --radius-lg: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.07), 0 4px 12px rgba(0,0,0,.04);
+  --shadow-lg: 0 2px 8px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.06);
+  --transition: 150ms cubic-bezier(.2,.6,.3,1);
+}
+
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-2); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-4); }
+
+/* ─── Nav ─── */
+#nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  border-bottom: 1.5px solid var(--ink);
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 28px;
+  min-height: 52px;
+}
+
+#nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 32px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+#nav-brand .logo-mark {
+  width: 28px;
+  height: 28px;
+  background: var(--ink);
+  border-radius: 3px;
+  display: grid;
+  place-items: center;
+}
+#nav-brand .logo-mark svg { display: block; }
+
+#nav-brand .brand-text {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--ink);
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+#nav-brand .brand-sub {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  color: var(--ink-3);
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: block;
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-bottom: 2.5px solid transparent;
+  margin-bottom: -1.5px;
+  transition: color var(--transition), border-color var(--transition);
+  user-select: none;
+  white-space: nowrap;
+}
+.nav-tab:hover { color: var(--ink); }
+.nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ─── Stats bar ─── */
+#stats-bar {
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 28px;
+  display: flex;
+  gap: 28px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.stat-chip {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+.stat-chip .label {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.stat-chip .value {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+.stat-chip .value.accent { color: var(--accent); }
+.stat-chip .value.win { color: var(--win); }
+.stat-chip .value.fail { color: var(--fail); }
+.stat-sep { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
+
+/* ─── Main layout ─── */
+#main {
+  flex: 1;
+  padding: 28px;
+  max-width: 1600px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* ─── Footer ─── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 12px 28px;
+  font-size: 0.75rem;
+  color: var(--ink-4);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* ─── Loading / Error states ─── */
+#loading-overlay {
+  position: fixed; inset: 0;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(3px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 1000;
+  transition: opacity 300ms;
+}
+#loading-overlay.hidden { opacity: 0; pointer-events: none; }
+
+.spinner {
+  width: 32px; height: 32px;
+  border: 2.5px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 700ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+
+#error-box {
+  background: var(--fail-bg);
+  border: 1px solid #f5c0aa;
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  max-width: 580px;
+  margin: 40px auto;
+}
+#error-box h2 {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  color: var(--fail);
+  margin-bottom: 10px;
+}
+#error-box p { font-size: 0.88rem; color: var(--ink-2); margin-bottom: 8px; line-height: 1.7; }
+#error-box code {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  background: #fff;
+  border: 1px solid #f5c0aa;
+  border-radius: var(--radius);
+  padding: 2px 6px;
+}
+#error-box pre {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  background: #fff;
+  border: 1px solid #f5c0aa;
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-top: 12px;
+  overflow-x: auto;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+
+/* ─── Tab content panels ─── */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ─── Section headers ─── */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.section-title {
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-style: italic;
+  color: var(--ink);
+  font-weight: 400;
+}
+.section-count {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--ink-4);
+}
+
+/* ─── Filter bar ─── */
+.filter-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-input {
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--bg);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  outline: none;
+}
+.filter-input::placeholder { color: var(--ink-4); }
+.filter-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+
+.filter-select {
+  padding: 7px 28px 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a6e80'/%3E%3C/svg%3E") no-repeat right 10px center;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color var(--transition);
+  outline: none;
+}
+.filter-select:focus { border-color: var(--accent); }
+
+/* ─── Tables ─── */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  background: var(--bg);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+thead th {
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 0.71rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  background: var(--bg-2);
+  border-bottom: 1.5px solid var(--border);
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+  position: relative;
+}
+thead th.sortable:hover { color: var(--accent); background: var(--accent-bg); }
+thead th.sort-asc::after { content: ' ↑'; color: var(--accent); font-size: 0.7rem; }
+thead th.sort-desc::after { content: ' ↓'; color: var(--accent); font-size: 0.7rem; }
+thead th:not(.sortable) { cursor: default; }
+
+tbody tr {
+  border-bottom: 1px solid var(--border-light);
+  transition: background var(--transition);
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg-2); }
+tbody td {
+  padding: 9px 14px;
+  vertical-align: middle;
+  color: var(--ink-2);
+}
+.td-mono {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--ink-3);
+}
+.td-link {
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 500;
+  text-decoration: none;
+}
+.td-link:hover { text-decoration: underline; color: var(--accent-light); }
+
+/* ─── Badges ─── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  font-family: var(--font-mono);
+}
+.badge-task { background: #e8f0fe; color: #1a3a9c; }
+.badge-done { background: var(--win-bg); color: var(--win); }
+.badge-failed { background: var(--fail-bg); color: var(--fail); }
+.badge-timeout { background: var(--warn-bg); color: var(--warn); }
+.badge-oom { background: #fff0f5; color: #9c1a4a; }
+.badge-running { background: var(--accent-bg); color: var(--accent); }
+.badge-unknown { background: var(--bg-3); color: var(--ink-3); }
+
+/* ─── Score cells / color heat ─── */
+.score-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.score-pill {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 2px 7px;
+  border-radius: var(--radius);
+  white-space: nowrap;
+}
+.score-hi { background: var(--score-hi-bg); color: var(--score-hi); }
+.score-mid { background: var(--score-mid-bg); color: var(--score-mid); }
+.score-lo { background: var(--score-lo-bg); color: var(--score-lo); }
+.score-na { background: var(--bg-3); color: var(--ink-4); }
+
+/* ─── Score bars (horizontal) ─── */
+.score-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+.score-bar-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  min-width: 120px;
+  color: var(--ink-2);
+}
+.score-bar-outer {
+  flex: 1;
+  height: 8px;
+  background: var(--bg-3);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.score-bar-inner {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 600ms cubic-bezier(.2,.6,.3,1);
+}
+.score-bar-inner.hi { background: var(--score-hi); }
+.score-bar-inner.mid { background: #e0b820; }
+.score-bar-inner.lo { background: var(--score-lo); }
+.score-bar-inner.accent { background: var(--accent); }
+.score-bar-val {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  min-width: 56px;
+  text-align: right;
+}
+
+/* ─── Detail views ─── */
+.detail-header {
+  margin-bottom: 28px;
+}
+.detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  cursor: pointer;
+  padding: 5px 0;
+  border: none;
+  background: none;
+  font-family: var(--font-sans);
+  margin-bottom: 14px;
+  transition: color var(--transition);
+}
+.detail-back:hover { color: var(--accent); }
+.detail-back svg { transition: transform var(--transition); }
+.detail-back:hover svg { transform: translateX(-2px); }
+
+.detail-title {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  font-style: italic;
+  color: var(--ink);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+.detail-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+}
+.meta-chip strong {
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+/* ─── Card / section blocks ─── */
+.card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+.card-title {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+/* ─── Stats grid (config detail) ─── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.stat-block {
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+.stat-block .s-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  margin-bottom: 4px;
+}
+.stat-block .s-value {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1;
+}
+.stat-block .s-value.accent { color: var(--accent); }
+.stat-block .s-value.win { color: var(--win); }
+
+/* ─── Combiner chart ─── */
+.combiner-chart {
+  padding: 12px 0;
+  margin-bottom: 24px;
+}
+.combiner-bar-row {
+  display: grid;
+  grid-template-columns: 140px 1fr 60px 60px;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0;
+}
+.combiner-bar-row:first-child { margin-top: 0; }
+.cbar-name {
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  color: var(--ink-2);
+  font-weight: 500;
+  text-align: right;
+  padding-right: 4px;
+}
+.cbar-outer {
+  height: 22px;
+  background: var(--bg-3);
+  border-radius: var(--radius);
+  overflow: hidden;
+  position: relative;
+}
+.cbar-inner {
+  height: 100%;
+  border-radius: var(--radius);
+  background: var(--accent);
+  transition: width 700ms cubic-bezier(.2,.6,.3,1);
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  min-width: 0;
+}
+.cbar-inner-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: #fff;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.cbar-val {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  text-align: right;
+}
+.cbar-wins {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--win);
+  text-align: right;
+  font-weight: 500;
+}
+
+/* ─── Status filter pills ─── */
+.pill-filter {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.pill {
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 500;
+  font-family: var(--font-mono);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: all var(--transition);
+  letter-spacing: 0.03em;
+}
+.pill:hover { border-color: var(--accent); color: var(--accent); }
+.pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ─── Empty state ─── */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--ink-4);
+}
+.empty-state svg { margin-bottom: 14px; opacity: .4; }
+.empty-state p { font-size: 0.88rem; }
+
+/* ─── Rank badge ─── */
+.rank-1 {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; height: 24px;
+  background: #e8c840;
+  color: #6a4800;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+.rank-2 { background: #d8d8d8; color: #505050; }
+.rank-3 { background: #e8b880; color: #6a3800; }
+
+/* ─── Delta chip ─── */
+.delta {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+}
+.delta.neg { color: var(--fail); }
+.delta.zero { color: var(--win); }
+
+/* ─── Encoder tag list ─── */
+.enc-tag {
+  display: inline-block;
+  padding: 2px 7px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--ink-3);
+  margin: 2px 2px 2px 0;
+}
+
+/* ─── Tooltip on hash ─── */
+.hash-short {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--accent);
+  cursor: pointer;
+  border-bottom: 1px dashed var(--border);
+}
+
+/* ─── Progress bar (runs done) ─── */
+.progress-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.progress-bar-outer {
+  width: 64px;
+  height: 6px;
+  background: var(--bg-3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-bar-inner {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 3px;
+}
+
+/* ─── Rank distribution visual ─── */
+.rank-dist {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+.rank-dot {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  background: var(--border);
+}
+.rank-dot.r1 { background: #e8c840; }
+.rank-dot.r2 { background: var(--accent); }
+.rank-dot.r3 { background: #a0b8d0; }
+.rank-dot.rfail { background: var(--score-lo-bg); border: 1px solid #f5c0aa; }
+
+/* ─── Animations ─── */
+.fade-in {
+  animation: fadeIn 200ms ease forwards;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 1024px) {
+  #nav { padding: 0 16px; }
+  #stats-bar { padding: 8px 16px; gap: 16px; }
+  #main { padding: 20px 16px; }
+  .combiner-bar-row { grid-template-columns: 100px 1fr 50px 50px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── Nav ─── -->
+<nav id="nav">
+  <div id="nav-brand" onclick="navigate('datasets')">
+    <div class="logo-mark">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2" y="2" width="5" height="5" fill="white" rx="0.5"/>
+        <rect x="9" y="2" width="5" height="5" fill="white" opacity=".6" rx="0.5"/>
+        <rect x="2" y="9" width="5" height="5" fill="white" opacity=".6" rx="0.5"/>
+        <rect x="9" y="9" width="5" height="5" fill="white" opacity=".3" rx="0.5"/>
+      </svg>
+    </div>
+    <div>
+      <span class="brand-text">Ludwig AutoML</span>
+      <span class="brand-sub">Benchmark Dashboard</span>
+    </div>
+  </div>
+  <div class="nav-tab active" data-tab="datasets" onclick="navigate('datasets')">Datasets</div>
+  <div class="nav-tab" data-tab="configs" onclick="navigate('configs')">Configs</div>
+  <div class="nav-tab" data-tab="combiners" onclick="navigate('combiners')">Combiners</div>
+  <div class="nav-tab" data-tab="runs" onclick="navigate('runs')">Runs</div>
+</nav>
+
+<!-- ─── Stats bar ─── -->
+<div id="stats-bar">
+  <div class="stat-chip">
+    <span class="label">Datasets</span>
+    <span class="value accent" id="stat-datasets">—</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-chip">
+    <span class="label">Runs Done</span>
+    <span class="value win" id="stat-runs-done">—</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-chip">
+    <span class="label">Failed</span>
+    <span class="value fail" id="stat-runs-failed">—</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-chip">
+    <span class="label">Completion</span>
+    <span class="value" id="stat-completion">—</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-chip">
+    <span class="label">Unique Configs</span>
+    <span class="value" id="stat-configs">—</span>
+  </div>
+  <div class="stat-sep"></div>
+  <div class="stat-chip">
+    <span class="label">Generated</span>
+    <span class="value td-mono" id="stat-generated">—</span>
+  </div>
+</div>
+
+<!-- ─── Main content ─── -->
+<main id="main">
+  <!-- Datasets tab -->
+  <div id="tab-datasets" class="tab-panel active">
+    <div class="section-header">
+      <h2 class="section-title">Datasets</h2>
+      <span class="section-count" id="datasets-count"></span>
+    </div>
+    <div class="filter-bar">
+      <input class="filter-input" id="ds-search" placeholder="Search by name or source…" oninput="renderDatasetsTable()">
+      <select class="filter-select" id="ds-task-filter" onchange="renderDatasetsTable()">
+        <option value="">All task types</option>
+      </select>
+    </div>
+    <div class="table-wrap">
+      <table id="datasets-table">
+        <thead>
+          <tr>
+            <th class="sortable" onclick="sortTable('datasets','name',this)">Dataset</th>
+            <th class="sortable" onclick="sortTable('datasets','source',this)">Source</th>
+            <th class="sortable" onclick="sortTable('datasets','n_rows',this)">Rows</th>
+            <th class="sortable" onclick="sortTable('datasets','n_features',this)">Features</th>
+            <th>Task</th>
+            <th class="sortable" onclick="sortTable('datasets','best_score',this)">Best Score</th>
+            <th>Best Combiner</th>
+            <th class="sortable" onclick="sortTable('datasets','xgb',this)">XGB Baseline</th>
+            <th class="sortable" onclick="sortTable('datasets','lgb',this)">LGB Baseline</th>
+            <th class="sortable" onclick="sortTable('datasets','n_runs_done',this)">Runs Done</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="datasets-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Dataset detail -->
+  <div id="tab-dataset-detail" class="tab-panel">
+    <div id="dataset-detail-content"></div>
+  </div>
+
+  <!-- Configs tab -->
+  <div id="tab-configs" class="tab-panel">
+    <div class="section-header">
+      <h2 class="section-title">Configurations</h2>
+      <span class="section-count" id="configs-count"></span>
+    </div>
+    <div class="filter-bar">
+      <input class="filter-input" id="cfg-search" placeholder="Search by combiner or decoder…" oninput="renderConfigsTable()">
+    </div>
+    <div class="table-wrap">
+      <table id="configs-table">
+        <thead>
+          <tr>
+            <th>Hash</th>
+            <th class="sortable" onclick="sortTable('configs','combiner',this)">Combiner</th>
+            <th class="sortable" onclick="sortTable('configs','output_decoder',this)">Decoder</th>
+            <th class="sortable" onclick="sortTable('configs','learning_rate',this)">LR</th>
+            <th class="sortable" onclick="sortTable('configs','batch_size',this)">Batch</th>
+            <th class="sortable" onclick="sortTable('configs','n_datasets_tested',this)">Datasets</th>
+            <th class="sortable" onclick="sortTable('configs','n_wins',this)">Wins</th>
+            <th class="sortable" onclick="sortTable('configs','win_rate',this)">Win Rate</th>
+            <th class="sortable" onclick="sortTable('configs','mean_rank',this)">Mean Rank</th>
+            <th class="sortable" onclick="sortTable('configs','mean_score',this)">Mean Score</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="configs-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Config detail -->
+  <div id="tab-config-detail" class="tab-panel">
+    <div id="config-detail-content"></div>
+  </div>
+
+  <!-- Combiners tab -->
+  <div id="tab-combiners" class="tab-panel">
+    <div class="section-header">
+      <h2 class="section-title">Combiner Rankings</h2>
+    </div>
+    <div id="combiners-content"></div>
+  </div>
+
+  <!-- Runs tab -->
+  <div id="tab-runs" class="tab-panel">
+    <div class="section-header">
+      <h2 class="section-title">All Runs</h2>
+      <span class="section-count" id="runs-count"></span>
+    </div>
+    <div class="pill-filter" id="runs-status-filter">
+      <div class="pill active" data-status="all" onclick="filterRuns('all',this)">All</div>
+      <div class="pill" data-status="done" onclick="filterRuns('done',this)">Done</div>
+      <div class="pill" data-status="failed" onclick="filterRuns('failed',this)">Failed</div>
+      <div class="pill" data-status="timeout" onclick="filterRuns('timeout',this)">Timeout</div>
+      <div class="pill" data-status="oom" onclick="filterRuns('oom',this)">OOM</div>
+    </div>
+    <div class="filter-bar">
+      <input class="filter-input" id="runs-search" placeholder="Search by dataset, combiner…" oninput="renderRunsTable()">
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Run ID</th>
+            <th>Dataset</th>
+            <th>Combiner</th>
+            <th>Encoders</th>
+            <th>Decoder</th>
+            <th>Score</th>
+            <th>Rank</th>
+            <th>Time</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="runs-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<!-- ─── Footer ─── -->
+<footer>
+  <span id="footer-updated"></span>
+  <span style="color:var(--ink-4)">Ludwig AutoML Dashboard</span>
+</footer>
+
+<!-- ─── Loading overlay ─── -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Loading dashboard data…</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════
+const state = {
+  summary: null,
+  datasets: [],     // datasets.json array
+  configs: [],      // configs.json array
+  combiners: [],    // combiners.json array
+  allRuns: [],      // aggregated from datasets
+  datasetCache: {}, // datasets/{name}.json
+  configCache: {},  // configs/{hash}.json
+  dsSort: { col: 'best_score', dir: 'desc' },
+  cfgSort: { col: 'n_wins', dir: 'desc' },
+  runsStatusFilter: 'all',
+};
+
+// ═══════════════════════════════════════════════════════════
+// Formatters
+// ═══════════════════════════════════════════════════════════
+const fmt = {
+  num: v => v == null ? '—' : Number(v).toLocaleString(),
+  score: v => v == null ? '—' : Number(v).toFixed(4),
+  pct: v => v == null ? '—' : Number(v).toFixed(1) + '%',
+  lr: v => v == null ? '—' : Number(v).toExponential(1),
+  dur: s => {
+    if (s == null) return '—';
+    s = Math.round(s);
+    if (s < 60) return s + 's';
+    const m = Math.floor(s / 60), sec = s % 60;
+    if (m < 60) return `${m}m ${sec}s`;
+    const h = Math.floor(m / 60), min = m % 60;
+    return `${h}h ${min}m`;
+  },
+  hash: h => h ? h.slice(0, 8) : '—',
+  date: s => {
+    if (!s) return '—';
+    try {
+      const d = new Date(s);
+      return d.toLocaleString(undefined, { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch { return s; }
+  },
+  encoders: arr => {
+    if (!arr || !arr.length) return '<span class="td-mono" style="color:var(--ink-4)">—</span>';
+    return arr.map(e => `<span class="enc-tag">${e}</span>`).join('');
+  },
+};
+
+// ═══════════════════════════════════════════════════════════
+// Score coloring
+// ═══════════════════════════════════════════════════════════
+function scoreClass(val, allVals) {
+  const valid = allVals.filter(v => v != null && !isNaN(v));
+  if (!valid.length || val == null) return 'score-na';
+  const sorted = [...valid].sort((a, b) => a - b);
+  const p25 = sorted[Math.floor(sorted.length * 0.25)];
+  const p75 = sorted[Math.floor(sorted.length * 0.75)];
+  if (val >= p75) return 'score-hi';
+  if (val <= p25) return 'score-lo';
+  return 'score-mid';
+}
+
+function scorePill(val, cls) {
+  return `<span class="score-pill ${cls}">${fmt.score(val)}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Status badge
+// ═══════════════════════════════════════════════════════════
+function statusBadge(s) {
+  const cls = s === 'done' ? 'badge-done' : s === 'failed' ? 'badge-failed' : s === 'timeout' ? 'badge-timeout' : s === 'oom' ? 'badge-oom' : s === 'running' ? 'badge-running' : 'badge-unknown';
+  return `<span class="badge ${cls}">${s || 'unknown'}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Fetch helpers
+// ═══════════════════════════════════════════════════════════
+async function fetchJSON(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`HTTP ${r.status} for ${url}`);
+  return r.json();
+}
+
+function showLoading(msg) {
+  document.getElementById('loading-text').textContent = msg || 'Loading…';
+  document.getElementById('loading-overlay').classList.remove('hidden');
+}
+function hideLoading() {
+  document.getElementById('loading-overlay').classList.add('hidden');
+}
+function showError(title, detail) {
+  hideLoading();
+  document.getElementById('main').innerHTML = `
+    <div id="error-box">
+      <h2>${title}</h2>
+      <p>${detail}</p>
+      <p>To generate the data files, run:</p>
+      <pre>python -m benchmark.exporter \\
+  --results-dir ./results \\
+  --output-dir ./dashboard</pre>
+      <p>Then refresh this page, or use <code>serve.py</code> to start a local server.</p>
+    </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Initial data load
+// ═══════════════════════════════════════════════════════════
+async function loadInitialData() {
+  showLoading('Loading dashboard data…');
+  try {
+    const [summary, datasets, configs, combiners] = await Promise.all([
+      fetchJSON('data/summary.json'),
+      fetchJSON('data/datasets.json'),
+      fetchJSON('data/configs.json'),
+      fetchJSON('data/combiners.json'),
+    ]);
+    state.summary = summary;
+    state.datasets = datasets;
+    state.configs = configs;
+    state.combiners = combiners;
+    populateStats(summary);
+    populateTaskFilter(datasets);
+    // Aggregate all runs for the Runs tab
+    state.allRuns = datasets.flatMap(ds => {
+      // We'll load lazily from dataset detail; for now seed with summary data
+      return [];
+    });
+    hideLoading();
+    routeFromHash();
+  } catch (e) {
+    showError('Could not load dashboard data', `Failed to fetch <code>data/summary.json</code> or companion files. ${e.message}`);
+  }
+}
+
+function populateStats(s) {
+  document.getElementById('stat-datasets').textContent = fmt.num(s.n_datasets);
+  document.getElementById('stat-runs-done').textContent = fmt.num(s.n_runs_done);
+  document.getElementById('stat-runs-failed').textContent = fmt.num(s.n_runs_failed ?? 0);
+  const total = s.n_runs_total || (s.n_runs_done + (s.n_runs_failed || 0));
+  const pct = total ? (100 * s.n_runs_done / total).toFixed(1) : '—';
+  document.getElementById('stat-completion').textContent = s.completion_rate != null ? fmt.pct(s.completion_rate) : pct + '%';
+  document.getElementById('stat-configs').textContent = fmt.num(s.n_unique_configs);
+  const gen = fmt.date(s.generated_at);
+  document.getElementById('stat-generated').textContent = gen;
+  document.getElementById('footer-updated').textContent = `Last updated: ${gen}`;
+}
+
+function populateTaskFilter(datasets) {
+  const tasks = [...new Set(datasets.map(d => d.task_type).filter(Boolean))].sort();
+  const sel = document.getElementById('ds-task-filter');
+  tasks.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t; opt.textContent = t;
+    sel.appendChild(opt);
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// Hash-based routing
+// ═══════════════════════════════════════════════════════════
+function navigate(hash) {
+  window.location.hash = '#' + hash;
+}
+
+function routeFromHash() {
+  const hash = window.location.hash.replace('#', '') || 'datasets';
+  const parts = hash.split('/');
+  const tab = parts[0];
+  const param = decodeURIComponent(parts.slice(1).join('/'));
+
+  // Update nav tabs
+  document.querySelectorAll('.nav-tab').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tab || (tab === 'dataset' && el.dataset.tab === 'datasets') || (tab === 'config' && el.dataset.tab === 'configs'));
+  });
+
+  // Hide all panels
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+
+  if (tab === 'datasets') {
+    document.getElementById('tab-datasets').classList.add('active');
+    renderDatasetsTable();
+  } else if (tab === 'dataset' && param) {
+    document.getElementById('tab-dataset-detail').classList.add('active');
+    loadDatasetDetail(param);
+  } else if (tab === 'configs') {
+    document.getElementById('tab-configs').classList.add('active');
+    renderConfigsTable();
+  } else if (tab === 'config' && param) {
+    document.getElementById('tab-config-detail').classList.add('active');
+    loadConfigDetail(param);
+  } else if (tab === 'combiners') {
+    document.getElementById('tab-combiners').classList.add('active');
+    renderCombiners();
+  } else if (tab === 'runs') {
+    document.getElementById('tab-runs').classList.add('active');
+    loadAllRunsAndRender();
+  } else {
+    document.getElementById('tab-datasets').classList.add('active');
+    renderDatasetsTable();
+  }
+}
+
+window.addEventListener('hashchange', routeFromHash);
+
+// ═══════════════════════════════════════════════════════════
+// Sort state
+// ═══════════════════════════════════════════════════════════
+function sortTable(which, col, th) {
+  const s = which === 'datasets' ? state.dsSort : state.cfgSort;
+  if (s.col === col) {
+    s.dir = s.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    s.col = col;
+    s.dir = 'desc';
+  }
+  // Remove sort classes from siblings
+  th.closest('thead').querySelectorAll('th').forEach(t => t.classList.remove('sort-asc', 'sort-desc'));
+  th.classList.add(s.dir === 'asc' ? 'sort-asc' : 'sort-desc');
+  if (which === 'datasets') renderDatasetsTable();
+  else renderConfigsTable();
+}
+
+function sortRows(rows, col, dir) {
+  return [...rows].sort((a, b) => {
+    let av = a[col], bv = b[col];
+    // Handle nested like baseline_scores
+    if (col === 'xgb') { av = a.baseline_scores?.xgboost; bv = b.baseline_scores?.xgboost; }
+    if (col === 'lgb') { av = a.baseline_scores?.lightgbm; bv = b.baseline_scores?.lightgbm; }
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === 'string') return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    return dir === 'asc' ? av - bv : bv - av;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// Datasets table
+// ═══════════════════════════════════════════════════════════
+function renderDatasetsTable() {
+  const q = document.getElementById('ds-search').value.toLowerCase();
+  const task = document.getElementById('ds-task-filter').value;
+  let rows = state.datasets.filter(d => {
+    if (q && !d.name.toLowerCase().includes(q) && !(d.source || '').toLowerCase().includes(q)) return false;
+    if (task && d.task_type !== task) return false;
+    return true;
+  });
+  rows = sortRows(rows, state.dsSort.col, state.dsSort.dir);
+  document.getElementById('datasets-count').textContent = `${rows.length} dataset${rows.length !== 1 ? 's' : ''}`;
+
+  const allBest = state.datasets.map(d => d.best_score);
+  const allXgb = state.datasets.map(d => d.baseline_scores?.xgboost);
+  const allLgb = state.datasets.map(d => d.baseline_scores?.lightgbm);
+
+  const tbody = document.getElementById('datasets-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><p>No datasets match your filters.</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(d => {
+    const pct = d.n_runs_total ? Math.round(100 * d.n_runs_done / d.n_runs_total) : 0;
+    const xgb = d.baseline_scores?.xgboost;
+    const lgb = d.baseline_scores?.lightgbm;
+    return `<tr>
+      <td><span class="td-link" onclick="navigate('dataset/${encodeURIComponent(d.name)}')">${d.name}</span></td>
+      <td class="td-mono">${d.source || '—'}</td>
+      <td class="td-mono">${fmt.num(d.n_rows)}</td>
+      <td class="td-mono">${fmt.num(d.n_features)}</td>
+      <td>${d.task_type ? `<span class="badge badge-task">${d.task_type}</span>` : '—'}</td>
+      <td>${scorePill(d.best_score, scoreClass(d.best_score, allBest))}</td>
+      <td class="td-mono" style="font-size:.8rem">${d.best_combiner || '—'}</td>
+      <td>${scorePill(xgb, scoreClass(xgb, allXgb))}</td>
+      <td>${scorePill(lgb, scoreClass(lgb, allLgb))}</td>
+      <td>
+        <div class="progress-wrap">
+          <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%"></div></div>
+          <span class="td-mono" style="font-size:.77rem">${d.n_runs_done}/${d.n_runs_total ?? '?'}</span>
+        </div>
+      </td>
+      <td><span class="td-link" onclick="navigate('dataset/${encodeURIComponent(d.name)}')">Detail →</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// Dataset detail
+// ═══════════════════════════════════════════════════════════
+async function loadDatasetDetail(name) {
+  document.getElementById('dataset-detail-content').innerHTML = '<div style="padding:40px 0;text-align:center"><div class="spinner" style="margin:auto"></div></div>';
+  try {
+    if (!state.datasetCache[name]) {
+      state.datasetCache[name] = await fetchJSON(`data/datasets/${encodeURIComponent(name)}.json`);
+    }
+    renderDatasetDetail(state.datasetCache[name]);
+  } catch (e) {
+    document.getElementById('dataset-detail-content').innerHTML = `<div id="error-box"><h2>Dataset not found</h2><p>Could not load <code>data/datasets/${name}.json</code>. ${e.message}</p></div>`;
+  }
+}
+
+function renderDatasetDetail(d) {
+  const baselines = d.baseline_scores || {};
+  const allBaselineVals = [d.best_score, baselines.xgboost, baselines.lightgbm].filter(v => v != null);
+  const maxB = allBaselineVals.length ? Math.max(...allBaselineVals) : 1;
+
+  function barRow(label, val, cls) {
+    const pct = maxB > 0 && val != null ? Math.max(2, (val / maxB) * 100) : 0;
+    return `<div class="score-bar-wrap">
+      <div class="score-bar-label">${label}</div>
+      <div class="score-bar-outer"><div class="score-bar-inner ${cls}" style="width:${pct}%"></div></div>
+      <div class="score-bar-val">${fmt.score(val)}</div>
+    </div>`;
+  }
+
+  const allRunScores = d.runs.filter(r => r.status === 'done').map(r => r.primary_metric_value);
+  const maxScore = allRunScores.length ? Math.max(...allRunScores.filter(v => v != null)) : null;
+
+  const runsRows = d.runs.map(run => {
+    const delta = run.primary_metric_value != null && maxScore != null
+      ? (run.primary_metric_value - maxScore)
+      : null;
+    const rankHtml = run.rank === 1 ? `<span class="rank-1">#1</span>` : run.rank === 2 ? `<span class="rank-1 rank-2">#2</span>` : run.rank === 3 ? `<span class="rank-1 rank-3">#3</span>` : run.rank != null ? `<span class="td-mono" style="font-size:.78rem">#${run.rank}</span>` : `<span style="color:var(--ink-4)">—</span>`;
+    const sc = scoreClass(run.primary_metric_value, allRunScores);
+    const deltaHtml = delta == null ? '—' : delta === 0 ? '<span class="delta zero">best</span>' : `<span class="delta neg">${delta.toFixed(4)}</span>`;
+    return `<tr>
+      <td>${rankHtml}</td>
+      <td class="td-mono">${run.combiner || '—'}</td>
+      <td style="max-width:160px">${fmt.encoders(run.input_encoders)}</td>
+      <td class="td-mono" style="font-size:.78rem">${run.output_decoder || '—'}</td>
+      <td class="td-mono">${fmt.lr(run.learning_rate)}</td>
+      <td class="td-mono">${fmt.num(run.batch_size)}</td>
+      <td>${scorePill(run.primary_metric_value, sc)}</td>
+      <td>${deltaHtml}</td>
+      <td class="td-mono">${fmt.dur(run.wall_seconds)}</td>
+      <td>${statusBadge(run.status)}</td>
+      <td>${run.config_hash ? `<span class="hash-short td-link" onclick="navigate('config/${encodeURIComponent(run.config_hash)}')" title="${run.config_hash}">${fmt.hash(run.config_hash)}</span>` : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  const combinerRows = (d.combiner_scores || []).map(cs => {
+    const sc = scoreClass(cs.best_score, (d.combiner_scores || []).map(x => x.best_score));
+    return `<tr>
+      <td class="td-mono">${cs.combiner}</td>
+      <td>${scorePill(cs.best_score, sc)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('dataset-detail-content').innerHTML = `
+    <div class="detail-header fade-in">
+      <button class="detail-back" onclick="navigate('datasets')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Datasets
+      </button>
+      <h1 class="detail-title">${d.name}</h1>
+      <div class="detail-meta">
+        <span class="meta-chip"><strong>Source:</strong> ${d.source || '—'}</span>
+        <span class="meta-chip"><strong>Rows:</strong> ${fmt.num(d.n_rows)}</span>
+        <span class="meta-chip"><strong>Features:</strong> ${fmt.num(d.n_features)}</span>
+        ${d.task_type ? `<span class="meta-chip"><strong>Task:</strong> <span class="badge badge-task">${d.task_type}</span></span>` : ''}
+        ${d.target_column ? `<span class="meta-chip"><strong>Target:</strong> <code style="font-family:var(--font-mono);font-size:.8rem">${d.target_column}</code></span>` : ''}
+        ${d.primary_metric ? `<span class="meta-chip"><strong>Metric:</strong> ${d.primary_metric}</span>` : ''}
+        <span class="meta-chip"><strong>Runs:</strong> ${d.n_runs_done}/${d.n_runs_total ?? '?'} done</span>
+      </div>
+    </div>
+
+    <div class="card fade-in">
+      <div class="card-title">Baseline Comparison</div>
+      ${barRow('Ludwig Best', d.best_score, 'accent')}
+      ${Object.keys(baselines).length ? Object.entries(baselines).map(([k, v]) => barRow(k.charAt(0).toUpperCase() + k.slice(1), v, k.includes('xgb') || k === 'xgboost' ? 'hi' : 'mid')).join('') : '<p style="color:var(--ink-4);font-size:.85rem">No baseline scores available.</p>'}
+    </div>
+
+    ${d.combiner_scores?.length ? `
+    <div class="card fade-in">
+      <div class="card-title">Combiner Breakdown</div>
+      <div class="table-wrap" style="box-shadow:none;border:none">
+        <table>
+          <thead><tr><th>Combiner</th><th>Best Score</th></tr></thead>
+          <tbody>${combinerRows}</tbody>
+        </table>
+      </div>
+    </div>` : ''}
+
+    <div class="card fade-in">
+      <div class="card-title">All Runs — sorted by rank</div>
+      <div class="table-wrap" style="box-shadow:none;border:none">
+        <table>
+          <thead><tr>
+            <th>Rank</th><th>Combiner</th><th>Encoders</th><th>Decoder</th>
+            <th>LR</th><th>Batch</th><th>Score</th><th>Δ Best</th>
+            <th>Time</th><th>Status</th><th>Config</th>
+          </tr></thead>
+          <tbody>${runsRows || '<tr><td colspan="11"><div class="empty-state"><p>No runs found.</p></div></td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Configs table
+// ═══════════════════════════════════════════════════════════
+function renderConfigsTable() {
+  const q = document.getElementById('cfg-search').value.toLowerCase();
+  let rows = state.configs.filter(c => {
+    if (!q) return true;
+    return (c.combiner || '').toLowerCase().includes(q) || (c.output_decoder || '').toLowerCase().includes(q) || (c.config_hash || '').toLowerCase().includes(q);
+  });
+  rows = sortRows(rows, state.cfgSort.col, state.cfgSort.dir);
+  document.getElementById('configs-count').textContent = `${rows.length} config${rows.length !== 1 ? 's' : ''}`;
+
+  const allScores = state.configs.map(c => c.mean_score);
+  const allRanks = state.configs.map(c => c.mean_rank);
+
+  const tbody = document.getElementById('configs-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="11"><div class="empty-state"><p>No configurations found.</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(c => {
+    const scoreC = scoreClass(c.mean_score, allScores);
+    // For rank: lower is better, invert
+    const rankC = c.mean_rank == null ? 'score-na' : (() => {
+      const valid = allRanks.filter(v => v != null && !isNaN(v));
+      const sorted = [...valid].sort((a, b) => a - b);
+      const p25 = sorted[Math.floor(sorted.length * 0.25)];
+      const p75 = sorted[Math.floor(sorted.length * 0.75)];
+      if (c.mean_rank <= p25) return 'score-hi';
+      if (c.mean_rank >= p75) return 'score-lo';
+      return 'score-mid';
+    })();
+    const encTags = (c.input_encoders || []).slice(0, 2).map(e => `<span class="enc-tag">${e}</span>`).join('') + ((c.input_encoders || []).length > 2 ? `<span class="enc-tag">+${c.input_encoders.length - 2}</span>` : '');
+    return `<tr>
+      <td><span class="hash-short td-link" onclick="navigate('config/${encodeURIComponent(c.config_hash)}')" title="${c.config_hash}">${fmt.hash(c.config_hash)}</span></td>
+      <td class="td-mono">${c.combiner || '—'}</td>
+      <td class="td-mono" style="font-size:.78rem">${c.output_decoder || '—'}</td>
+      <td class="td-mono">${fmt.lr(c.learning_rate)}</td>
+      <td class="td-mono">${fmt.num(c.batch_size)}</td>
+      <td class="td-mono">${c.n_datasets_tested ?? '—'}</td>
+      <td class="td-mono" style="color:var(--win);font-weight:500">${c.n_wins ?? '—'}</td>
+      <td>${c.win_rate != null ? `<span class="score-pill ${c.win_rate >= 50 ? 'score-hi' : c.win_rate >= 25 ? 'score-mid' : 'score-lo'}">${fmt.pct(c.win_rate)}</span>` : '—'}</td>
+      <td>${scorePill(c.mean_rank, rankC)}</td>
+      <td>${scorePill(c.mean_score, scoreC)}</td>
+      <td><span class="td-link" onclick="navigate('config/${encodeURIComponent(c.config_hash)}')">Detail →</span></td>
+    </tr>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════════
+// Config detail
+// ═══════════════════════════════════════════════════════════
+async function loadConfigDetail(hash) {
+  document.getElementById('config-detail-content').innerHTML = '<div style="padding:40px 0;text-align:center"><div class="spinner" style="margin:auto"></div></div>';
+  try {
+    if (!state.configCache[hash]) {
+      state.configCache[hash] = await fetchJSON(`data/configs/${encodeURIComponent(hash)}.json`);
+    }
+    renderConfigDetail(state.configCache[hash]);
+  } catch (e) {
+    document.getElementById('config-detail-content').innerHTML = `<div id="error-box"><h2>Config not found</h2><p>Could not load <code>data/configs/${hash}.json</code>. ${e.message}</p></div>`;
+  }
+}
+
+function renderConfigDetail(c) {
+  const dsRows = (c.dataset_scores || []).map(ds => {
+    const vsBest = ds.primary_metric_value != null ? '' : '';
+    const sc = scoreClass(ds.primary_metric_value, (c.dataset_scores || []).map(x => x.primary_metric_value));
+    const rankHtml = ds.rank_on_dataset === 1 ? `<span class="rank-1">#1</span>` : ds.rank_on_dataset === 2 ? `<span class="rank-1 rank-2">#2</span>` : ds.rank_on_dataset === 3 ? `<span class="rank-1 rank-3">#3</span>` : ds.rank_on_dataset != null ? `#${ds.rank_on_dataset}` : '—';
+    return `<tr>
+      <td><span class="td-link" onclick="navigate('dataset/${encodeURIComponent(ds.dataset_name)}')">${ds.dataset_name}</span></td>
+      <td>${scorePill(ds.primary_metric_value, sc)}</td>
+      <td class="td-mono">${rankHtml}</td>
+      <td class="td-mono">${fmt.dur(ds.wall_seconds)}</td>
+      <td>${statusBadge(ds.status)}</td>
+    </tr>`;
+  }).join('');
+
+  // Rank distribution: build dots from dataset_scores
+  const ranks = (c.dataset_scores || []).map(ds => ds.rank_on_dataset).filter(r => r != null);
+  const rankDots = (c.dataset_scores || []).map(ds => {
+    const r = ds.rank_on_dataset;
+    const cls = r === 1 ? 'r1' : r === 2 ? 'r2' : r <= 3 ? 'r3' : ds.status !== 'done' ? 'rfail' : '';
+    return `<div class="rank-dot ${cls}" title="${ds.dataset_name}: rank ${r ?? 'n/a'}"></div>`;
+  }).join('');
+
+  document.getElementById('config-detail-content').innerHTML = `
+    <div class="detail-header fade-in">
+      <button class="detail-back" onclick="navigate('configs')">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Configs
+      </button>
+      <h1 class="detail-title" style="font-family:var(--font-mono);font-style:normal;font-size:1.3rem">${c.config_hash}</h1>
+      <div class="detail-meta">
+        <span class="meta-chip"><strong>Combiner:</strong> ${c.combiner || '—'}</span>
+        <span class="meta-chip"><strong>Decoder:</strong> ${c.output_decoder || '—'}</span>
+        <span class="meta-chip"><strong>LR:</strong> ${fmt.lr(c.learning_rate)}</span>
+        <span class="meta-chip"><strong>Batch:</strong> ${fmt.num(c.batch_size)}</span>
+        <span class="meta-chip"><strong>Epochs:</strong> ${c.n_epochs ?? '—'}</span>
+      </div>
+      ${c.input_encoders?.length ? `<div style="margin-top:10px">${fmt.encoders(c.input_encoders)}</div>` : ''}
+    </div>
+
+    <div class="stats-grid fade-in">
+      <div class="stat-block">
+        <div class="s-label">Datasets Tested</div>
+        <div class="s-value accent">${fmt.num(c.n_datasets_tested)}</div>
+      </div>
+      <div class="stat-block">
+        <div class="s-label">Wins</div>
+        <div class="s-value win">${c.n_wins ?? '—'}</div>
+      </div>
+      <div class="stat-block">
+        <div class="s-label">Win Rate</div>
+        <div class="s-value">${fmt.pct(c.win_rate)}</div>
+      </div>
+      <div class="stat-block">
+        <div class="s-label">Mean Rank</div>
+        <div class="s-value">${c.mean_rank != null ? c.mean_rank.toFixed(2) : '—'}</div>
+      </div>
+      <div class="stat-block">
+        <div class="s-label">Mean Score</div>
+        <div class="s-value">${fmt.score(c.mean_score)}</div>
+      </div>
+    </div>
+
+    ${rankDots ? `
+    <div class="card fade-in">
+      <div class="card-title">Rank Distribution — one dot per dataset</div>
+      <div class="rank-dist">${rankDots}</div>
+      <div style="margin-top:10px;display:flex;gap:16px;flex-wrap:wrap">
+        <span style="font-size:.72rem;color:var(--ink-4);display:flex;align-items:center;gap:5px"><span class="rank-dot r1"></span> Rank #1</span>
+        <span style="font-size:.72rem;color:var(--ink-4);display:flex;align-items:center;gap:5px"><span class="rank-dot r2"></span> Rank #2</span>
+        <span style="font-size:.72rem;color:var(--ink-4);display:flex;align-items:center;gap:5px"><span class="rank-dot r3"></span> Rank #3+</span>
+        <span style="font-size:.72rem;color:var(--ink-4);display:flex;align-items:center;gap:5px"><span class="rank-dot rfail"></span> Failed</span>
+      </div>
+    </div>` : ''}
+
+    <div class="card fade-in">
+      <div class="card-title">Cross-Dataset Performance</div>
+      <div class="table-wrap" style="box-shadow:none;border:none">
+        <table>
+          <thead><tr><th>Dataset</th><th>Score</th><th>Rank</th><th>Time</th><th>Status</th></tr></thead>
+          <tbody>${dsRows || '<tr><td colspan="5"><div class="empty-state"><p>No cross-dataset data available.</p></div></td></tr>'}</tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Combiners
+// ═══════════════════════════════════════════════════════════
+function renderCombiners() {
+  const combiners = state.combiners;
+  if (!combiners.length) {
+    document.getElementById('combiners-content').innerHTML = '<div class="empty-state"><p>No combiner data available.</p></div>';
+    return;
+  }
+
+  const maxWinRate = Math.max(...combiners.map(c => c.win_rate || 0), 1);
+  const allScores = combiners.map(c => c.mean_score);
+
+  const chartRows = combiners.map((c, i) => {
+    const pct = maxWinRate > 0 ? Math.max(2, (c.win_rate / maxWinRate) * 100) : 0;
+    const hue = Math.round(220 - (i / Math.max(combiners.length - 1, 1)) * 40);
+    return `<div class="combiner-bar-row">
+      <div class="cbar-name">${c.combiner}</div>
+      <div class="cbar-outer">
+        <div class="cbar-inner" style="width:${pct}%;background:hsl(${hue},65%,38%)">
+          ${pct > 15 ? `<span class="cbar-inner-label">${fmt.pct(c.win_rate)}</span>` : ''}
+        </div>
+      </div>
+      <div class="cbar-val">${fmt.pct(c.win_rate)}</div>
+      <div class="cbar-wins">${c.n_wins}W</div>
+    </div>`;
+  }).join('');
+
+  const tableRows = combiners.map(c => {
+    const sc = scoreClass(c.mean_score, allScores);
+    const rankScore = (() => {
+      const valid = combiners.map(x => x.mean_rank).filter(v => v != null && !isNaN(v));
+      const sorted = [...valid].sort((a, b) => a - b);
+      const p25 = sorted[Math.floor(sorted.length * 0.25)];
+      const p75 = sorted[Math.floor(sorted.length * 0.75)];
+      if (c.mean_rank == null) return 'score-na';
+      if (c.mean_rank <= p25) return 'score-hi';
+      if (c.mean_rank >= p75) return 'score-lo';
+      return 'score-mid';
+    })();
+    return `<tr>
+      <td class="td-mono" style="font-weight:500">${c.combiner}</td>
+      <td class="td-mono">${c.n_datasets_tested}</td>
+      <td class="td-mono" style="color:var(--win);font-weight:500">${c.n_wins}</td>
+      <td>${c.win_rate != null ? `<span class="score-pill ${c.win_rate >= 50 ? 'score-hi' : c.win_rate >= 25 ? 'score-mid' : 'score-lo'}">${fmt.pct(c.win_rate)}</span>` : '—'}</td>
+      <td>${scorePill(c.mean_score, sc)}</td>
+      <td class="td-mono">${fmt.score(c.p25_score)}</td>
+      <td class="td-mono">${fmt.score(c.p75_score)}</td>
+      <td>${scorePill(c.mean_rank, rankScore)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('combiners-content').innerHTML = `
+    <div class="card fade-in">
+      <div class="card-title">Win Rate by Combiner</div>
+      <div class="combiner-chart">${chartRows}</div>
+    </div>
+    <div class="table-wrap fade-in">
+      <table>
+        <thead><tr>
+          <th>Combiner</th><th>Datasets</th><th>Wins</th><th>Win Rate</th>
+          <th>Mean Score</th><th>P25</th><th>P75</th><th>Mean Rank</th>
+        </tr></thead>
+        <tbody>${tableRows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Runs tab (aggregate across all dataset detail files)
+// ═══════════════════════════════════════════════════════════
+let runsLoaded = false;
+
+async function loadAllRunsAndRender() {
+  if (runsLoaded) { renderRunsTable(); return; }
+  showLoading('Loading run data from all datasets…');
+  try {
+    const allRuns = [];
+    await Promise.all(state.datasets.map(async ds => {
+      try {
+        if (!state.datasetCache[ds.name]) {
+          state.datasetCache[ds.name] = await fetchJSON(`data/datasets/${encodeURIComponent(ds.name)}.json`);
+        }
+        const data = state.datasetCache[ds.name];
+        (data.runs || []).forEach(r => allRuns.push({ ...r, dataset_name: ds.name }));
+      } catch { /* skip */ }
+    }));
+    state.allRuns = allRuns;
+    runsLoaded = true;
+    hideLoading();
+    renderRunsTable();
+  } catch (e) {
+    hideLoading();
+    showError('Failed to load runs', e.message);
+  }
+}
+
+function filterRuns(status, el) {
+  state.runsStatusFilter = status;
+  document.querySelectorAll('#runs-status-filter .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderRunsTable();
+}
+
+function renderRunsTable() {
+  const q = (document.getElementById('runs-search')?.value || '').toLowerCase();
+  const statusF = state.runsStatusFilter;
+  let runs = state.allRuns.filter(r => {
+    if (statusF !== 'all' && r.status !== statusF) return false;
+    if (q && !(r.dataset_name || '').toLowerCase().includes(q) && !(r.combiner || '').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  document.getElementById('runs-count').textContent = `${runs.length} run${runs.length !== 1 ? 's' : ''}`;
+
+  const tbody = document.getElementById('runs-tbody');
+  if (!runs.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><p>No runs match current filters.</p></div></td></tr>`;
+    return;
+  }
+  const allScores = runs.map(r => r.primary_metric_value);
+  // Show at most 2000 rows for performance
+  const display = runs.slice(0, 2000);
+  tbody.innerHTML = display.map(r => {
+    const sc = scoreClass(r.primary_metric_value, allScores);
+    return `<tr>
+      <td class="td-mono" style="font-size:.75rem">${(r.run_id || '').slice(0, 10)}…</td>
+      <td><span class="td-link" onclick="navigate('dataset/${encodeURIComponent(r.dataset_name)}')">${r.dataset_name}</span></td>
+      <td class="td-mono">${r.combiner || '—'}</td>
+      <td style="max-width:160px">${fmt.encoders(r.input_encoders)}</td>
+      <td class="td-mono" style="font-size:.78rem">${r.output_decoder || '—'}</td>
+      <td>${scorePill(r.primary_metric_value, sc)}</td>
+      <td class="td-mono">${r.rank != null ? `#${r.rank}` : '—'}</td>
+      <td class="td-mono">${fmt.dur(r.wall_seconds)}</td>
+      <td>${statusBadge(r.status)}</td>
+    </tr>`;
+  }).join('');
+  if (runs.length > 2000) {
+    tbody.innerHTML += `<tr><td colspan="9" style="text-align:center;font-size:.8rem;color:var(--ink-4);padding:12px">Showing first 2,000 of ${fmt.num(runs.length)} runs. Use filters to narrow results.</td></tr>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// Bootstrap
+// ═══════════════════════════════════════════════════════════
+loadInitialData();
+</script>
+</body>
+</html>

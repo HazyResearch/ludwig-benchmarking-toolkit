@@ -1,21 +1,313 @@
-# Ludwig Benchmark
-A framework for running a large-scale comparative analysis of common deep learning NLP architectures using Ludwig.
+# Ludwig Mega-AutoML Benchmark
 
-## **Relevant files and directories:**
-`model_template.yaml`: Every task (i.e. text classification) will have its owns model template. The template specifies the model architecture (encoder and decoder structure), training parameters, and a hyperopt configuration. A large majority of the values of the template will be populated at training time.
+Run hundreds of tabular datasets against 100 sampled Ludwig configs each, collect results in a
+Parquet/DuckDB store, and explore them through a structured JSON dashboard.
 
-`hyperparam_values.yaml`: provides a range of values for training parameters that will populate the hyperopt configuration in the model template
+The full pipeline is: register datasets → generate configs → run experiments → export dashboard.
 
-`dataset_metadata.yaml`: lists the datasets (and associated metadata) that the hyperparameter optimization will be performed over.
+---
 
-`encoder-configs`: contains all encoder specific yaml files. Each files specifies possible values for relevant encoder parameters that will be optimized over. Each file in this directory adheres to the naming convention {encoder_name}_hyperopt.yaml
+## Quick Start
 
-`experiment-configs`: houses all experiment configs built from the templates specified above (note: this folder will be populate at runtime). At a high level, each config file specifies the training and hyperopt information for a (task, dataset, architecture) combination. An example might be (text classification, SST2, BERT)
+```bash
+# 1. Register and prepare the OpenML-CC18 suite (72 datasets, 100 configs each)
+python scripts/prepare_benchmark.py \
+    --openml-suite 99 \
+    --registry benchmark/dataset_registry.json \
+    --configs-dir benchmark/configs
 
-## **Running an experiment:**
+# 2. (Optional) Estimate cost before launching
+python -c "
+from benchmark.cost_estimator import estimate_from_registry_file, print_cost_report
+print_cost_report(estimate_from_registry_file('benchmark/dataset_registry.json'))
+"
 
+# 3. Run the benchmark (sequential; use --ray for distributed)
+python scripts/run_benchmark.py \
+    --registry benchmark/dataset_registry.json \
+    --configs-dir benchmark/configs \
+    --results-dir benchmark/results
 
-To run experiment an experiment, simply modify the aforementioned yaml files and run the following command:
- `python experiment_driver.py` 
+# 4. Export dashboard data and serve
+python -m benchmark.exporter \
+    --results-dir benchmark/results \
+    --output-dir dashboard \
+    --registry benchmark/dataset_registry.json
+python dashboard/serve.py --data-dir dashboard/data
+```
 
+---
 
+## Full Pipeline Walkthrough
+
+### 1. Register Datasets
+
+The dataset registry lives at `benchmark/dataset_registry.json`. Each entry is a `DatasetEntry`
+with fields: `name`, `source`, `openml_task_id`, `kaggle_ref`, `local_path`, `target_column`,
+`task_type`, `priority`, `seed`, etc.
+
+**OpenML benchmark suites**
+
+```bash
+# CC18 = suite 99 (72 classification datasets)
+# CTR23 = suite 353 (tabular regression/classification)
+python scripts/prepare_benchmark.py --openml-suite 99 \
+    --registry benchmark/dataset_registry.json \
+    --configs-dir benchmark/configs
+```
+
+**Ludwig built-in datasets**
+
+```bash
+python scripts/prepare_benchmark.py --ludwig-builtins \
+    --registry benchmark/dataset_registry.json \
+    --configs-dir benchmark/configs
+```
+
+**Kaggle datasets** (requires `~/.kaggle/kaggle.json` credentials)
+
+```bash
+# Step 1: scrape the Kaggle catalog
+python scripts/kaggle_discovery/scrape_kaggle.py \
+    --pages 500 --output kaggle_registry.json
+
+# Step 2: filter to open-license, ML-ready datasets
+python scripts/kaggle_discovery/filter_kaggle.py \
+    --input kaggle_registry.json --output ml_ready.json
+
+# Step 3: download filtered datasets
+python scripts/kaggle_discovery/download_kaggle.py \
+    --input ml_ready.json --dest data/kaggle/
+
+# Step 4: register them
+python -c "
+from benchmark.dataset_registry import DatasetRegistry, register_kaggle_filtered
+r = DatasetRegistry('benchmark/dataset_registry.json')
+register_kaggle_filtered(r, 'ml_ready.json', 'data/kaggle/')
+r.save()
+"
+```
+
+**Local CSV/Parquet**
+
+```python
+from benchmark.dataset_registry import DatasetRegistry, DatasetEntry
+r = DatasetRegistry("benchmark/dataset_registry.json")
+r.add(DatasetEntry(
+    name="my_dataset",
+    source="path",
+    local_path="/abs/path/to/my_dataset.csv",
+    target_column="label",
+    task_type="binary",
+))
+r.save()
+```
+
+---
+
+### 2. Generate Configs
+
+`scripts/prepare_benchmark.py` handles registration and config generation in one pass. To
+regenerate configs independently, or for a single dataset, use `scripts/generate_configs.py`.
+
+```bash
+# Regenerate configs for one dataset
+python scripts/generate_configs.py \
+    --registry benchmark/dataset_registry.json \
+    --dataset openml_task_7592 \
+    --configs-dir benchmark/configs \
+    --n 100 --force
+
+# Generate configs directly from a CSV (no registry entry needed)
+python scripts/generate_configs.py \
+    --csv mydata.csv --target label \
+    --configs-dir benchmark/configs --n 100
+```
+
+Configs are written as JSONL files: `benchmark/configs/{dataset_name}/configs.jsonl`, one Ludwig
+config dict per line.
+
+Key flags for `prepare_benchmark.py`:
+
+| Flag | Default | Description |
+|---|---|---|
+| `--n` | 100 | Configs to generate per dataset |
+| `--seed` | 42 | Random seed for config sampling |
+| `--resume` | off | Skip datasets that already have `configs.jsonl` |
+| `--dry-run` | off | Run the pipeline without writing any files |
+| `--skip-quality-check` | off | Skip the min-rows/columns sanity check |
+
+---
+
+### 3. Run the Benchmark
+
+The scheduler reads the registry and config files, builds a SQLite job queue
+(`benchmark/jobs.db`), and dispatches experiments. Job state persists across restarts; failed jobs
+are retried up to 3 times.
+
+```bash
+# Sequential (single machine)
+python scripts/run_benchmark.py \
+    --registry benchmark/dataset_registry.json \
+    --configs-dir benchmark/configs \
+    --results-dir benchmark/results \
+    --time-limit 1800
+
+# Distributed via Ray
+python scripts/run_benchmark.py \
+    --registry benchmark/dataset_registry.json \
+    --configs-dir benchmark/configs \
+    --results-dir benchmark/results \
+    --ray --max-concurrent 16 --gpus-per-trial 1.0
+
+# Monitor progress while running
+python -c "
+from benchmark.db import BenchmarkDB
+from benchmark.scheduler import BenchmarkScheduler
+from benchmark.dashboard import print_progress
+db = BenchmarkDB('benchmark/results')
+# scheduler is reconstructed from the existing jobs.db
+"
+```
+
+Each experiment enforces a per-job wall-time limit (default 30 min). Runs that exceed the limit
+return `status="timeout"`; out-of-memory failures return `status="oom"`.
+
+---
+
+### 4. View Results
+
+Export the Parquet store to the JSON hierarchy that the dashboard reads, then start the server.
+
+```bash
+python -m benchmark.exporter \
+    --results-dir benchmark/results \
+    --output-dir dashboard \
+    --registry benchmark/dataset_registry.json
+
+# Serve the dashboard (static files)
+python dashboard/serve.py --data-dir dashboard/data
+```
+
+Or query results programmatically:
+
+```python
+from benchmark.db import BenchmarkDB
+
+db = BenchmarkDB("benchmark/results")
+print(db.progress_summary())
+print(db.best_per_dataset())
+print(db.combiner_win_rates())
+```
+
+---
+
+## Directory Structure
+
+```
+ludwig-benchmark/
+├── benchmark/                  # Core library
+│   ├── dataset_registry.py     # DatasetEntry, DatasetRegistry, register_* helpers
+│   ├── runner.py               # run_experiment() — single Ludwig training run
+│   ├── scheduler.py            # BenchmarkScheduler — SQLite job queue + dispatch
+│   ├── db.py                   # BenchmarkDB — Parquet/DuckDB results store
+│   ├── exporter.py             # export_dashboard() — JSON hierarchy for the UI
+│   ├── baselines.py            # XGBoost / LightGBM / AutoGluon baseline runners
+│   ├── cost_estimator.py       # GPU-hour and cloud cost estimator
+│   ├── dashboard.py            # Terminal progress dashboard (Rich)
+│   └── configs/                # Generated JSONL config files (one dir per dataset)
+├── scripts/
+│   ├── prepare_benchmark.py    # End-to-end: register + quality check + generate configs
+│   ├── generate_configs.py     # Config generation only (registry or raw CSV)
+│   └── kaggle_discovery/
+│       ├── scrape_kaggle.py    # Paginate Kaggle API, save metadata JSON
+│       ├── filter_kaggle.py    # Filter scraped catalog to open-license ML-ready datasets
+│       └── download_kaggle.py  # Download filtered datasets to local disk
+├── dashboard/
+│   └── serve.py                # Static file server for the benchmark dashboard
+├── tests/
+│   └── test_exporter.py        # Unit tests for benchmark.exporter
+└── data/                       # Generated JSON output for the dashboard (see below)
+```
+
+---
+
+## Module Reference
+
+| Module | What it does |
+|---|---|
+| `benchmark.dataset_registry` | Persists dataset metadata as JSON; helpers to bulk-register OpenML suites, Ludwig builtins, and Kaggle catalogs |
+| `benchmark.runner` | Loads a dataset, calls `LudwigModel.train()` + `.evaluate()`, enforces a wall-time timeout, returns a `RunResult` |
+| `benchmark.scheduler` | Manages a SQLite job queue; dispatches jobs sequentially or via Ray; retries on failure |
+| `benchmark.db` | Writes one Parquet file per run; rebuilds a consolidated index on demand; supports DuckDB analytical queries |
+| `benchmark.exporter` | Reads the Parquet store and writes the full `data/` JSON hierarchy consumed by the dashboard |
+| `benchmark.baselines` | Trains XGBoost, LightGBM, and (optionally) AutoGluon on the same splits; writes results to `BenchmarkDB` |
+| `benchmark.cost_estimator` | Estimates total GPU-hours and AWS spot cost before launching a run |
+| `benchmark.dashboard` | Live terminal progress view (Rich); shows scheduler queue state, best-per-dataset table, combiner win rates |
+| `scripts.prepare_benchmark` | One-shot CLI: registers datasets, runs quality checks, detects target columns, generates configs |
+| `scripts.generate_configs` | Standalone config generation; can operate from registry or directly from a CSV file |
+| `scripts.kaggle_discovery.scrape_kaggle` | Paginates Kaggle API, saves raw metadata with checkpointing |
+| `scripts.kaggle_discovery.filter_kaggle` | Filters by votes, downloads, license (CC0/CC-BY/ODbL), and file size |
+
+---
+
+## Dataset Sources
+
+| Source | How to register | Notes |
+|---|---|---|
+| OpenML CC18 | `--openml-suite 99` | 72 classification tasks; requires `pip install openml` |
+| OpenML CTR23 | `--openml-suite 353` | Tabular classification + regression benchmark |
+| Ludwig builtins | `--ludwig-builtins` | All datasets from `ludwig.datasets.list_datasets()` |
+| Kaggle | `scrape_kaggle.py` → `filter_kaggle.py` → `download_kaggle.py` | Requires Kaggle API credentials |
+| Local CSV/Parquet | `DatasetEntry(source="path", local_path=...)` | Absolute path; target column must be set manually |
+
+---
+
+## Output Format
+
+`benchmark.exporter.export_dashboard()` writes the following files under `{output_dir}/data/`:
+
+```
+data/
+├── summary.json            # Global stats: n_datasets, n_runs, completion rate, top combiners
+├── datasets.json           # List of per-dataset summary rows (for the dataset list page)
+├── combiners.json          # Per-combiner aggregate stats: win rate, mean rank, score distribution
+├── configs.json            # Per-config-hash aggregate stats: n_wins, mean_rank, mean_score
+├── datasets/
+│   └── {name}.json         # Full ranked run list for one dataset + baseline scores
+├── configs/
+│   └── {config_hash}.json  # Cross-dataset performance profile for one config
+└── runs/
+    └── {run_id}.json       # Individual run detail: all metrics, hyperparams, timing
+```
+
+The dashboard loads `summary.json` and `datasets.json` on the landing page. Dataset detail loads
+`datasets/{name}.json`. Config detail loads `configs/{hash}.json`.
+
+---
+
+## Requirements
+
+**Core**
+
+- Python 3.10+
+- `ludwig` (installed from source)
+- `pandas`, `numpy`, `pyarrow`
+- `duckdb >= 0.10.0`
+- `filelock >= 3.12.0`
+- `rich >= 13.0.0` (optional — plain-text fallback if absent)
+
+**Dataset sources** (install as needed)
+
+- `openml >= 0.14.0` — OpenML suites
+- `kaggle >= 1.6.0` — Kaggle catalog scraping and download
+
+**Baselines** (optional)
+
+- `xgboost` — XGBoost baseline
+- `lightgbm` — LightGBM baseline
+- `autogluon.tabular` — AutoGluon baseline
+
+**Distributed execution** (optional)
+
+- `ray` — distributed job execution via `--ray` flag

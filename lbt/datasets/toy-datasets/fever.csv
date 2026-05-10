@@ -1,0 +1,31 @@
+,id,verifiable,label,claim,evidence,split
+155448,113501,NOT VERIFIABLE,NOT ENOUGH INFO,Grease had bad reviews.,"[[[133128, None, None, None]]]",1
+155449,163803,VERIFIABLE,SUPPORTS,Ukrainian Soviet Socialist Republic was a founding participant of the UN.,"[[[296950, 288668, 'Ukrainian_Soviet_Socialist_Republic', 7]], [[298602, 290067, 'Ukrainian_Soviet_Socialist_Republic', 7], [298602, 290067, 'United_Nations', 0]], [[300696, 291816, 'Ukrainian_Soviet_Socialist_Republic', 7]], [[344347, 327887, 'Ukrainian_Soviet_Socialist_Republic', 7]], [[344994, 328433, 'Ukrainian_Soviet_Socialist_Republic', 7]], [[344997, 328435, 'Ukrainian_Soviet_Socialist_Republic', 7]]]",1
+155450,70041,VERIFIABLE,SUPPORTS,2 Hearts is a musical composition by Minogue.,"[[[225394, 230056, '2_Hearts_-LRB-Kylie_Minogue_song-RRB-', 0]], [[317953, 306972, '2_Hearts_-LRB-Kylie_Minogue_song-RRB-', 0]], [[319638, 308345, '2_Hearts_-LRB-Kylie_Minogue_song-RRB-', 0]], [[319643, 308348, '2_Hearts_-LRB-Kylie_Minogue_song-RRB-', 0]]]",1
+155451,202314,VERIFIABLE,REFUTES,The New Jersey Turnpike has zero shoulders.,"[[[238335, 240393, 'New_Jersey_Turnpike', 15]]]",1
+155452,57085,NOT VERIFIABLE,NOT ENOUGH INFO,Legendary Entertainment is the owner of Wanda Cinemas.,"[[[178035, None, None, None], [182093, None, None, None], [314120, None, None, None], [314126, None, None, None], [314131, None, None, None]]]",1
+155453,6032,VERIFIABLE,REFUTES,Aruba is the only ABC Island.,"[[[22769, 28071, 'ABC_islands_-LRB-Lesser_Antilles-RRB-', 0]], [[22769, 28072, 'ABC_islands_-LRB-Lesser_Antilles-RRB-', 1]]]",1
+155454,176630,NOT VERIFIABLE,NOT ENOUGH INFO,Great white sharks do not prefer dolphins as prey.,"[[[204612, None, None, None]]]",1
+155455,130048,VERIFIABLE,REFUTES,"Burbank, California has always been completely void of industry.","[[[152264, 167060, 'Burbank,_California', 7]]]",1
+155456,100046,NOT VERIFIABLE,NOT ENOUGH INFO,The Guthrie Theater's second building began operating in 1963.,"[[[117690, None, None, None]]]",1
+155457,204575,VERIFIABLE,REFUTES,Commodore is ranked above a rear admiral.,"[[[241594, 243126, 'Commodore_-LRB-rank-RRB-', 0]], [[241594, 243127, 'Commodore_-LRB-rank-RRB-', 9], [241594, 243127, 'Rear_admiral', 0]]]",1
+0,75397,VERIFIABLE,SUPPORTS,Nikolaj Coster-Waldau worked with the Fox Broadcasting Company.,"[[[92206, 104971, 'Nikolaj_Coster-Waldau', 7], [92206, 104971, 'Fox_Broadcasting_Company', 0]]]",0
+1,150448,VERIFIABLE,SUPPORTS,Roman Atwood is a content creator.,"[[[174271, 187498, 'Roman_Atwood', 1]], [[174271, 187499, 'Roman_Atwood', 3]]]",0
+2,214861,VERIFIABLE,SUPPORTS,"History of art includes architecture, dance, sculpture, music, painting, poetry literature, theatre, narrative, film, photography and graphic arts.","[[[255136, 254645, 'History_of_art', 2]]]",0
+3,156709,VERIFIABLE,REFUTES,Adrienne Bailon is an accountant.,"[[[180804, 193183, 'Adrienne_Bailon', 0]]]",0
+4,83235,NOT VERIFIABLE,NOT ENOUGH INFO,System of a Down briefly disbanded in limbo.,"[[[100277, None, None, None]]]",0
+5,129629,VERIFIABLE,SUPPORTS,Homeland is an American television spy thriller based on the Israeli television series Prisoners of War.,"[[[151831, 166598, 'Homeland_-LRB-TV_series-RRB-', 0], [151831, 166598, 'Prisoners_of_War_-LRB-TV_series-RRB-', 0]]]",0
+6,149579,NOT VERIFIABLE,NOT ENOUGH INFO,Beautiful reached number two on the Billboard Hot 100 in 2003.,"[[[173384, None, None, None]]]",0
+7,229289,NOT VERIFIABLE,NOT ENOUGH INFO,Neal Schon was named in 1954.,"[[[273626, None, None, None]]]",0
+8,33078,VERIFIABLE,SUPPORTS,The Boston Celtics play their home games at TD Garden.,"[[[49158, 58489, 'Boston_Celtics', 3]], [[49159, 58490, 'Boston_Celtics', 3]]]",0
+9,6744,VERIFIABLE,SUPPORTS,The Ten Commandments is an epic film.,"[[[23513, 28977, 'The_Ten_Commandments_-LRB-1956_film-RRB-', 0]], [[23513, 28978, 'The_Ten_Commandments_-LRB-1956_film-RRB-', 20]]]",0
+145449,91198,NOT VERIFIABLE,NOT ENOUGH INFO,Colin Kaepernick became a starting quarterback during the 49ers 63rd season in the National Football League.,"[[[108548, None, None, None]]]",2
+145450,194462,NOT VERIFIABLE,NOT ENOUGH INFO,Tilda Swinton is a vegan.,"[[[227768, None, None, None]]]",2
+145451,137334,VERIFIABLE,SUPPORTS,Fox 2000 Pictures released the film Soul Food.,"[[[289914, 283015, 'Soul_Food_-LRB-film-RRB-', 0]], [[291259, 284217, 'Soul_Food_-LRB-film-RRB-', 0]], [[293412, 285960, 'Soul_Food_-LRB-film-RRB-', 0]], [[337212, 322620, 'Soul_Food_-LRB-film-RRB-', 0]], [[337214, 322622, 'Soul_Food_-LRB-film-RRB-', 0]]]",2
+145452,166626,NOT VERIFIABLE,NOT ENOUGH INFO,Anne Rice was born in New Jersey.,"[[[191656, None, None, None], [191657, None, None, None]]]",2
+145453,111897,VERIFIABLE,REFUTES,Telemundo is a English-language television network.,"[[[131371, 146144, 'Telemundo', 0]], [[131371, 146148, 'Telemundo', 1]], [[131371, 146150, 'Telemundo', 4], [131371, 146150, 'Hispanic_and_Latino_Americans', 0]], [[131371, 146151, 'Telemundo', 5]]]",2
+145454,89891,VERIFIABLE,REFUTES,Damon Albarn's debut album was released in 2011.,"[[[107201, 120581, 'Damon_Albarn', 17]]]",2
+145455,181634,VERIFIABLE,SUPPORTS,There is a capital called Mogadishu.,"[[[210946, 218608, 'Mogadishu', 0]]]",2
+145456,219028,VERIFIABLE,REFUTES,Savages was exclusively a German film.,"[[[260471, 258880, 'Savages_-LRB-2012_film-RRB-', 3]], [[260473, 258882, 'Savages_-LRB-2012_film-RRB-', 3]]]",2
+145457,194372,NOT VERIFIABLE,NOT ENOUGH INFO,Happiness in Slavery is a gospel song by Nine Inch Nails.,"[[[227658, None, None, None]]]",2
+145458,108281,VERIFIABLE,REFUTES,Andrew Kevin Walker is only Chinese.,"[[[127089, 141573, 'Andrew_Kevin_Walker', 0]]]",2

@@ -1,0 +1,19 @@
+goal: maximize
+metric: accuracy
+parameters:
+  training.learning_rate:
+    type: float
+    lower: 0.00002
+    upper: 0.01
+    space: loguniform
+sampler:
+  type: ray
+  search_alg:
+    type: skopt
+    max_concurrent: 1
+  num_samples: 1
+executor:
+  type: ray
+  cpu_resources_per_trial: 1
+  gpu_resources_per_trial: 0
+  #kubernetes_namespace: "ray"

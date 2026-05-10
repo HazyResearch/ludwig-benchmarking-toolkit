@@ -1,0 +1,171 @@
+AGNews:
+  data_class: AGNews
+  input_features:
+    - name: description
+      type: text
+  output_features:
+    - name: class_index
+      type: category
+
+AmazonPolarity:
+  data_class: AmazonPolarity
+  input_features:
+    - name: review_text
+      type: text
+  output_features:
+    - name: label
+      type: category
+
+AmazonReviews:
+  data_class: AmazonReviews
+  input_features:
+    - name: review_text
+      type: text
+  output_features:
+    - name: label
+      type: category
+
+DBPedia:
+  data_class: DBPedia
+  input_features:
+    - name: content
+      type: text
+  output_features:
+    - name: label
+      type: category
+
+EthosBinary:
+  data_class: EthosBinary
+  input_features:
+    - name: comment
+      type: text
+  output_features: isHate
+  type: category
+
+GoEmotions:
+  data_class: GoEmotions
+  input_features:
+    - name: text
+      type: text
+  output_features:
+    - name: emotion_ids
+      type: set
+
+Irony:
+  data_class: Irony
+  input_features:
+    - name: comment_text
+      type: text
+  output_features:
+    - name: label
+      type: category
+
+SST2:
+  data_class: SST2
+  input_features:
+    - name: sentence
+      type: text
+  output_features:
+    - name: label
+      type: category
+
+SST5:
+  data_class: SST5
+  input_features:
+    - name: sentence
+      type: text
+  output_features:
+    - name: label
+      type: category
+
+YahooAnswers:
+  data_class: YahooAnswers
+  input_features:
+    - name: question
+      type: text
+  output_features:
+    - name: label
+      type: category
+
+YelpPolarity:
+  data_class: YelpPolarity
+  input_features:
+    - name: text
+      type: text
+
+  output_features:
+    - name: label
+      type: category
+
+YelpReviews:
+  data_class: YelpReviews
+  input_features:
+    - name: text
+      type: text
+  output_features:
+    - name: label
+      type: category
+
+HateSpeech:
+  data_class: HateSpeech
+  input_features:
+    - name: tweet
+      type: text
+  output_features:
+    - name: class
+      type: category
+
+SocialBiasFrames:
+  data_class: SocialBiasFrames
+  input_features:
+    - name: post
+      type: text
+  output_features:
+    - name: sexYN
+      type: category
+    - name: offensiveYN
+      type: category
+    - name: intentYN
+      type: category
+    - name: speakerMinorityYN
+      type: category
+  type: category
+
+MDGenderBias:
+  data_class: MDGenderBias
+  input_features:
+    - name: text
+      type: text
+  output_features:
+    - name: gender
+      type: category
+  type: category
+
+CIFAR10:
+  data_class: CIFAR10
+  input_features:
+    - name: image_path
+      type: image
+  output_features:
+    - name: label
+      type: category
+  type: category
+
+Mnist:
+  data_class: Mnist
+  input_features:
+    - name: image_path
+      type: image
+  output_features:
+    - name: label
+      type: category
+  type: category
+
+toy_agnews:
+  data_class: toy_agnews
+  input_features:
+    - name: description
+      type: text
+  output_features:
+    - name: class_index
+      type: category

@@ -1,0 +1,36 @@
+input_features:
+  - encoder: rnn
+    preprocessing:
+      word_tokenizer: space
+      pretrained_model_name_or_path: None
+    dropout: 0.5
+
+training:
+  early_stop: 7
+  batch_size: 128
+  eval_batch_size: 256
+
+parameters:
+  input_features.name.encoder: rnn
+  input_features.name.num_layers:
+    space: randint
+    type: int
+    lower: 1
+    upper: 5
+  input_features.name.cell_type:
+    space: choice
+    type: category
+    categories: [rnn, gru, lstm]
+  input_features.name.state_size:
+    space: choice
+    type: category
+    categories: [256, 512]
+  input_features.name.fc_layers:
+    space: choice
+    type: category
+    categories:
+      [
+        [{ fc_size: 512 }, { fc_size: 256 }],
+        [{ fc_size: 512 }],
+        [{ fc_size: 256 }],
+      ]

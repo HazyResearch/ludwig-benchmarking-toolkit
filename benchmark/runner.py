@@ -1,17 +1,14 @@
 """Runs a single Ludwig training experiment and records results."""
 from __future__ import annotations
 
-import json
 import logging
 import os
 import signal
 import threading
 import time
 import traceback
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
-
 from typing import Literal
 
 import pandas as pd
@@ -54,8 +51,8 @@ class RunResult:
 
 def _load_dataset_openml(task_id: int) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Load dataset from OpenML using Ludwig's OpenMLLoader, returning (train, val, test)."""
-    from ludwig.datasets.loaders.openml_loader import OpenMLLoader
     from ludwig.datasets.dataset_config import DatasetConfig
+    from ludwig.datasets.loaders.openml_loader import OpenMLLoader
 
     config = DatasetConfig(
         name=f"openml_task_{task_id}",
@@ -278,7 +275,7 @@ def run_experiment(cfg: RunConfig) -> RunResult:
     """
     from ludwig.api import LudwigModel
 
-    gpu_type = _setup_gpu_env(cfg.gpu_id)
+    _setup_gpu_env(cfg.gpu_id)
     output_dir = Path(cfg.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -381,7 +378,7 @@ def run_experiment(cfg: RunConfig) -> RunResult:
             dataset_n_features=dataset_n_features,
         )
 
-    except Exception as exc:
+    except Exception:
         wall_seconds = time.monotonic() - wall_start
         msg = traceback.format_exc()
         logger.error("[%s] Experiment failed:\n%s", cfg.run_id, msg)

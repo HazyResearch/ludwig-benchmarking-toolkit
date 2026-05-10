@@ -33,6 +33,10 @@ import sys
 import time
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -332,10 +336,9 @@ def main() -> None:
     sys.path.insert(0, str(Path(__file__).parent.parent))
     from benchmark.dataset_registry import (
         DatasetRegistry,
-        DatasetEntry,
-        register_openml_suite,
-        register_ludwig_builtins,
         register_from_metadata_yaml,
+        register_ludwig_builtins,
+        register_openml_suite,
     )
 
     parser = _build_parser()

@@ -1,9 +1,11 @@
-from lbt.metrics.base_metric import LBTMetric
-import ray
 import importlib
-import sys
 import json
 import os
+import sys
+
+import ray
+
+from lbt.metrics.base_metric import LBTMetric
 
 LOCATION = os.path.abspath(os.path.dirname(__file__))
 INSTANCE_PRICES_FILEPATH = os.path.join(LOCATION, "instance_prices.json")

@@ -1,23 +1,21 @@
 import datetime
 import os
 import shutil
-import tempfile
 
 import GPUtil
 import ludwig
 import numpy as np
 import pandas as pd
 import psutil
-import ray
 from experiment_impact_tracker.compute_tracker import ImpactTracker
 from experiment_impact_tracker.data_interface import DataInterface
-from globals import ENERGY_LOGGING_DIR
-from lbt.metrics import register_metric
-from lbt.metrics import INSTANCE_PRICES
-from lbt.metrics.base_metric import LBTMetric
-from lbt.metrics.utils import scale_bytes
 from ludwig.api import LudwigModel
 from ludwig.collect import collect_weights
+
+from globals import ENERGY_LOGGING_DIR
+from lbt.metrics import INSTANCE_PRICES, register_metric
+from lbt.metrics.base_metric import LBTMetric
+from lbt.metrics.utils import scale_bytes
 
 
 @register_metric("ludwig_version")

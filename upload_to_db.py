@@ -1,12 +1,11 @@
-import ray
-from database import Database, save_results_to_es
-from utils.experiment_utils import *
 
 # from experiment_driver import map_runstats_to_modelpath
 import pickle
-import os
-import json
-from utils.metadata_utils import append_experiment_metadata
+
+import ray
+from utils.experiment_utils import *
+
+from database import save_results_to_es
 
 ray.init(address="auto")
 

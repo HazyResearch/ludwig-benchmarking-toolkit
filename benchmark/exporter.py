@@ -387,7 +387,6 @@ def export_dashboard(
     Returns:
         Path to the output_dir/data/ directory.
     """
-    from benchmark.db import BenchmarkDB  # noqa: F811 (TYPE_CHECKING import)
 
     out_dir = Path(output_dir) / "data"
     out_dir.mkdir(parents=True, exist_ok=True)

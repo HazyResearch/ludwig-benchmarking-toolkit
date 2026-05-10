@@ -5,9 +5,7 @@ Estimates total GPU-hours and cloud cost before launching experiments.
 from __future__ import annotations
 
 import json
-import math
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import dataclass
 from typing import Optional
 
 # Reference wall times per config (minutes) based on dataset size x model type.
@@ -142,9 +140,7 @@ def estimate_experiment_cost(
 def print_cost_report(estimate: CostEstimate) -> None:
     """Prints a formatted cost report (Rich if available, else plain text)."""
     try:
-        from rich.console import Console
-        from rich.table import Table
-        from rich import print as rprint
+        import rich  # noqa: F401
         _rich_available = True
     except ImportError:
         _rich_available = False
@@ -157,8 +153,8 @@ def print_cost_report(estimate: CostEstimate) -> None:
 
 def _print_cost_report_rich(estimate: CostEstimate) -> None:
     from rich.console import Console
-    from rich.table import Table
     from rich.panel import Panel
+    from rich.table import Table
 
     console = Console()
 

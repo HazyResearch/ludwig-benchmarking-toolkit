@@ -1,0 +1,8 @@
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+exclude = ["lbt/", "database.py", "experiment_driver.py", "upload_to_db.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E501"]

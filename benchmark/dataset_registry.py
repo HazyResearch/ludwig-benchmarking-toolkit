@@ -30,7 +30,7 @@ class DatasetEntry:
     priority: int = 0                  # higher = runs first
     seed: int = 42
     tags: list[str] = field(default_factory=list)
-    quality_passed: Optional[bool] = None
+    quality_passed: bool | None = None
     n_configs: int = 0                 # number of configs generated so far
     notes: str = ""
 

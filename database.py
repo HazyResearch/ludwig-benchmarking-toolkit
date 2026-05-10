@@ -2,19 +2,19 @@ import copy
 import json
 import logging
 import os
-import ray
 import socket
+
+import ray
 from elasticsearch import Elasticsearch
 
+# from utils.metadata_utils import append_experiment_metadata
+from lbt.metrics import get_experiment_metadata
 from lbt.utils.experiment_utils import (
     format_fields_float,
     get_model_ckpt_paths,
     hash_dict,
     substitute_dict_parameters,
 )
-
-# from utils.metadata_utils import append_experiment_metadata
-from lbt.metrics import get_experiment_metadata
 
 hostname = socket.gethostbyname(socket.gethostname())
 

@@ -108,8 +108,8 @@ def main() -> None:
     dashboard_dir = Path(__file__).parent.resolve()
     data_dir = resolve_data_dir(args.data_dir, dashboard_dir)
 
-    print(f"\n  Ludwig AutoML Dashboard")
-    print(f"  ========================")
+    print("\n  Ludwig AutoML Dashboard")
+    print("  ========================")
     print(f"  Dashboard dir : {dashboard_dir}")
     print(f"  Data dir      : {data_dir}")
 
@@ -120,7 +120,7 @@ def main() -> None:
 
     url = f"http://localhost:{args.port}/"
     print(f"\n  Serving at    : {url}")
-    print(f"  Press Ctrl+C to stop.\n")
+    print("  Press Ctrl+C to stop.\n")
 
     if not args.no_browser:
         webbrowser.open(url)

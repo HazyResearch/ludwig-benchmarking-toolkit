@@ -1,6 +1,5 @@
 import abc
 from abc import ABC
-import pandas as pd
 
 
 class BaseSubpopulation(ABC):

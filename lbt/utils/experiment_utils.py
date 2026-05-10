@@ -6,12 +6,13 @@ import logging
 import math
 import os
 from typing import Union
-from lbt.datasets import build_dataset
-from lbt.metrics import get_experiment_metadata
 
-import globals
 import pandas as pd
 import yaml
+
+import globals
+from lbt.datasets import build_dataset
+from lbt.metrics import get_experiment_metadata
 
 
 def get_gpu_list():
@@ -53,7 +54,7 @@ def compute_additional_metadata(
             "hyperopt_results": run["hyperopt_results"],
             "model_path": run["model_path"],
         }
-        
+
         num_gpus = len(GPUtil.getGPUs())
 
         get_experiment_metadata(

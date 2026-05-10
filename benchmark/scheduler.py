@@ -4,9 +4,8 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
-import time
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator
 
@@ -231,8 +230,7 @@ class BenchmarkScheduler:
 
     def run_sequential(self, time_limit_per_job: int = 1800) -> None:
         """Run all queued jobs sequentially (for single-machine use)."""
-        from benchmark.runner import RunConfig, RunResult, run_experiment
-        from benchmark.db import RunRecord
+        from benchmark.runner import RunResult, run_experiment
 
         while True:
             job = self.next_job()
@@ -269,7 +267,6 @@ class BenchmarkScheduler:
             raise RuntimeError("Ray is required for distributed execution: pip install ray")
 
         from benchmark.runner import RunConfig, RunResult, run_experiment
-        from benchmark.db import RunRecord
 
         if not ray.is_initialized():
             ray.init(ignore_reinit_error=True)
@@ -373,8 +370,9 @@ def _hash_config(cfg: dict) -> str:
 
 
 def _job_to_run_config(job: BenchmarkJob, run_id: str, time_limit_s: int) -> "RunConfig":  # noqa: F821
-    from benchmark.runner import RunConfig
     import json
+
+    from benchmark.runner import RunConfig
 
     # Load the config dict from the jsonl file at config_index
     config_dict: dict = {}
@@ -410,9 +408,10 @@ def _job_to_run_config(job: BenchmarkJob, run_id: str, time_limit_s: int) -> "Ru
 
 
 def _result_to_record(result: "RunResult", job: BenchmarkJob, cfg: "RunConfig") -> "RunRecord":  # noqa: F821
-    from benchmark.db import RunRecord
-    from datetime import datetime, timezone
     import json
+    from datetime import datetime, timezone
+
+    from benchmark.db import RunRecord
 
     config_dict = cfg.config_dict
     combiner = config_dict.get("combiner", {}).get("type", "") if isinstance(config_dict.get("combiner"), dict) else config_dict.get("combiner", "")

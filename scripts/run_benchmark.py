@@ -48,8 +48,6 @@ try:
     from rich.console import Console as _RichConsole
     from rich.logging import RichHandler as _RichHandler
     from rich.panel import Panel as _RichPanel
-    from rich.table import Table as _RichTable
-    from rich import box as _rich_box
     _RICH = True
 except ImportError:
     _RICH = False
@@ -131,8 +129,8 @@ def _print_banner(args: argparse.Namespace, n_datasets: int, n_total_jobs: int) 
 def _build_registry(args: argparse.Namespace) -> "DatasetRegistry":  # noqa: F821
     from benchmark.dataset_registry import (
         DatasetRegistry,
-        register_openml_suite,
         register_ludwig_builtins,
+        register_openml_suite,
     )
 
     registry = DatasetRegistry(args.registry)
@@ -240,7 +238,6 @@ def _generate_configs_for_entry(
     """Generate, validate, and write configs.jsonl. Returns count written."""
     from ludwig.automl.config_sampler import configs_from_dataframe
     from ludwig.automl.config_validator import validate_config_for_dataset
-    import pandas as pd
 
     df = _load_dataframe_for_entry(entry)
     sampled = configs_from_dataframe(df, target_column=entry.target_column, n=n, seed=seed)
@@ -263,8 +260,9 @@ def _generate_configs_for_entry(
 
 def _load_dataframe_for_entry(entry) -> "pd.DataFrame":  # noqa: F821
     """Load the full un-split DataFrame for a DatasetEntry."""
-    import pandas as pd
     from pathlib import Path as _Path
+
+    import pandas as pd
 
     source = entry.source
 
@@ -803,7 +801,6 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 1. Build / load registry
     # ------------------------------------------------------------------
-    from benchmark.dataset_registry import DatasetRegistry
 
     registry = _build_registry(args)
     entries = _select_entries(registry, args)
@@ -873,7 +870,7 @@ def main() -> None:
     # 7. Populate job queue
     # ------------------------------------------------------------------
     logger.info("=== Populating job queue ===")
-    n_new_jobs = _populate_scheduler(scheduler, entries, registry_dict, args)
+    _populate_scheduler(scheduler, entries, registry_dict, args)
 
     if args.max_attempts != 3:
         _run_with_max_attempts(scheduler, args.max_attempts)

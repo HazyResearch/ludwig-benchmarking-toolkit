@@ -5,7 +5,6 @@ Uses DuckDB for queries over Parquet files. Zero-server, analytical, cross-platf
 from __future__ import annotations
 
 import dataclasses
-import json
 import threading
 import uuid
 from dataclasses import dataclass, field
@@ -275,7 +274,6 @@ class BenchmarkDB:
         Delegates to :func:`benchmark.exporter.export_dashboard`. See that module for
         a description of the output layout and the meaning of each parameter.
         """
-        from pathlib import Path as _Path  # noqa: PLC0415
         from benchmark.exporter import export_dashboard as _export  # noqa: PLC0415
 
         return _export(

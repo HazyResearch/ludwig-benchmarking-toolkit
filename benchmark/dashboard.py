@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -14,13 +14,12 @@ if TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 try:
+    from rich import box
     from rich.console import Console
-    from rich.table import Table
     from rich.live import Live
     from rich.panel import Panel
-    from rich.layout import Layout
+    from rich.table import Table
     from rich.text import Text
-    from rich import box
     _RICH = True
 except ImportError:
     _RICH = False
@@ -57,7 +56,7 @@ def _plain_print_progress(sched_prog: dict, db_prog: dict) -> None:
     done = sched_prog["done"]
     pct = 100 * done / total if total else 0.0
     print(f"  Progress   — {done}/{total} ({pct:.1f}%)")
-    print(f"  Timestamp  — {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
+    print(f"  Timestamp  — {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC")
     print()
 
 
@@ -65,8 +64,9 @@ def _rich_print_progress(
     sched_prog: dict,
     db_prog: dict,
     db: "BenchmarkDB",
+    console: "Console | None" = None,
 ) -> None:
-    console = Console()
+    console = console or Console()
     total = sched_prog["total"]
     done = sched_prog["done"]
     pct = 100 * done / total if total else 0.0
@@ -100,7 +100,7 @@ def _rich_print_progress(
     console.print(prog_table)
     console.print(
         f"  [bold]Overall:[/bold] {done}/{total} ({pct:.1f}%)  "
-        f"| [dim]{datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC[/dim]"
+        f"| [dim]{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')} UTC[/dim]"
     )
 
     # Best-per-dataset table (top 10)
@@ -188,20 +188,20 @@ def _rich_live_dashboard(
 
     def _make_renderable() -> Panel:
         from io import StringIO
+
         from rich.console import Console as _C
 
         buf = StringIO()
         sub = _C(file=buf, highlight=False)
         sched_prog = scheduler.progress()
         db_prog = db.progress_summary()
-        _rich_print_progress(sched_prog, db_prog, db)
-        # Re-render into a panel
+        _rich_print_progress(sched_prog, db_prog, db, console=sub)
         total = sched_prog["total"]
         done = sched_prog["done"]
         pct = 100 * done / total if total else 0.0
         title = (
             f"Ludwig Mega-AutoML Benchmark — {done}/{total} ({pct:.1f}%) — "
-            f"{datetime.utcnow().strftime('%H:%M:%S')}"
+            f"{datetime.now(timezone.utc).strftime('%H:%M:%S')}"
         )
         return Panel(Text(buf.getvalue()), title=title, border_style="bright_blue")
 

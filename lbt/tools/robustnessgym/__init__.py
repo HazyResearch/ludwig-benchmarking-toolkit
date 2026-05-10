@@ -1,12 +1,13 @@
 RGSUBPOPULATION_REGISTRY = {}
 
 import importlib
-import sys
 import inspect
+import sys
+
+from robustnessgym.slicebuilders.subpopulation import Subpopulation
 
 from .base_subpopulation import BaseSubpopulation
 from .robustnessgym import RG
-from robustnessgym.slicebuilders.subpopulation import Subpopulation
 
 # from lbt.tools.robustnessgym imort RG
 

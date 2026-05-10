@@ -2,15 +2,12 @@
 from __future__ import annotations
 
 import json
-import math
 from pathlib import Path
 
-import pandas as pd
 import pytest
 
 from benchmark.db import BenchmarkDB, RunRecord
 from benchmark.exporter import export_dashboard
-
 
 # ---------------------------------------------------------------------------
 # Fixtures

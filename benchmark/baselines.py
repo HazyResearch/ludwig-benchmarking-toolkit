@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 if TYPE_CHECKING:
-    from benchmark.db import BenchmarkDB
+    from benchmark.db import BenchmarkDB, RunRecord
     from benchmark.runner import RunResult
 
 logger = logging.getLogger(__name__)
@@ -76,7 +76,7 @@ def _encode_labels(
 
 def _primary_metric(task_type: str, y_true: np.ndarray, y_pred: np.ndarray, y_prob: np.ndarray | None) -> tuple[str, float]:
     """Return (metric_name, value) for the appropriate primary metric."""
-    from sklearn.metrics import roc_auc_score, accuracy_score, r2_score
+    from sklearn.metrics import accuracy_score, r2_score, roc_auc_score
 
     if task_type == "binary":
         if y_prob is not None:
@@ -219,7 +219,7 @@ def run_xgboost_baseline(
             dataset_n_features=dataset_n_features,
         )
 
-    except Exception as exc:
+    except Exception:
         return _make_run_result(
             run_id=run_id,
             status="failed",
@@ -321,7 +321,7 @@ def run_lightgbm_baseline(
             dataset_n_features=dataset_n_features,
         )
 
-    except Exception as exc:
+    except Exception:
         return _make_run_result(
             run_id=run_id,
             status="failed",
@@ -393,7 +393,7 @@ def run_autogluon_baseline(
             dataset_n_features=dataset_n_features,
         )
 
-    except Exception as exc:
+    except Exception:
         return _make_run_result(
             run_id=run_id,
             status="failed",
@@ -580,7 +580,6 @@ def run_all_baselines(
     time_limit_s: int = 1800,
 ) -> None:
     """Run baselines for all datasets and write results to BenchmarkDB."""
-    from benchmark.db import RunRecord
 
     datasets = list(dataset_registry.keys())
     logger.info("Running baselines on %d datasets", len(datasets))

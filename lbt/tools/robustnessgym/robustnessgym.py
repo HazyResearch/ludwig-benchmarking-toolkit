@@ -4,13 +4,12 @@ from typing import Union
 
 import numpy as np
 import pandas as pd
-from lbt.datasets import DATASET_REGISTRY
-from lbt.tools.robustnessgym import RGSUBPOPULATION_REGISTRY
 from ludwig.api import LudwigModel
-from lbt.tools.utils import get_dataset_features
-
 from robustnessgym import Dataset, Identifier, Spacy
 from robustnessgym.core.testbench import DevBench
+
+from lbt.tools.robustnessgym import RGSUBPOPULATION_REGISTRY
+from lbt.tools.utils import get_dataset_features
 
 from .base_subpopulation import BaseSubpopulation
 

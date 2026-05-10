@@ -1,15 +1,15 @@
-import os
-from typing import List, Union
-
-import globals
 import json
+import os
 import pickle
-from lbt.datasets import DATASET_REGISTRY
+
 from ludwig.visualize import (
     compare_performance,
     hyperopt_report,
     learning_curves,
 )
+
+import globals
+from lbt.datasets import DATASET_REGISTRY
 
 
 def hyperopt_viz(

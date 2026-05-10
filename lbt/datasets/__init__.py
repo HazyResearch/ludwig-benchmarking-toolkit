@@ -1,8 +1,9 @@
 import importlib
 import inspect
 
-from lbt.datasets.base_dataset import LBTDataset
 from ludwig.datasets.base_dataset import BaseDataset
+
+from lbt.datasets.base_dataset import LBTDataset
 
 DATASET_REGISTRY = {}
 

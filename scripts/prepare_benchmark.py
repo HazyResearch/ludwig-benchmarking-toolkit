@@ -1,0 +1,507 @@
+"""Full benchmark preparation pipeline.
+
+Usage:
+    # Prepare OpenML-CC18 suite (72 datasets)
+    python scripts/prepare_benchmark.py --openml-suite 99 \\
+        --registry benchmark/dataset_registry.json \\
+        --configs-dir benchmark/configs
+
+    # Prepare Ludwig builtins
+    python scripts/prepare_benchmark.py --ludwig-builtins \\
+        --registry benchmark/dataset_registry.json \\
+        --configs-dir benchmark/configs
+
+    # Prepare specific datasets
+    python scripts/prepare_benchmark.py --datasets openml_task_7592 titanic \\
+        --registry benchmark/dataset_registry.json \\
+        --configs-dir benchmark/configs
+
+    # Dry run — show what would happen
+    python scripts/prepare_benchmark.py --openml-suite 99 --dry-run
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import logging
+import sys
+import time
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Quality check
+# ---------------------------------------------------------------------------
+
+@dataclass
+class QualityCheckResult:
+    passed: bool
+    reason: str
+
+
+def check_dataset_quality(df: "pd.DataFrame", min_rows: int = 50, min_cols: int = 2) -> QualityCheckResult:
+    """Basic sanity checks on a DataFrame before generating configs.
+
+    Checks:
+    - Minimum row count (default 50)
+    - Minimum column count (default 2: at least one input + one output)
+    - Not all-NA (entire DataFrame)
+    - At least one column has more than 1 distinct non-null value
+
+    Returns QualityCheckResult with passed=True/False and a human-readable reason.
+    """
+    import pandas as pd
+
+    n_rows, n_cols = df.shape
+
+    if n_rows < min_rows:
+        return QualityCheckResult(passed=False, reason=f"Too few rows: {n_rows} < {min_rows}")
+
+    if n_cols < min_cols:
+        return QualityCheckResult(passed=False, reason=f"Too few columns: {n_cols} < {min_cols}")
+
+    # Check for entirely-empty DataFrame
+    if df.isnull().all(axis=None):
+        return QualityCheckResult(passed=False, reason="All values are NA")
+
+    # Check that at least one column is informative
+    max_distinct = max(df[c].nunique(dropna=True) for c in df.columns)
+    if max_distinct <= 1:
+        return QualityCheckResult(
+            passed=False,
+            reason=f"No column has more than 1 distinct non-null value (max={max_distinct})",
+        )
+
+    # Warn about extremely high missing-value rate but don't fail
+    na_frac = df.isnull().mean().mean()
+    if na_frac > 0.9:
+        logger.warning("Dataset has >90%% missing values (na_frac=%.2f) — proceeding anyway", na_frac)
+
+    return QualityCheckResult(passed=True, reason="OK")
+
+
+# ---------------------------------------------------------------------------
+# Dataset loading
+# ---------------------------------------------------------------------------
+
+def _load_dataframe_for_entry(entry) -> "pd.DataFrame":
+    """Load the full un-split DataFrame for a DatasetEntry."""
+    import pandas as pd
+
+    source = entry.source
+
+    if source == "path":
+        if not entry.local_path:
+            raise ValueError(f"[{entry.name}] source='path' but local_path is not set")
+        p = Path(entry.local_path)
+        return pd.read_parquet(p) if p.suffix == ".parquet" else pd.read_csv(p)
+
+    elif source == "openml":
+        if entry.openml_task_id is None:
+            raise ValueError(f"[{entry.name}] source='openml' but openml_task_id is not set")
+        import openml
+        task = openml.tasks.get_task(entry.openml_task_id)
+        dataset = task.get_dataset()
+        X, y, _, _ = dataset.get_data(task=task)
+        target_name = task.target_name
+        X[target_name] = y
+        # Store the task-provided target for later
+        entry._openml_target = target_name
+        return X
+
+    elif source == "ludwig":
+        from ludwig.datasets import get_dataset
+        loader = get_dataset(entry.name)
+        train, val, test = loader.load(split=True)
+        frames = [d for d in (train, val, test) if d is not None and len(d) > 0]
+        return pd.concat(frames, ignore_index=True)
+
+    elif source == "kaggle":
+        if not entry.local_path:
+            raise ValueError(
+                f"[{entry.name}] source='kaggle' but local_path is not set — download first"
+            )
+        p = Path(entry.local_path)
+        return pd.read_parquet(p) if p.suffix == ".parquet" else pd.read_csv(p)
+
+    else:
+        raise ValueError(f"Unknown source: {source!r}")
+
+
+# ---------------------------------------------------------------------------
+# Config generation (mirrors generate_configs.py logic, importable here)
+# ---------------------------------------------------------------------------
+
+def _generate_and_write_configs(
+    entry,
+    df: "pd.DataFrame",
+    configs_dir: Path,
+    n: int,
+    seed: int,
+) -> int:
+    """Generate, validate, and write configs. Returns count of valid configs written."""
+    from ludwig.automl.config_sampler import configs_from_dataframe
+    from ludwig.automl.config_validator import validate_config_for_dataset
+
+    target_column = entry.target_column
+    if not target_column:
+        raise ValueError(f"[{entry.name}] target_column is not set")
+
+    sampled = configs_from_dataframe(df, target_column=target_column, n=n, seed=seed)
+    valid_configs = [
+        sc.config_dict for sc in sampled
+        if validate_config_for_dataset(sc.config_dict, df).is_valid
+    ]
+
+    if valid_configs:
+        out_dir = configs_dir / entry.name
+        out_dir.mkdir(parents=True, exist_ok=True)
+        jsonl_path = out_dir / "configs.jsonl"
+        with jsonl_path.open("w") as f:
+            for cfg in valid_configs:
+                f.write(json.dumps(cfg) + "\n")
+
+    return len(valid_configs)
+
+
+# ---------------------------------------------------------------------------
+# Summary table (Rich if available, plain text fallback)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class _DatasetSummaryRow:
+    name: str
+    source: str
+    n_rows: int
+    n_features: int
+    task_type: str
+    target_column: str
+    quality: str
+    n_configs: int
+    elapsed_s: float
+    error: str
+
+
+def _print_summary_table(rows: list[_DatasetSummaryRow]) -> None:
+    try:
+        from rich.console import Console
+        from rich.table import Table
+
+        table = Table(title="Benchmark Preparation Summary", show_lines=False)
+        table.add_column("Dataset", style="cyan", no_wrap=True)
+        table.add_column("Source")
+        table.add_column("Rows", justify="right")
+        table.add_column("Feats", justify="right")
+        table.add_column("Task")
+        table.add_column("Target")
+        table.add_column("Quality")
+        table.add_column("Configs", justify="right")
+        table.add_column("Time(s)", justify="right")
+        table.add_column("Error")
+
+        for row in rows:
+            quality_style = "green" if row.quality == "PASS" else "red"
+            table.add_row(
+                row.name,
+                row.source,
+                str(row.n_rows) if row.n_rows else "-",
+                str(row.n_features) if row.n_features else "-",
+                row.task_type or "-",
+                row.target_column or "-",
+                f"[{quality_style}]{row.quality}[/{quality_style}]",
+                str(row.n_configs) if row.n_configs else "-",
+                f"{row.elapsed_s:.1f}",
+                row.error or "",
+            )
+
+        Console().print(table)
+
+    except ImportError:
+        # Plain text fallback
+        header = f"{'Dataset':<35} {'Source':<8} {'Rows':>7} {'Feats':>5} {'Task':<12} {'Target':<20} {'Quality':<6} {'Configs':>7} {'Time':>6}  Error"
+        print()
+        print(header)
+        print("-" * len(header))
+        for row in rows:
+            print(
+                f"{row.name:<35} {row.source:<8} {str(row.n_rows) if row.n_rows else '-':>7} "
+                f"{str(row.n_features) if row.n_features else '-':>5} {row.task_type or '-':<12} "
+                f"{(row.target_column or '-'):<20} {row.quality:<6} "
+                f"{str(row.n_configs) if row.n_configs else '-':>7} {row.elapsed_s:>6.1f}  {row.error or ''}"
+            )
+
+
+# ---------------------------------------------------------------------------
+# Core pipeline
+# ---------------------------------------------------------------------------
+
+def _prepare_entry(
+    entry,
+    configs_dir: Path,
+    n: int,
+    seed: int,
+    skip_quality_check: bool,
+    dry_run: bool,
+) -> _DatasetSummaryRow:
+    """Run the full prepare pipeline for one DatasetEntry."""
+    t0 = time.monotonic()
+    summary = _DatasetSummaryRow(
+        name=entry.name,
+        source=entry.source,
+        n_rows=entry.n_rows or 0,
+        n_features=entry.n_features or 0,
+        task_type=entry.task_type or "",
+        target_column=entry.target_column or "",
+        quality="",
+        n_configs=0,
+        elapsed_s=0.0,
+        error="",
+    )
+
+    try:
+        # 1. Load data
+        df = _load_dataframe_for_entry(entry)
+
+        # 2. Quality check
+        if not skip_quality_check:
+            qr = check_dataset_quality(df)
+            summary.quality = "PASS" if qr.passed else "FAIL"
+            if not qr.passed:
+                logger.warning("[%s] Quality FAIL: %s — skipping", entry.name, qr.reason)
+                if not dry_run:
+                    entry.quality_passed = False
+                summary.elapsed_s = time.monotonic() - t0
+                return summary
+        else:
+            summary.quality = "SKIP"
+
+        # 3. Target detection (if not already set)
+        if not entry.target_column:
+            # OpenML tasks already set _openml_target during load
+            if hasattr(entry, "_openml_target") and entry._openml_target:
+                entry.target_column = entry._openml_target
+            else:
+                from ludwig.automl.target_detection import detect_target_column
+                det = detect_target_column(df)
+                entry.target_column = det.column
+                logger.info(
+                    "[%s] Auto-detected target: %s (confidence=%.2f)",
+                    entry.name, det.column, det.confidence
+                )
+
+        # 4. Infer task type from target column if not set
+        if not entry.task_type and entry.target_column in df.columns:
+            from ludwig.automl.target_detection import infer_task_type
+            entry.task_type = infer_task_type(df[entry.target_column]).value
+
+        # 5. Update metadata
+        entry.n_rows = len(df)
+        entry.n_features = df.shape[1]
+        if not skip_quality_check:
+            entry.quality_passed = True
+
+        # Populate summary fields
+        summary.n_rows = entry.n_rows
+        summary.n_features = entry.n_features
+        summary.task_type = entry.task_type or ""
+        summary.target_column = entry.target_column or ""
+
+        # 6. Generate configs
+        if not dry_run:
+            n_configs = _generate_and_write_configs(entry, df, configs_dir, n, seed)
+            entry.n_configs = n_configs
+            summary.n_configs = n_configs
+        else:
+            # In dry-run mode, count without writing
+            from ludwig.automl.config_sampler import configs_from_dataframe
+            from ludwig.automl.config_validator import validate_config_for_dataset
+            sampled = configs_from_dataframe(df, target_column=entry.target_column, n=n, seed=seed)
+            n_valid = sum(
+                1 for sc in sampled
+                if validate_config_for_dataset(sc.config_dict, df).is_valid
+            )
+            summary.n_configs = n_valid
+
+    except Exception as exc:
+        logger.error("[%s] Failed: %s", entry.name, exc)
+        summary.error = str(exc)
+        summary.quality = summary.quality or "ERROR"
+
+    summary.elapsed_s = time.monotonic() - t0
+    return summary
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="End-to-end benchmark preparation: download → quality check → configs.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+    source_group = parser.add_argument_group("Dataset source (pick one or more)")
+    source_group.add_argument(
+        "--openml-suite",
+        type=int,
+        metavar="SUITE_ID",
+        help="Add and prepare all tasks from an OpenML benchmark suite (e.g. 99 for CC18)",
+    )
+    source_group.add_argument(
+        "--ludwig-builtins",
+        action="store_true",
+        help="Add and prepare all Ludwig built-in datasets",
+    )
+    source_group.add_argument(
+        "--datasets",
+        nargs="+",
+        metavar="DATASET_NAME",
+        help="Prepare specific datasets already in the registry",
+    )
+
+    parser.add_argument(
+        "--registry",
+        default="benchmark/dataset_registry.json",
+        help="Path to dataset_registry.json (default: benchmark/dataset_registry.json)",
+    )
+    parser.add_argument(
+        "--configs-dir",
+        default="benchmark/configs",
+        help="Directory to write configs.jsonl files (default: benchmark/configs)",
+    )
+    parser.add_argument(
+        "--n",
+        type=int,
+        default=100,
+        help="Number of configs to generate per dataset (default: 100)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed (default: 42)",
+    )
+    parser.add_argument(
+        "--skip-quality-check",
+        action="store_true",
+        help="Skip the quality check step",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Run the pipeline but do not write any files or update registry",
+    )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Skip datasets that already have a configs.jsonl",
+    )
+
+    return parser
+
+
+def main() -> None:
+    # Allow running as `python scripts/prepare_benchmark.py` from repo root
+    sys.path.insert(0, str(Path(__file__).parent.parent))
+    from benchmark.dataset_registry import (
+        DatasetRegistry,
+        DatasetEntry,
+        register_openml_suite,
+        register_ludwig_builtins,
+    )
+
+    parser = _build_parser()
+    args = parser.parse_args()
+
+    if not any([args.openml_suite, args.ludwig_builtins, args.datasets]):
+        parser.print_help()
+        sys.exit(1)
+
+    registry_path = Path(args.registry)
+    configs_dir = Path(args.configs_dir)
+    registry = DatasetRegistry(registry_path)
+
+    # Expand dataset list from requested sources
+    if args.openml_suite is not None:
+        added = register_openml_suite(registry, args.openml_suite)
+        logger.info("Registered %d datasets from OpenML suite %d", added, args.openml_suite)
+        if not args.dry_run:
+            registry.save()
+
+    if args.ludwig_builtins:
+        added = register_ludwig_builtins(registry)
+        logger.info("Registered %d Ludwig built-in datasets", added)
+        if not args.dry_run:
+            registry.save()
+
+    # Determine which entries to process
+    if args.datasets:
+        entries = []
+        for name in args.datasets:
+            e = registry.get(name)
+            if e is None:
+                logger.error("Dataset '%s' not found in registry — skipping", name)
+            else:
+                entries.append(e)
+    elif args.openml_suite is not None and not args.ludwig_builtins:
+        # Only the suite datasets
+        suite_tag = f"suite_{args.openml_suite}"
+        entries = [e for e in registry.all() if suite_tag in e.tags]
+    elif args.ludwig_builtins and not args.openml_suite:
+        entries = [e for e in registry.all() if "ludwig_builtin" in e.tags]
+    else:
+        entries = registry.all()
+
+    # Sort by priority descending
+    entries = sorted(entries, key=lambda e: -e.priority)
+
+    # --resume: skip datasets that already have configs.jsonl
+    if args.resume:
+        before = len(entries)
+        entries = [
+            e for e in entries
+            if not (configs_dir / e.name / "configs.jsonl").exists()
+        ]
+        logger.info("--resume: skipping %d datasets that already have configs.jsonl", before - len(entries))
+
+    logger.info("Preparing %d datasets ...", len(entries))
+
+    summary_rows: list[_DatasetSummaryRow] = []
+    for entry in entries:
+        logger.info("Processing: %s", entry.name)
+        row = _prepare_entry(
+            entry,
+            configs_dir=configs_dir,
+            n=args.n,
+            seed=args.seed,
+            skip_quality_check=args.skip_quality_check,
+            dry_run=args.dry_run,
+        )
+        summary_rows.append(row)
+
+        # Save registry after each dataset (crash-safe progress)
+        if not args.dry_run:
+            registry.save()
+
+    _print_summary_table(summary_rows)
+
+    n_ok = sum(1 for r in summary_rows if not r.error and r.quality in ("PASS", "SKIP"))
+    n_fail_quality = sum(1 for r in summary_rows if r.quality == "FAIL")
+    n_error = sum(1 for r in summary_rows if r.error)
+    total_configs = sum(r.n_configs for r in summary_rows)
+
+    print(f"\nTotal: {len(summary_rows)} datasets | "
+          f"{n_ok} OK | {n_fail_quality} quality fail | {n_error} error | "
+          f"{total_configs} configs generated")
+    if args.dry_run:
+        print("[DRY RUN] No files were written.")
+
+
+if __name__ == "__main__":
+    main()

@@ -7,3 +7,8 @@ wget
 fiber
 bayesmark>=0.0.7
 pySOT
+duckdb>=0.10.0
+openml>=0.14.0
+filelock>=3.12.0
+rich>=13.0.0
+kaggle>=1.6.0

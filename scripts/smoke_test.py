@@ -1,7 +1,7 @@
 """End-to-end smoke test: 1 epoch, minimal model, across all datasets in the metadata YAML.
 
-Loads up to SAMPLE_ROWS rows from each dataset, runs one epoch of a tiny concat model,
-and reports PASS / FAIL for each. Does not save any results.
+Supports all Ludwig modalities: tabular, text, image, audio, and generative tasks.
+Loads up to SAMPLE_ROWS rows from each dataset, runs one epoch, and reports PASS/FAIL.
 
 Usage:
     python scripts/smoke_test.py [--metadata-yaml dataset_metadata.yaml] [--gpu-id 0]
@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import logging
 import os
+import re
 import sys
 import time
 import traceback
@@ -21,26 +22,14 @@ import yaml
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-SAMPLE_ROWS = 1000  # rows to use per dataset (fast, still exercises full pipeline)
-
-MINIMAL_CONFIG = {
-    "combiner": {"type": "concat"},
-    "trainer": {
-        "epochs": 1,
-        "batch_size": 32,
-        "early_stop": -1,
-    },
-}
-
+SAMPLE_ROWS = 1000
 
 
 def _check_kaggle_credentials() -> tuple[str, str] | None:
-    """Return (username, key) if Kaggle credentials are available, else None."""
     username = os.environ.get("KAGGLE_USERNAME")
     key = os.environ.get("KAGGLE_KEY")
     if username and key:
         return username, key
-
     config_dir = os.environ.get("KAGGLE_CONFIG_DIR", os.path.expanduser("~/.kaggle"))
     token_path = Path(config_dir) / "kaggle.json"
     if token_path.exists():
@@ -48,12 +37,10 @@ def _check_kaggle_credentials() -> tuple[str, str] | None:
         data = json.loads(token_path.read_text())
         if data.get("username") and data.get("key"):
             return data["username"], data["key"]
-
     return None
 
 
 def _prompt_kaggle_setup():
-    """Print setup instructions and exit if credentials are missing."""
     print(
         "\n  Kaggle credentials not found.\n"
         "\n"
@@ -69,17 +56,14 @@ def _prompt_kaggle_setup():
 
 
 def _kaggle_competition_for_dataset(name: str) -> str | None:
-    """Return the Kaggle competition slug for a Ludwig dataset, or None."""
     try:
         from ludwig.datasets import get_dataset
-        loader = get_dataset(name)
-        return loader.config.kaggle_competition
+        return get_dataset(name).config.kaggle_competition
     except Exception:
         return None
 
 
 def _exit_competition_rules(competition: str, dataset_name: str):
-    """Print competition rules URL and exit with instructions."""
     rules_url = f"https://www.kaggle.com/competitions/{competition}/rules"
     print(
         f"\n  Competition rules not accepted for '{dataset_name}'.\n"
@@ -90,6 +74,91 @@ def _exit_competition_rules(competition: str, dataset_name: str):
         f"  3. Re-run this script\n"
     )
     sys.exit(1)
+
+
+def _infer_feature_type(series) -> str:
+    """Infer Ludwig feature type from a pandas Series."""
+    import pandas as pd
+    if pd.api.types.is_float_dtype(series) or pd.api.types.is_integer_dtype(series):
+        return "number"
+    sample = series.dropna().astype(str).head(30)
+    if sample.empty:
+        return "category"
+    # Image / audio path detection
+    if sample.str.match(r'.*\.(jpe?g|png|gif|bmp|tiff?)$', case=False).mean() > 0.5:
+        return "image"
+    if sample.str.match(r'.*\.(wav|mp3|flac|ogg|aac)$', case=False).mean() > 0.5:
+        return "audio"
+    # Long strings → text (avg > 30 chars or any value > 100 chars)
+    avg_len = sample.str.len().mean()
+    max_len = sample.str.len().max()
+    if avg_len > 30 or max_len > 100:
+        return "text"
+    return "category"
+
+
+def _make_config(df, target_column: str, task_type: str, loader_config=None) -> dict:
+    """Build a minimal Ludwig config, using the dataset's own feature types when available."""
+    import pandas as pd
+
+    # Determine output features
+    if loader_config is not None and loader_config.output_features:
+        output_features = [dict(f) for f in loader_config.output_features]
+    else:
+        output_type_map = {
+            "binary": "binary",
+            "multiclass": "category",
+            "binary_or_multiclass": "category",
+            "regression": "number",
+            "text_generation": "text",
+            "image_segmentation": "image",
+        }
+        out_type = output_type_map.get(task_type, "category")
+        output_features = [{"name": target_column, "type": out_type}]
+
+    target_cols = {f["name"] for f in output_features}
+
+    # Build input features with smart type detection
+    input_features = []
+    for col in df.columns:
+        if col in target_cols:
+            continue
+        feat_type = _infer_feature_type(df[col])
+        feat = {"name": col, "type": feat_type}
+        # Minimal encoder overrides to keep smoke test fast
+        if feat_type == "image":
+            feat["encoder"] = {"type": "stacked_cnn", "num_filters": 8, "num_conv_layers": 1}
+        elif feat_type == "audio":
+            feat["encoder"] = {"type": "stacked_cnn", "num_filters": 8, "num_conv_layers": 1}
+        input_features.append(feat)
+
+    if not input_features:
+        raise ValueError(f"No input features found — target_cols={target_cols}, df.cols={list(df.columns)}")
+
+    input_types = {f["type"] for f in input_features}
+    output_types = {f["type"] for f in output_features}
+    has_text_out = "text" in output_types
+    has_image_out = "image" in output_types
+    has_image_in = "image" in input_types
+    has_audio_in = "audio" in input_types
+    has_text_in = "text" in input_types
+
+    # Batch size scaled by modality cost
+    if has_text_out or has_image_out:
+        batch_size = 4
+    elif has_image_in or has_audio_in:
+        batch_size = 16
+    elif has_text_in:
+        batch_size = 16
+    else:
+        batch_size = 32
+
+    return {
+        "input_features": input_features,
+        "output_features": output_features,
+        "combiner": {"type": "concat"},
+        "trainer": {"epochs": 1, "batch_size": batch_size, "early_stop": -1},
+    }
 
 
 def _load_df(name: str, meta: dict):
@@ -141,40 +210,21 @@ def _load_df(name: str, meta: dict):
     else:
         raise ValueError(f"Unknown source: {source!r}")
 
-    # Sample down
     if len(df) > SAMPLE_ROWS:
         df = df.sample(n=SAMPLE_ROWS, random_state=42).reset_index(drop=True)
 
     return df
 
 
-def _make_config(df, target_column: str, task_type: str) -> dict:
-    import pandas as pd
-
-    output_type_map = {
-        "binary": "binary",
-        "multiclass": "category",
-        "regression": "number",
-    }
-    out_type = output_type_map.get(task_type, "category")
-
-    input_features = []
-    for col in df.columns:
-        if col == target_column:
-            continue
-        dtype = df[col].dtype
-        if pd.api.types.is_float_dtype(dtype) or pd.api.types.is_integer_dtype(dtype):
-            feat_type = "number"
-        else:
-            feat_type = "category"
-        input_features.append({"name": col, "type": feat_type})
-
-    cfg = {
-        "input_features": input_features,
-        "output_features": [{"name": target_column, "type": out_type}],
-        **MINIMAL_CONFIG,
-    }
-    return cfg
+def _get_loader_config(name: str, source: str):
+    """Return the Ludwig DatasetConfig for a built-in dataset, or None."""
+    if source != "ludwig":
+        return None
+    try:
+        from ludwig.datasets import get_dataset
+        return get_dataset(name).config
+    except Exception:
+        return None
 
 
 def _run_one(name: str, meta: dict, gpu_id: int | None) -> tuple[str, float, str | None]:
@@ -188,20 +238,27 @@ def _run_one(name: str, meta: dict, gpu_id: int | None) -> tuple[str, float, str
     t0 = time.monotonic()
     try:
         df = _load_df(name, meta)
-
-        target_col = meta["target_column"]
+        # For OpenML tasks, target_column comes from the task itself if not set in YAML
+        target_col = meta.get("target_column")
+        if not target_col and meta.get("source") == "openml":
+            import openml
+            task = openml.tasks.get_task(meta["openml_task_id"])
+            target_col = task.target_name
+        if not target_col:
+            raise ValueError(f"target_column not set for {name!r}")
         task_type = meta.get("task_type", "binary")
 
-        # Drop rows where target is NaN (unlabeled competition splits)
+        # Drop rows where target is NaN (unlabeled splits)
         df = df.dropna(subset=[target_col]).reset_index(drop=True)
         if len(df) < 10:
             return "skip", 0.0, f"only {len(df)} labeled rows after dropna"
 
-        # Train/val split (80/20)
+        loader_config = _get_loader_config(name, meta.get("source", ""))
+
         from sklearn.model_selection import train_test_split
         train_df, val_df = train_test_split(df, test_size=0.2, random_state=42)
 
-        config = _make_config(df, target_col, task_type)
+        config = _make_config(df, target_col, task_type, loader_config=loader_config)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             model = LudwigModel(config=config, logging_level=logging.ERROR)
@@ -221,18 +278,8 @@ def _run_one(name: str, meta: dict, gpu_id: int | None) -> tuple[str, float, str
         return "fail", time.monotonic() - t0, traceback.format_exc()
 
 
-_OUTPUT_TYPE_TO_TASK = {
-    "binary": "binary",
-    "category": "multiclass",
-    "number": "regression",
-}
-
-# Output types not suitable for the generic automl pipeline (generative tasks)
-_SKIP_OUTPUT_TYPES = {"text", "image", "audio", "sequence", "set", "bag", "vector", "timeseries"}
-
-
 def _discover_ludwig_datasets() -> dict:
-    """Auto-discover all Ludwig built-in datasets and build a metadata dict."""
+    """Auto-discover all Ludwig built-in datasets."""
     from ludwig.datasets import list_datasets, get_dataset
 
     meta = {}
@@ -243,15 +290,14 @@ def _discover_ludwig_datasets() -> dict:
             ofs = getattr(cfg, "output_features", [])
             if not ofs:
                 continue
-            out_type = ofs[0].get("type", "")
-            if out_type in _SKIP_OUTPUT_TYPES:
-                continue
-            task_type = _OUTPUT_TYPE_TO_TASK.get(out_type)
-            if task_type is None:
-                continue
+            out = ofs[0]
+            out_type = out.get("type", "")
+            type_map = {"binary": "binary", "category": "multiclass", "number": "regression",
+                        "text": "text_generation", "image": "image"}
+            task_type = type_map.get(out_type, out_type)
             meta[name] = {
                 "source": "ludwig",
-                "target_column": ofs[0]["name"],
+                "target_column": out["name"],
                 "task_type": task_type,
             }
         except Exception:
@@ -266,20 +312,14 @@ def _is_403_error(err: str | None) -> bool:
 def main():
     parser = argparse.ArgumentParser(description="Smoke-test all datasets: 1 epoch, minimal model")
     parser.add_argument("--metadata-yaml", default=None,
-        help="YAML file of datasets to test. If omitted, auto-discovers all Ludwig built-ins.")
+        help="Path to dataset_metadata.yaml. If omitted, auto-discovers Ludwig built-ins.")
     parser.add_argument("--gpu-id", type=int, default=None)
-    parser.add_argument(
-        "--datasets", nargs="*", default=None,
-        help="Subset of dataset names to test. Default: all.",
-    )
-    parser.add_argument(
-        "--skip-sources", nargs="*", default=[],
-        help="Skip datasets from these sources. Default: none skipped.",
-    )
-    parser.add_argument(
-        "--skip-kaggle", action="store_true", default=False,
-        help="Skip all Kaggle competition datasets without attempting download.",
-    )
+    parser.add_argument("--datasets", nargs="*", default=None,
+        help="Subset of dataset names to test. Default: all.")
+    parser.add_argument("--skip-sources", nargs="*", default=[],
+        help="Skip datasets whose source matches any of these values.")
+    parser.add_argument("--skip-kaggle", action="store_true", default=False,
+        help="Skip all Kaggle datasets without prompting.")
     args = parser.parse_args()
 
     if args.metadata_yaml:
@@ -292,7 +332,6 @@ def main():
     names = args.datasets if args.datasets else list(meta_all.keys())
     skip_sources = set(args.skip_sources or [])
 
-    # Kaggle datasets in this run (to check credentials once upfront)
     kaggle_names = [
         n for n in names
         if "kaggle_credentials_required" in (meta_all.get(n, {}).get("tags") or [])
@@ -303,13 +342,12 @@ def main():
     if has_kaggle:
         kaggle_creds = _check_kaggle_credentials()
         if not kaggle_creds:
-            _prompt_kaggle_setup()  # exits
+            _prompt_kaggle_setup()
 
     results: list[dict] = []
     passes = fails = skips = 0
 
     col_w = max(len(n) for n in names) + 2
-
     print(f"\n{'DATASET':<{col_w}}  {'STATUS':<6}  {'TIME':>6}  NOTE")
     print("-" * (col_w + 30))
 
@@ -337,7 +375,6 @@ def main():
 
         status, elapsed, err = _run_one(name, meta, args.gpu_id)
 
-        # If competition download failed with 403: print rules URL and exit
         if status == "fail" and is_kaggle and _is_403_error(err):
             competition = _kaggle_competition_for_dataset(name)
             if competition:
@@ -353,7 +390,6 @@ def main():
             skips += 1
 
         print(f"{name:<{col_w}}  {status.upper():<6}  {elapsed:>5.1f}s  {note}")
-
         results.append({"dataset": name, "status": status, "elapsed": elapsed, "error": err})
 
     print("-" * (col_w + 30))

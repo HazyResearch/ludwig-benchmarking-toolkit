@@ -1296,3 +1296,957 @@ customer_churn_prediction:
   task_type: binary
   priority: 3
   tags: [tabular, classification, kaggle, kaggle_credentials_required]
+
+# ---------------------------------------------------------------------------
+# OpenML AutoML Benchmark — suite 271 (classification) + suite 218 + suite 353 (regression)
+# ---------------------------------------------------------------------------
+openml_task_10090:
+  source: openml
+  openml_task_id: 10090
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_146212:
+  source: openml
+  openml_task_id: 146212
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_146606:
+  source: openml
+  openml_task_id: 146606
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_146818:
+  source: openml
+  openml_task_id: 146818
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_168329:
+  source: openml
+  openml_task_id: 168329
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_168330:
+  source: openml
+  openml_task_id: 168330
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_168331:
+  source: openml
+  openml_task_id: 168331
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_168332:
+  source: openml
+  openml_task_id: 168332
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_168335:
+  source: openml
+  openml_task_id: 168335
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_168337:
+  source: openml
+  openml_task_id: 168337
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_168338:
+  source: openml
+  openml_task_id: 168338
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_168350:
+  source: openml
+  openml_task_id: 168350
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_168757:
+  source: openml
+  openml_task_id: 168757
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_168784:
+  source: openml
+  openml_task_id: 168784
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_168868:
+  source: openml
+  openml_task_id: 168868
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_168908:
+  source: openml
+  openml_task_id: 168908
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_168909:
+  source: openml
+  openml_task_id: 168909
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_168910:
+  source: openml
+  openml_task_id: 168910
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_168911:
+  source: openml
+  openml_task_id: 168911
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_168912:
+  source: openml
+  openml_task_id: 168912
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_189354:
+  source: openml
+  openml_task_id: 189354
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_189355:
+  source: openml
+  openml_task_id: 189355
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_189356:
+  source: openml
+  openml_task_id: 189356
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_189922:
+  source: openml
+  openml_task_id: 189922
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_190137:
+  source: openml
+  openml_task_id: 190137
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_190146:
+  source: openml
+  openml_task_id: 190146
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_190392:
+  source: openml
+  openml_task_id: 190392
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_190410:
+  source: openml
+  openml_task_id: 190410
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_190411:
+  source: openml
+  openml_task_id: 190411
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_190412:
+  source: openml
+  openml_task_id: 190412
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_2073:
+  source: openml
+  openml_task_id: 2073
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_211979:
+  source: openml
+  openml_task_id: 211979
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_211986:
+  source: openml
+  openml_task_id: 211986
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_34539:
+  source: openml
+  openml_task_id: 34539
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_218']
+
+openml_task_359953:
+  source: openml
+  openml_task_id: 359953
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359954:
+  source: openml
+  openml_task_id: 359954
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359955:
+  source: openml
+  openml_task_id: 359955
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359956:
+  source: openml
+  openml_task_id: 359956
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359957:
+  source: openml
+  openml_task_id: 359957
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359958:
+  source: openml
+  openml_task_id: 359958
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359959:
+  source: openml
+  openml_task_id: 359959
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359960:
+  source: openml
+  openml_task_id: 359960
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359961:
+  source: openml
+  openml_task_id: 359961
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359962:
+  source: openml
+  openml_task_id: 359962
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359963:
+  source: openml
+  openml_task_id: 359963
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359964:
+  source: openml
+  openml_task_id: 359964
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359965:
+  source: openml
+  openml_task_id: 359965
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359966:
+  source: openml
+  openml_task_id: 359966
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359967:
+  source: openml
+  openml_task_id: 359967
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359968:
+  source: openml
+  openml_task_id: 359968
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359969:
+  source: openml
+  openml_task_id: 359969
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359970:
+  source: openml
+  openml_task_id: 359970
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359971:
+  source: openml
+  openml_task_id: 359971
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359972:
+  source: openml
+  openml_task_id: 359972
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359973:
+  source: openml
+  openml_task_id: 359973
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359974:
+  source: openml
+  openml_task_id: 359974
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359975:
+  source: openml
+  openml_task_id: 359975
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359976:
+  source: openml
+  openml_task_id: 359976
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359977:
+  source: openml
+  openml_task_id: 359977
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359979:
+  source: openml
+  openml_task_id: 359979
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359980:
+  source: openml
+  openml_task_id: 359980
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359981:
+  source: openml
+  openml_task_id: 359981
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359982:
+  source: openml
+  openml_task_id: 359982
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359983:
+  source: openml
+  openml_task_id: 359983
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359984:
+  source: openml
+  openml_task_id: 359984
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359985:
+  source: openml
+  openml_task_id: 359985
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359986:
+  source: openml
+  openml_task_id: 359986
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359987:
+  source: openml
+  openml_task_id: 359987
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359988:
+  source: openml
+  openml_task_id: 359988
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359989:
+  source: openml
+  openml_task_id: 359989
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359990:
+  source: openml
+  openml_task_id: 359990
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359991:
+  source: openml
+  openml_task_id: 359991
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359992:
+  source: openml
+  openml_task_id: 359992
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359993:
+  source: openml
+  openml_task_id: 359993
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_359994:
+  source: openml
+  openml_task_id: 359994
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_360112:
+  source: openml
+  openml_task_id: 360112
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_360113:
+  source: openml
+  openml_task_id: 360113
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_360114:
+  source: openml
+  openml_task_id: 360114
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_360975:
+  source: openml
+  openml_task_id: 360975
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_361234:
+  source: openml
+  openml_task_id: 361234
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361235:
+  source: openml
+  openml_task_id: 361235
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361236:
+  source: openml
+  openml_task_id: 361236
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361237:
+  source: openml
+  openml_task_id: 361237
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361241:
+  source: openml
+  openml_task_id: 361241
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361242:
+  source: openml
+  openml_task_id: 361242
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361243:
+  source: openml
+  openml_task_id: 361243
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361244:
+  source: openml
+  openml_task_id: 361244
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361247:
+  source: openml
+  openml_task_id: 361247
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361249:
+  source: openml
+  openml_task_id: 361249
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361250:
+  source: openml
+  openml_task_id: 361250
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361251:
+  source: openml
+  openml_task_id: 361251
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361252:
+  source: openml
+  openml_task_id: 361252
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361253:
+  source: openml
+  openml_task_id: 361253
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361254:
+  source: openml
+  openml_task_id: 361254
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361255:
+  source: openml
+  openml_task_id: 361255
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361256:
+  source: openml
+  openml_task_id: 361256
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361257:
+  source: openml
+  openml_task_id: 361257
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361258:
+  source: openml
+  openml_task_id: 361258
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361259:
+  source: openml
+  openml_task_id: 361259
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361260:
+  source: openml
+  openml_task_id: 361260
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361261:
+  source: openml
+  openml_task_id: 361261
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361264:
+  source: openml
+  openml_task_id: 361264
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361266:
+  source: openml
+  openml_task_id: 361266
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361267:
+  source: openml
+  openml_task_id: 361267
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361268:
+  source: openml
+  openml_task_id: 361268
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361269:
+  source: openml
+  openml_task_id: 361269
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361272:
+  source: openml
+  openml_task_id: 361272
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361616:
+  source: openml
+  openml_task_id: 361616
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361617:
+  source: openml
+  openml_task_id: 361617
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361618:
+  source: openml
+  openml_task_id: 361618
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361619:
+  source: openml
+  openml_task_id: 361619
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361621:
+  source: openml
+  openml_task_id: 361621
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361622:
+  source: openml
+  openml_task_id: 361622
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_361623:
+  source: openml
+  openml_task_id: 361623
+  task_type: regression
+  priority: 7
+  tags: ['tabular', 'suite_353']
+
+openml_task_3945:
+  source: openml
+  openml_task_id: 3945
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+openml_task_7593:
+  source: openml
+  openml_task_id: 7593
+  task_type: binary_or_multiclass
+  priority: 7
+  tags: ['tabular', 'suite_271']
+
+
+# ---------------------------------------------------------------------------
+# New Ludwig built-in datasets — all modalities
+# ---------------------------------------------------------------------------
+
+# --- Text classification (free download) ---
+
+ohsumed_cmu:
+  source: ludwig
+  description: "OHSUMED medical abstract classification (6-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
+  tags: [text, classification, medical, ludwig_builtin]
+
+reuters_cmu:
+  source: ludwig
+  description: "Reuters-21578 newswire classification (6-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
+  tags: [text, classification, news, ludwig_builtin]
+
+jigsaw_unintended_bias100K:
+  source: ludwig
+  description: "Jigsaw toxicity classification 100K (binary) — text + identity features"
+  target_column: target
+  task_type: binary
+  priority: 6
+  tags: [text, classification, toxicity, multimodal, ludwig_builtin]
+
+# --- Multimodal tabular+text (free download via S3) ---
+
+google_qa_answer_type_reason_explanation:
+  source: ludwig
+  description: "Google Quest QA — answer type/reason/explanation score (regression)"
+  target_column: answer_type_reason_explanation
+  task_type: regression
+  priority: 5
+  tags: [text, tabular, multimodal, regression, ludwig_builtin]
+
+google_qa_question_type_reason_explanation:
+  source: ludwig
+  description: "Google Quest QA — question type/reason/explanation score (regression)"
+  target_column: question_type_reason_explanation
+  task_type: regression
+  priority: 5
+  tags: [text, tabular, multimodal, regression, ludwig_builtin]
+
+mercari_price_suggestion100K:
+  source: ludwig
+  description: "Mercari price suggestion 100K — product title+description → log price"
+  target_column: log_price
+  task_type: regression
+  priority: 6
+  tags: [text, tabular, multimodal, regression, ludwig_builtin]
+
+# --- Rating / multi-target regression (free download) ---
+
+goodbooks_books:
+  source: ludwig
+  description: "Goodbooks-10K average book rating (regression)"
+  target_column: average_rating
+  task_type: regression
+  priority: 4
+  tags: [tabular, regression, ludwig_builtin]
+
+# --- Generative / seq2seq (free download) ---
+
+alpaca:
+  source: ludwig
+  description: "Stanford Alpaca instruction-following dataset (text generation)"
+  target_column: output
+  task_type: text_generation
+  priority: 4
+  tags: [text, generative, llm, instruction_tuning, ludwig_builtin]
+
+code_alpaca:
+  source: ludwig
+  description: "Code Alpaca code-generation instruction dataset (text generation)"
+  target_column: output
+  task_type: text_generation
+  priority: 4
+  tags: [text, generative, llm, code, ludwig_builtin]
+
+# --- Image (free download) ---
+
+flickr8k:
+  source: ludwig
+  description: "Flickr8k image captioning (text generation from image)"
+  target_column: caption0
+  task_type: text_generation
+  priority: 4
+  tags: [image, text, generative, captioning, ludwig_builtin]
+
+# --- Kaggle dataset API required (credentials needed, no competition rules) ---
+
+consumer_complaints:
+  source: ludwig
+  description: "Consumer complaint issue classification (text→category) [kaggle_credentials_required]"
+  target_column: Issue
+  task_type: multiclass
+  priority: 4
+  tags: [text, classification, kaggle, kaggle_credentials_required]
+
+ohsumed_7400:
+  source: ludwig
+  description: "OHSUMED 7400 medical text classification (category) [kaggle_credentials_required]"
+  target_column: intent
+  task_type: multiclass
+  priority: 4
+  tags: [text, classification, medical, kaggle, kaggle_credentials_required]
+
+wmt15:
+  source: ludwig
+  description: "WMT15 French→English translation (text generation) [kaggle_credentials_required]"
+  target_column: en
+  task_type: text_generation
+  priority: 3
+  tags: [text, generative, translation, kaggle, kaggle_credentials_required]
+
+camseq:
+  source: ludwig
+  description: "CamSeq semantic segmentation (image→image mask) [kaggle_credentials_required]"
+  target_column: mask_path
+  task_type: image_segmentation
+  priority: 3
+  tags: [image, segmentation, kaggle, kaggle_credentials_required]
+
+# --- Kaggle competition required ---
+
+talkingdata_adtrack_fraud_detection:
+  source: ludwig
+  description: "TalkingData AdTracking fraud detection (binary) [kaggle_credentials_required]"
+  target_column: is_attributed
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, fraud, kaggle, kaggle_credentials_required]

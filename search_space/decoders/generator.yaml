@@ -1,0 +1,7 @@
+name: generator
+feature_types: [text, sequence]
+hyperparameters:
+  num_layers:
+    values: [1, 2]
+  cell_type:
+    values: [lstm, gru]

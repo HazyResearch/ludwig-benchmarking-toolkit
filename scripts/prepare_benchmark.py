@@ -11,6 +11,11 @@ Usage:
         --registry benchmark/dataset_registry.json \\
         --configs-dir benchmark/configs
 
+    # Prepare from dataset_metadata.yaml (YAML-driven, most flexible)
+    python scripts/prepare_benchmark.py --metadata-yaml dataset_metadata.yaml \\
+        --registry benchmark/dataset_registry.json \\
+        --configs-dir benchmark/configs
+
     # Prepare specific datasets
     python scripts/prepare_benchmark.py --datasets openml_task_7592 titanic \\
         --registry benchmark/dataset_registry.json \\
@@ -364,6 +369,15 @@ def _build_parser() -> argparse.ArgumentParser:
         metavar="DATASET_NAME",
         help="Prepare specific datasets already in the registry",
     )
+    source_group.add_argument(
+        "--metadata-yaml",
+        metavar="PATH",
+        help=(
+            "Register datasets from a dataset_metadata.yaml file and prepare them. "
+            "Equivalent to --openml-suite / --ludwig-builtins but driven by a YAML manifest. "
+            "Default path: dataset_metadata.yaml in the repo root."
+        ),
+    )
 
     parser.add_argument(
         "--registry",
@@ -414,12 +428,13 @@ def main() -> None:
         DatasetEntry,
         register_openml_suite,
         register_ludwig_builtins,
+        register_from_metadata_yaml,
     )
 
     parser = _build_parser()
     args = parser.parse_args()
 
-    if not any([args.openml_suite, args.ludwig_builtins, args.datasets]):
+    if not any([args.openml_suite, args.ludwig_builtins, args.datasets, args.metadata_yaml]):
         parser.print_help()
         sys.exit(1)
 
@@ -437,6 +452,16 @@ def main() -> None:
     if args.ludwig_builtins:
         added = register_ludwig_builtins(registry)
         logger.info("Registered %d Ludwig built-in datasets", added)
+        if not args.dry_run:
+            registry.save()
+
+    if args.metadata_yaml is not None:
+        yaml_path = Path(args.metadata_yaml)
+        if not yaml_path.exists():
+            logger.error("--metadata-yaml path does not exist: %s", yaml_path)
+            sys.exit(1)
+        added = register_from_metadata_yaml(registry, yaml_path)
+        logger.info("Registered %d datasets from metadata YAML: %s", added, yaml_path)
         if not args.dry_run:
             registry.save()
 

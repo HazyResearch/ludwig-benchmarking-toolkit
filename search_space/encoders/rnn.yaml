@@ -1,0 +1,11 @@
+name: rnn
+feature_types: [sequence, text, audio, timeseries]
+hyperparameters:
+  num_layers:
+    values: [1, 2, 3]
+  state_size:
+    values: [64, 128, 256]
+  dropout:
+    values: [0.0, 0.1, 0.3]
+  cell_type:
+    values: [rnn, lstm, gru]

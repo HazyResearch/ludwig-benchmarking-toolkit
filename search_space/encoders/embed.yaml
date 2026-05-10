@@ -1,0 +1,5 @@
+name: embed
+feature_types: [bag, set, date, h3]
+hyperparameters:
+  embedding_size:
+    values: [32, 64, 128]

@@ -1,0 +1,4 @@
+name: tabpfn_v2
+constraints:
+  requires_all_tabular: true
+hyperparameters: {}

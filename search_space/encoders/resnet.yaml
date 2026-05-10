@@ -1,0 +1,5 @@
+name: resnet
+feature_types: [image]
+hyperparameters:
+  resnet_size:
+    values: [18, 34, 50]

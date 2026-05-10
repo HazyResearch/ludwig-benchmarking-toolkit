@@ -1,0 +1,10 @@
+name: tabnet
+constraints:
+  requires_all_tabular: true
+hyperparameters:
+  size:
+    values: [8, 16, 32]
+  output_size:
+    values: [8, 16, 32]
+  num_steps:
+    values: [3, 5, 7]

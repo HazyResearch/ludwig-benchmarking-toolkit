@@ -139,6 +139,66 @@ def register_ludwig_builtins(
     return added
 
 
+def register_from_metadata_yaml(
+    registry: DatasetRegistry,
+    metadata_yaml_path: str | Path,
+    priority_override: int | None = None,
+) -> int:
+    """Register datasets from a dataset_metadata.yaml file.
+
+    Each top-level key in the YAML becomes the dataset name. Supported fields
+    map directly to DatasetEntry attributes:
+        source, openml_task_id, kaggle_ref, local_path, target_column,
+        task_type, priority, tags, notes, description (stored in notes).
+
+    Args:
+        registry: The DatasetRegistry to populate.
+        metadata_yaml_path: Path to a YAML file in dataset_metadata.yaml format.
+        priority_override: When set, overrides the priority for every entry.
+
+    Returns:
+        Count of newly added entries (entries already in the registry are skipped).
+    """
+    try:
+        import yaml
+    except ImportError:
+        raise ImportError("PyYAML required: pip install pyyaml")
+
+    path = Path(metadata_yaml_path)
+    with path.open() as f:
+        raw: dict = yaml.safe_load(f)
+
+    if not raw:
+        return 0
+
+    added = 0
+    for name, meta in raw.items():
+        if name in registry:
+            continue
+
+        priority = priority_override if priority_override is not None else meta.get("priority", 0)
+
+        # "description" is informational; fold it into notes if notes not set
+        notes = meta.get("notes", "") or meta.get("description", "")
+
+        entry = DatasetEntry(
+            name=name,
+            source=meta["source"],
+            openml_task_id=meta.get("openml_task_id"),
+            kaggle_ref=meta.get("kaggle_ref"),
+            local_path=meta.get("local_path"),
+            target_column=meta.get("target_column"),
+            task_type=meta.get("task_type"),
+            priority=priority,
+            tags=list(meta.get("tags") or []),
+            notes=notes,
+        )
+        registry.add(entry)
+        added += 1
+
+    return added
+
+
 def register_kaggle_filtered(
     registry: DatasetRegistry,
     ml_ready_json: str | Path,

@@ -1,0 +1,5 @@
+name: vit
+feature_types: [image]
+hyperparameters:
+  patch_size:
+    values: [16, 32]

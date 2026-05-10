@@ -1,0 +1,4 @@
+name: sequence_concat
+constraints:
+  requires_sequential: true
+hyperparameters: {}

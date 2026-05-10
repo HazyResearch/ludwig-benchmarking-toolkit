@@ -1,0 +1,3 @@
+name: passthrough
+feature_types: [binary, number, category, sequence, text, date, vector, timeseries, audio]
+hyperparameters: {}

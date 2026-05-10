@@ -1,0 +1,5 @@
+name: auto_transformer
+feature_types: [text]
+hyperparameters:
+  trainable:
+    values: [true, false]

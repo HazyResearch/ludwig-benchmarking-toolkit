@@ -1,0 +1,4 @@
+name: sequence
+constraints:
+  requires_sequential: true
+hyperparameters: {}

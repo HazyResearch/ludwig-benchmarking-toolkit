@@ -1,0 +1,7 @@
+name: stacked_cnn
+feature_types: [sequence, text, audio, timeseries, image]
+hyperparameters:
+  num_filters:
+    values: [64, 128, 256]
+  dropout:
+    values: [0.0, 0.1, 0.3]

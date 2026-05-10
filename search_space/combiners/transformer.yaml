@@ -1,0 +1,8 @@
+name: transformer
+hyperparameters:
+  num_heads:
+    values: [2, 4, 8]
+  num_layers:
+    values: [1, 2, 3]
+  dropout:
+    values: [0.0, 0.1, 0.3]

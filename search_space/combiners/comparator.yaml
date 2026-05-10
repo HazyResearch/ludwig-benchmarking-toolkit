@@ -1,0 +1,4 @@
+name: comparator
+constraints:
+  exact_n_inputs: 2
+hyperparameters: {}

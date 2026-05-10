@@ -1,26 +1,324 @@
+# Ludwig Mega-AutoML Benchmark — Dataset Metadata
+#
+# Each top-level key is the dataset_name used throughout the system.
+# Fields:
+#   source          : "openml" | "ludwig" | "kaggle" | "path"
+#   openml_task_id  : integer, required when source=openml
+#   description     : human-readable summary
+#   target_column   : output/label column name
+#   task_type       : "binary" | "multiclass" | "regression"
+#   priority        : integer, higher runs first (default 0)
+#   tags            : list of strings
+
+# ---------------------------------------------------------------------------
+# Tabular — Ludwig built-in
+# ---------------------------------------------------------------------------
+
+adult_census_income:
+  source: ludwig
+  description: "Adult census income prediction (binary, >50K vs <=50K)"
+  target_column: income
+  task_type: binary
+  priority: 9
+  tags: [tabular, classification, ludwig_builtin]
+
+titanic:
+  source: ludwig
+  description: "Titanic survival prediction"
+  target_column: Survived
+  task_type: binary
+  priority: 8
+  tags: [tabular, classification, ludwig_builtin]
+
+california_housing:
+  source: ludwig
+  description: "California housing median house value regression"
+  target_column: target
+  task_type: regression
+  priority: 7
+  tags: [tabular, regression, ludwig_builtin]
+
+forest_cover:
+  source: ludwig
+  description: "Forest cover type prediction (7-class)"
+  target_column: Cover_Type
+  task_type: multiclass
+  priority: 7
+  tags: [tabular, classification, ludwig_builtin]
+
+creditcard_fraud:
+  source: ludwig
+  description: "Credit card fraud detection (binary, highly imbalanced)"
+  target_column: Class
+  task_type: binary
+  priority: 7
+  tags: [tabular, classification, imbalanced, ludwig_builtin]
+
+iris:
+  source: ludwig
+  description: "Iris flower species classification (3-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, small, ludwig_builtin]
+
+mushroom_edibility:
+  source: ludwig
+  description: "Mushroom edibility prediction (binary: edible vs poisonous)"
+  target_column: class
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, ludwig_builtin]
+
+telco_customer_churn:
+  source: ludwig
+  description: "Telecom customer churn prediction (binary)"
+  target_column: Churn
+  task_type: binary
+  priority: 6
+  tags: [tabular, classification, ludwig_builtin]
+
+noshow_appointments:
+  source: ludwig
+  description: "Medical appointment no-show prediction (binary)"
+  target_column: No-show
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, ludwig_builtin]
+
+insurance_lite:
+  source: ludwig
+  description: "Insurance charges regression (small subset)"
+  target_column: charges
+  task_type: regression
+  priority: 4
+  tags: [tabular, regression, small, ludwig_builtin]
+
+naval:
+  source: ludwig
+  description: "Naval propulsion plant turbine decay regression"
+  target_column: turbine_decay
+  task_type: regression
+  priority: 4
+  tags: [tabular, regression, ludwig_builtin]
+
+connect4:
+  source: ludwig
+  description: "Connect-4 opening game outcome prediction (3-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, ludwig_builtin]
+
+electricity:
+  source: ludwig
+  description: "Electricity price direction prediction (binary)"
+  target_column: class
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, ludwig_builtin]
+
+ames_housing:
+  source: ludwig
+  description: "Ames housing sale price regression"
+  target_column: SalePrice
+  task_type: regression
+  priority: 6
+  tags: [tabular, regression, ludwig_builtin]
+
+allstate_claims_severity:
+  source: ludwig
+  description: "Allstate insurance claims severity regression"
+  target_column: loss
+  task_type: regression
+  priority: 5
+  tags: [tabular, regression, ludwig_builtin]
+
+# ---------------------------------------------------------------------------
+# Text — Ludwig built-in
+# ---------------------------------------------------------------------------
+
 fever:
-  data_class: Fever
-  input_name: claim
-  output_name: label
-  output_type: category
+  source: ludwig
+  description: "Fact verification / NLI (SUPPORTS / REFUTES / NOT ENOUGH INFO)"
+  target_column: label
+  task_type: multiclass
+  priority: 7
+  tags: [text, classification, nli, ludwig_builtin]
 
 scicite:
-  data_class: SciCite
-  input_name: string
-  output_name: label
-  output_type: category
+  source: ludwig
+  description: "Scientific citation intent classification (3-class)"
+  target_column: label
+  task_type: multiclass
+  priority: 6
+  tags: [text, classification, ludwig_builtin]
 
 goemotions:
-  data_class: GoEmotions
-  input_name: text
-  output_name: emotion_ids
-  output_type: set
+  source: ludwig
+  description: "Reddit comment emotion classification (multi-label, 28 emotions)"
+  target_column: emotion_ids
+  task_type: multiclass
+  priority: 5
+  tags: [text, multilabel, ludwig_builtin]
 
-amazonreview:
-  data_class: AmazonReview
-  input_name: reviewText
-  output_name: overall
-  output_type: category 
+amazon_reviews:
+  source: ludwig
+  description: "Amazon product review star rating (1-5)"
+  target_column: label
+  task_type: multiclass
+  priority: 6
+  tags: [text, classification, ludwig_builtin]
 
+yelp_review_polarity:
+  source: ludwig
+  description: "Yelp review sentiment polarity (binary: 1-2 stars vs 3-5 stars)"
+  target_column: label
+  task_type: binary
+  priority: 6
+  tags: [text, classification, ludwig_builtin]
 
+sst2:
+  source: ludwig
+  description: "Stanford Sentiment Treebank v2 (binary: positive / negative)"
+  target_column: label
+  task_type: binary
+  priority: 7
+  tags: [text, classification, sentiment, ludwig_builtin]
 
+imdb:
+  source: ludwig
+  description: "IMDB movie review sentiment (binary)"
+  target_column: sentiment
+  task_type: binary
+  priority: 6
+  tags: [text, classification, sentiment, ludwig_builtin]
+
+ethos_binary:
+  source: ludwig
+  description: "Hate speech detection (binary)"
+  target_column: isHate
+  task_type: binary
+  priority: 5
+  tags: [text, classification, hate_speech, ludwig_builtin]
+
+sarcastic_headlines:
+  source: ludwig
+  description: "News headline sarcasm detection (binary)"
+  target_column: is_sarcastic
+  task_type: binary
+  priority: 5
+  tags: [text, classification, ludwig_builtin]
+
+agnews:
+  source: ludwig
+  description: "AG News topic classification (4-class: World/Sports/Business/Tech)"
+  target_column: class_index
+  task_type: multiclass
+  priority: 6
+  tags: [text, classification, ludwig_builtin]
+
+dbpedia:
+  source: ludwig
+  description: "DBpedia ontology classification (14-class)"
+  target_column: label
+  task_type: multiclass
+  priority: 5
+  tags: [text, classification, ludwig_builtin]
+
+irony:
+  source: ludwig
+  description: "Twitter irony detection (binary)"
+  target_column: label
+  task_type: binary
+  priority: 4
+  tags: [text, classification, ludwig_builtin]
+
+# ---------------------------------------------------------------------------
+# Multi-modal — Ludwig built-in
+# ---------------------------------------------------------------------------
+
+mnist:
+  source: ludwig
+  description: "MNIST handwritten digit recognition (10-class image classification)"
+  target_column: label
+  task_type: multiclass
+  priority: 6
+  tags: [image, classification, ludwig_builtin]
+
+flickr8k:
+  source: ludwig
+  description: "Flickr 8k image captioning (image → text)"
+  target_column: caption0
+  task_type: regression
+  priority: 3
+  tags: [image, text, multimodal, captioning, ludwig_builtin]
+
+# ---------------------------------------------------------------------------
+# OpenML CC18 suite — representative tasks (suite_id=99)
+# Full suite registration is done programmatically via --openml-suite 99.
+# These entries are the highest-value individual tasks.
+# ---------------------------------------------------------------------------
+
+openml_task_7592:
+  source: openml
+  openml_task_id: 7592
+  description: "Adult income prediction (binary classification)"
+  target_column: class
+  task_type: binary
+  priority: 10
+  tags: [tabular, classification, suite_99]
+
+openml_task_3:
+  source: openml
+  openml_task_id: 3
+  description: "kr-vs-kp chess end-game (binary classification)"
+  target_column: class
+  task_type: binary
+  priority: 8
+  tags: [tabular, classification, suite_99]
+
+openml_task_31:
+  source: openml
+  openml_task_id: 31
+  description: "credit-g — German credit risk (binary classification)"
+  target_column: class
+  task_type: binary
+  priority: 8
+  tags: [tabular, classification, suite_99]
+
+openml_task_37:
+  source: openml
+  openml_task_id: 37
+  description: "diabetes — Pima Indians diabetes (binary classification)"
+  target_column: class
+  task_type: binary
+  priority: 8
+  tags: [tabular, classification, suite_99]
+
+openml_task_49:
+  source: openml
+  openml_task_id: 49
+  description: "tic-tac-toe endgame (binary classification)"
+  target_column: class
+  task_type: binary
+  priority: 7
+  tags: [tabular, classification, suite_99]
+
+openml_task_2079:
+  source: openml
+  openml_task_id: 2079
+  description: "hill-valley signal detection (binary classification)"
+  target_column: class
+  task_type: binary
+  priority: 7
+  tags: [tabular, classification, suite_99]
+
+openml_task_14965:
+  source: openml
+  openml_task_id: 14965
+  description: "bank-marketing telemarketing campaign (binary classification)"
+  target_column: class
+  task_type: binary
+  priority: 8
+  tags: [tabular, classification, suite_99]

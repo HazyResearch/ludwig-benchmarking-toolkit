@@ -1,0 +1,5 @@
+name: classifier
+feature_types: [category]
+hyperparameters:
+  num_layers:
+    values: [1, 2]

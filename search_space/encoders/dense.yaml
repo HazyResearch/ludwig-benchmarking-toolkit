@@ -1,0 +1,9 @@
+name: dense
+feature_types: [binary, number, category, date, vector]
+hyperparameters:
+  num_layers:
+    values: [1, 2, 3]
+  output_size:
+    values: [64, 128, 256]
+  dropout:
+    values: [0.0, 0.1, 0.3]

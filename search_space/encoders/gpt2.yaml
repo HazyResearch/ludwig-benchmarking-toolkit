@@ -1,0 +1,8 @@
+name: gpt2
+feature_types: [text]
+preprocessing:
+  word_tokenizer: hf_tokenizer
+  pretrained_model_name_or_path: gpt2
+hyperparameters:
+  trainable:
+    values: [false]

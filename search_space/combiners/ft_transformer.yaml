@@ -1,0 +1,10 @@
+name: ft_transformer
+constraints:
+  requires_all_tabular: true
+hyperparameters:
+  num_fc_layers:
+    values: [1, 2, 3]
+  output_size:
+    values: [64, 128, 256]
+  dropout:
+    values: [0.0, 0.1, 0.3]

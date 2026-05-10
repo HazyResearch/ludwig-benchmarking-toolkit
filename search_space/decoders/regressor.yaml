@@ -1,0 +1,3 @@
+name: regressor
+feature_types: [binary, number, vector]
+hyperparameters: {}

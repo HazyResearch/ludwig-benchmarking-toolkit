@@ -1,0 +1,8 @@
+name: xlm
+feature_types: [text]
+preprocessing:
+  word_tokenizer: hf_tokenizer
+  pretrained_model_name_or_path: xlm-mlm-enfr-1024
+hyperparameters:
+  trainable:
+    values: [false]

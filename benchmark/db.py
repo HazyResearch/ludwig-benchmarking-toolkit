@@ -12,7 +12,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-import duckdb
 import pandas as pd
 
 RUNS_SCHEMA = {
@@ -172,12 +171,15 @@ class BenchmarkDB:
 
     def _query(self, sql: str, rebuild: bool = True) -> pd.DataFrame:
         """Execute a DuckDB SQL query against the runs index."""
+        try:
+            import duckdb
+        except ImportError:
+            raise ImportError("duckdb is required for analytical queries: pip install duckdb")
         if rebuild:
             self._rebuild_index()
         if not self.index_path.exists():
             return pd.DataFrame(columns=list(RUNS_SCHEMA.keys()))
         con = duckdb.connect(":memory:")
-        # Register the parquet file as a virtual table
         result = con.execute(
             sql.replace("{index}", str(self.index_path))
         ).fetchdf()
@@ -222,22 +224,14 @@ class BenchmarkDB:
         if not self.index_path.exists():
             return pd.DataFrame(columns=list(RUNS_SCHEMA.keys()))
 
-        con = duckdb.connect(":memory:")
         df = pd.read_parquet(self.index_path)
-        con.register("runs", df)
-
-        clauses = []
         if dataset_name is not None:
-            clauses.append(f"dataset_name = '{dataset_name}'")
+            df = df[df["dataset_name"] == dataset_name]
         if status is not None:
-            clauses.append(f"status = '{status}'")
+            df = df[df["status"] == status]
         if combiner is not None:
-            clauses.append(f"combiner = '{combiner}'")
-
-        where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
-        result = con.execute(f"SELECT * FROM runs {where}").fetchdf()
-        con.close()
-        return result
+            df = df[df["combiner"] == combiner]
+        return df.reset_index(drop=True)
 
     def best_per_dataset(self) -> pd.DataFrame:
         """Returns the best run (highest primary_metric_value) per dataset."""
@@ -245,26 +239,12 @@ class BenchmarkDB:
         if not self.index_path.exists():
             return pd.DataFrame()
 
-        con = duckdb.connect(":memory:")
         df = pd.read_parquet(self.index_path)
-        con.register("runs", df)
-        result = con.execute(
-            """
-            SELECT r.*
-            FROM runs r
-            INNER JOIN (
-                SELECT dataset_name, MAX(primary_metric_value) AS best_val
-                FROM runs
-                WHERE status = 'done'
-                GROUP BY dataset_name
-            ) b
-            ON r.dataset_name = b.dataset_name
-            AND r.primary_metric_value = b.best_val
-            AND r.status = 'done'
-            """
-        ).fetchdf()
-        con.close()
-        return result
+        done = df[df["status"] == "done"].copy()
+        if done.empty:
+            return pd.DataFrame()
+        idx = done.groupby("dataset_name")["primary_metric_value"].idxmax()
+        return done.loc[idx].reset_index(drop=True)
 
     def combiner_win_rates(self) -> pd.DataFrame:
         """Returns how often each combiner is the best on its dataset."""
@@ -272,31 +252,12 @@ class BenchmarkDB:
         if best.empty:
             return pd.DataFrame(columns=["combiner", "wins", "win_rate"])
 
-        self._rebuild_index()
-        con = duckdb.connect(":memory:")
-        con.register("best", best)
-
         df_all = pd.read_parquet(self.index_path)
-        con.register("runs", df_all)
+        n_datasets = df_all[df_all["status"] == "done"]["dataset_name"].nunique()
 
-        result = con.execute(
-            """
-            WITH dataset_counts AS (
-                SELECT COUNT(DISTINCT dataset_name) AS n_datasets
-                FROM runs
-                WHERE status = 'done'
-            )
-            SELECT
-                b.combiner,
-                COUNT(*) AS wins,
-                ROUND(COUNT(*) * 100.0 / (SELECT n_datasets FROM dataset_counts), 2) AS win_rate
-            FROM best b
-            GROUP BY b.combiner
-            ORDER BY wins DESC
-            """
-        ).fetchdf()
-        con.close()
-        return result
+        wins = best.groupby("combiner").size().reset_index(name="wins")
+        wins["win_rate"] = (wins["wins"] * 100.0 / max(n_datasets, 1)).round(2)
+        return wins.sort_values("wins", ascending=False).reset_index(drop=True)
 
     def progress_summary(self) -> dict:
         """Returns dict with counts: total/queued/running/done/failed."""
@@ -304,19 +265,8 @@ class BenchmarkDB:
         if not self.index_path.exists():
             return {"total": 0, "queued": 0, "running": 0, "done": 0, "failed": 0}
 
-        con = duckdb.connect(":memory:")
         df = pd.read_parquet(self.index_path)
-        con.register("runs", df)
-        rows = con.execute(
-            """
-            SELECT status, COUNT(*) AS cnt
-            FROM runs
-            GROUP BY status
-            """
-        ).fetchdf()
-        con.close()
-
-        counts = dict(zip(rows["status"], rows["cnt"]))
+        counts = df["status"].value_counts().to_dict()
         total = sum(counts.values())
         return {
             "total": total,
@@ -330,3 +280,24 @@ class BenchmarkDB:
         """Export all done runs to CSV."""
         df = self.list_runs(status="done")
         df.to_csv(output_path, index=False)
+
+    def export_dashboard(
+        self,
+        output_dir: str,
+        registry: dict | None = None,
+        export_run_details: bool = True,
+    ) -> "Path":
+        """Export all results into the structured JSON hierarchy for the dashboard.
+
+        Delegates to :func:`benchmark.exporter.export_dashboard`. See that module for
+        a description of the output layout and the meaning of each parameter.
+        """
+        from pathlib import Path as _Path  # noqa: PLC0415
+        from benchmark.exporter import export_dashboard as _export  # noqa: PLC0415
+
+        return _export(
+            db=self,
+            output_dir=output_dir,
+            registry=registry,
+            export_run_details=export_run_details,
+        )

@@ -50,17 +50,20 @@ class RunResult:
 # ---------------------------------------------------------------------------
 
 def _load_dataset_openml(task_id: int) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    """Load dataset from OpenML using Ludwig's OpenMLLoader, returning (train, val, test)."""
-    from ludwig.datasets.dataset_config import DatasetConfig
-    from ludwig.datasets.loaders.openml_loader import OpenMLLoader
+    """Load dataset from OpenML, returning (train, val, test)."""
+    from sklearn.model_selection import train_test_split
+    import openml
 
-    config = DatasetConfig(
-        name=f"openml_task_{task_id}",
-        version="1",
-        openml_task_id=task_id,
-    )
-    loader = OpenMLLoader(config=config)
-    return loader.load(split=True)
+    task = openml.tasks.get_task(task_id)
+    dataset = task.get_dataset()
+    target_name = task.target_name
+    X, y, _, _ = dataset.get_data(target=target_name, dataset_format="dataframe")
+    if y is not None:
+        X[target_name] = y
+
+    train_val, test = train_test_split(X, test_size=0.2, random_state=42)
+    train, val = train_test_split(train_val, test_size=0.1, random_state=42)
+    return train.reset_index(drop=True), val.reset_index(drop=True), test.reset_index(drop=True)
 
 
 def _load_dataset_path(path: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -80,10 +83,34 @@ def _load_dataset_path(path: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFr
 
 def _load_dataset_ludwig(name: str) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """Load a Ludwig built-in dataset."""
+    from sklearn.model_selection import train_test_split
     from ludwig.datasets import get_dataset
 
     loader = get_dataset(name)
-    return loader.load(split=True)
+    try:
+        train, val, test = loader.load(split=True)
+    except (ValueError, TypeError):
+        # Dataset has no 'split' column — load whole then split manually
+        df = loader.load(split=False)
+        train_val, test = train_test_split(df, test_size=0.2, random_state=42)
+        train, val = train_test_split(train_val, test_size=0.1, random_state=42)
+        return train.reset_index(drop=True), val.reset_index(drop=True), test.reset_index(drop=True)
+
+    # Some Ludwig datasets have no dedicated test split
+    if test is None or len(test) == 0:
+        # Check if val is unlabeled (e.g. Kaggle competition splits where val = hidden test set)
+        # Heuristic: if any column is >80% NaN, val is unlabeled — rebuild all splits from train
+        val_max_null = val.isnull().mean().max() if val is not None and len(val) > 0 else 1.0
+        if val_max_null > 0.8:
+            train, test = train_test_split(train, test_size=0.15, random_state=42)
+            train, val = train_test_split(train, test_size=0.15, random_state=42)
+        else:
+            val, test = train_test_split(val, test_size=0.2, random_state=42)
+        val = val.reset_index(drop=True)
+        test = test.reset_index(drop=True)
+        train = train.reset_index(drop=True)
+
+    return train, val, test
 
 
 def _load_dataset(cfg: RunConfig) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:

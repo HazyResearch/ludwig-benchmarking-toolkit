@@ -109,6 +109,9 @@ class BenchmarkScheduler:
         Returns count of newly enqueued jobs.
         """
         configs_dir = Path(configs_dir)
+        if not configs_dir.exists():
+            logger.warning("configs_dir does not exist: %s — no jobs enqueued", configs_dir)
+            return 0
         count = 0
 
         with self._connect() as conn:
@@ -228,7 +231,7 @@ class BenchmarkScheduler:
     # Execution modes
     # ------------------------------------------------------------------
 
-    def run_sequential(self, time_limit_per_job: int = 1800) -> None:
+    def run_sequential(self, time_limit_per_job: int = 1800, gpu_id: int | None = None) -> None:
         """Run all queued jobs sequentially (for single-machine use)."""
         from benchmark.runner import RunResult, run_experiment
 
@@ -239,7 +242,7 @@ class BenchmarkScheduler:
                 break
 
             run_id = str(uuid.uuid4())
-            cfg = _job_to_run_config(job, run_id, time_limit_per_job)
+            cfg = _job_to_run_config(job, run_id, time_limit_per_job, gpu_id=gpu_id)
 
             self.mark_running(job.job_id)
             logger.info("Running job %s / run %s (%s / %s)", job.job_id, run_id, job.dataset_name, job.config_hash)
@@ -369,7 +372,7 @@ def _hash_config(cfg: dict) -> str:
     return hashlib.sha256(blob).hexdigest()[:16]
 
 
-def _job_to_run_config(job: BenchmarkJob, run_id: str, time_limit_s: int) -> "RunConfig":  # noqa: F821
+def _job_to_run_config(job: BenchmarkJob, run_id: str, time_limit_s: int, gpu_id: int | None = None) -> "RunConfig":  # noqa: F821
     import json
 
     from benchmark.runner import RunConfig
@@ -404,6 +407,7 @@ def _job_to_run_config(job: BenchmarkJob, run_id: str, time_limit_s: int) -> "Ru
         output_dir=str(Path(job.config_path).parent.parent.parent / "output" / run_id),
         seed=job.seed,
         time_limit_s=time_limit_s,
+        gpu_id=gpu_id,
     )
 
 

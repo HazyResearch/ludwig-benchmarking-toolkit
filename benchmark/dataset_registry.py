@@ -119,18 +119,23 @@ def load_dataframe_for_entry(entry: DatasetEntry) -> "pd.DataFrame":
         import openml
         task = openml.tasks.get_task(entry.openml_task_id)
         dataset = task.get_dataset()
-        X, y, _, _ = dataset.get_data(task=task)
         target_name = task.target_name
-        X[target_name] = y
+        X, y, _, _ = dataset.get_data(target=target_name, dataset_format="dataframe")
+        if y is not None:
+            X[target_name] = y
         entry._openml_target = target_name  # type: ignore[attr-defined]
         return X
 
     elif source == "ludwig":
         from ludwig.datasets import get_dataset
         loader = get_dataset(entry.name)
-        train, val, test = loader.load(split=True)
-        frames = [d for d in (train, val, test) if d is not None and len(d) > 0]
-        return pd.concat(frames, ignore_index=True)
+        try:
+            train, val, test = loader.load(split=True)
+            frames = [d for d in (train, val, test) if d is not None and len(d) > 0]
+            return pd.concat(frames, ignore_index=True)
+        except (ValueError, TypeError):
+            # Dataset has no 'split' column — load unsplit and return as-is
+            return loader.load(split=False)
 
     elif source == "kaggle":
         if not entry.local_path:
@@ -193,6 +198,7 @@ def register_from_metadata_yaml(
     registry: DatasetRegistry,
     metadata_yaml_path: str | Path,
     priority_override: int | None = None,
+    overwrite: bool = True,
 ) -> int:
     """Register datasets from a dataset_metadata.yaml file.
 
@@ -205,9 +211,11 @@ def register_from_metadata_yaml(
         registry: The DatasetRegistry to populate.
         metadata_yaml_path: Path to a YAML file in dataset_metadata.yaml format.
         priority_override: When set, overrides the priority for every entry.
+        overwrite: When True (default), YAML entries overwrite existing registry entries
+            so the YAML remains the source of truth. Set False to skip existing entries.
 
     Returns:
-        Count of newly added entries (entries already in the registry are skipped).
+        Count of added or updated entries.
     """
     try:
         import yaml
@@ -223,7 +231,7 @@ def register_from_metadata_yaml(
 
     added = 0
     for name, meta in raw.items():
-        if name in registry:
+        if name in registry and not overwrite:
             continue
 
         priority = priority_override if priority_override is not None else meta.get("priority", 0)
@@ -243,7 +251,7 @@ def register_from_metadata_yaml(
             tags=list(meta.get("tags") or []),
             notes=notes,
         )
-        registry.add(entry)
+        registry.add(entry, overwrite=True)
         added += 1
 
     return added

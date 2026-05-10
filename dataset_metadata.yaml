@@ -9,9 +9,12 @@
 #   task_type       : "binary" | "multiclass" | "regression"
 #   priority        : integer, higher runs first (default 0)
 #   tags            : list of strings
+#
+# Datasets marked with [kaggle_credentials_required] need ~/.kaggle/kaggle.json
+# to download; they are skipped by default in the smoke test.
 
 # ---------------------------------------------------------------------------
-# Tabular — Ludwig built-in
+# Tabular — Ludwig built-in (all confirmed passing smoke test)
 # ---------------------------------------------------------------------------
 
 adult_census_income:
@@ -89,15 +92,15 @@ noshow_appointments:
 insurance_lite:
   source: ludwig
   description: "Insurance charges regression (small subset)"
-  target_column: charges
+  target_column: amount
   task_type: regression
   priority: 4
   tags: [tabular, regression, small, ludwig_builtin]
 
 naval:
   source: ludwig
-  description: "Naval propulsion plant turbine decay regression"
-  target_column: turbine_decay
+  description: "Naval propulsion plant compressor decay regression"
+  target_column: gtcdsc
   task_type: regression
   priority: 4
   tags: [tabular, regression, ludwig_builtin]
@@ -105,34 +108,90 @@ naval:
 connect4:
   source: ludwig
   description: "Connect-4 opening game outcome prediction (3-class)"
-  target_column: class
+  target_column: winner
   task_type: multiclass
   priority: 5
   tags: [tabular, classification, ludwig_builtin]
 
 electricity:
   source: ludwig
-  description: "Electricity price direction prediction (binary)"
-  target_column: class
+  description: "Electricity demand regression"
+  target_column: Demand
+  task_type: regression
+  priority: 5
+  tags: [tabular, regression, ludwig_builtin]
+
+higgs:
+  source: ludwig
+  description: "HIGGS boson signal vs background (binary, ~9M rows)"
+  target_column: label
+  task_type: binary
+  priority: 8
+  tags: [tabular, classification, physics, ludwig_builtin]
+
+numerai28pt6:
+  source: ludwig
+  description: "Numerai stock market tournament (binary)"
+  target_column: attribute_21
   task_type: binary
   priority: 5
   tags: [tabular, classification, ludwig_builtin]
 
-ames_housing:
+rossman_store_sales:
   source: ludwig
-  description: "Ames housing sale price regression"
-  target_column: SalePrice
-  task_type: regression
-  priority: 6
-  tags: [tabular, regression, ludwig_builtin]
-
-allstate_claims_severity:
-  source: ludwig
-  description: "Allstate insurance claims severity regression"
-  target_column: loss
+  description: "Rossmann store sales forecasting (regression)"
+  target_column: Sales
   task_type: regression
   priority: 5
   tags: [tabular, regression, ludwig_builtin]
+
+temperature:
+  source: ludwig
+  description: "Temperature forecasting dataset (regression)"
+  target_column: Next_Tmax
+  task_type: regression
+  priority: 4
+  tags: [tabular, regression, ludwig_builtin]
+
+synthetic_fraud:
+  source: ludwig
+  description: "Synthetic financial fraud detection (binary)"
+  target_column: isFraud
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, fraud, ludwig_builtin]
+
+twitter_bots:
+  source: ludwig
+  description: "Twitter bot detection (binary)"
+  target_column: account_type
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, ludwig_builtin]
+
+protein:
+  source: ludwig
+  description: "Protein tertiary structure regression"
+  target_column: RMSD
+  task_type: regression
+  priority: 5
+  tags: [tabular, regression, ludwig_builtin]
+
+poker_hand:
+  source: ludwig
+  description: "Poker hand classification (10-class)"
+  target_column: CLASS
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, ludwig_builtin]
+
+sarcos:
+  source: ludwig
+  description: "SARCOS robot arm joint torque regression"
+  target_column: target0
+  task_type: regression
+  priority: 4
+  tags: [tabular, regression, small, ludwig_builtin]
 
 # ---------------------------------------------------------------------------
 # Text — Ludwig built-in
@@ -145,14 +204,6 @@ fever:
   task_type: multiclass
   priority: 7
   tags: [text, classification, nli, ludwig_builtin]
-
-scicite:
-  source: ludwig
-  description: "Scientific citation intent classification (3-class)"
-  target_column: label
-  task_type: multiclass
-  priority: 6
-  tags: [text, classification, ludwig_builtin]
 
 goemotions:
   source: ludwig
@@ -180,7 +231,7 @@ yelp_review_polarity:
 
 sst2:
   source: ludwig
-  description: "Stanford Sentiment Treebank v2 (binary: positive / negative)"
+  description: "Stanford Sentiment Treebank v2 (binary) — loaded via HuggingFace stanfordnlp/sst2"
   target_column: label
   task_type: binary
   priority: 7
@@ -234,8 +285,64 @@ irony:
   priority: 4
   tags: [text, classification, ludwig_builtin]
 
+bbcnews:
+  source: ludwig
+  description: "BBC News topic classification (5-class)"
+  target_column: category
+  task_type: multiclass
+  priority: 5
+  tags: [text, classification, ludwig_builtin]
+
+reuters_r8:
+  source: ludwig
+  description: "Reuters-21578 news categorization (8-class)"
+  target_column: topic
+  task_type: multiclass
+  priority: 5
+  tags: [text, classification, ludwig_builtin]
+
+sst3:
+  source: ludwig
+  description: "SST-3 sentiment (negative/neutral/positive) — tweet_eval/sentiment via HuggingFace"
+  target_column: label
+  task_type: multiclass
+  priority: 5
+  tags: [text, classification, sentiment, ludwig_builtin]
+
+sst5:
+  source: ludwig
+  description: "SST-5 sentiment (5-class) — SetFit/sst5 via HuggingFace"
+  target_column: label
+  task_type: multiclass
+  priority: 5
+  tags: [text, classification, sentiment, ludwig_builtin]
+
+yahoo_answers:
+  source: ludwig
+  description: "Yahoo Answers topic classification (10-class)"
+  target_column: topic
+  task_type: multiclass
+  priority: 6
+  tags: [text, classification, ludwig_builtin]
+
+amazon_review_polarity:
+  source: ludwig
+  description: "Amazon review polarity (binary: positive vs negative)"
+  target_column: label
+  task_type: binary
+  priority: 5
+  tags: [text, classification, ludwig_builtin]
+
+yelp_reviews:
+  source: ludwig
+  description: "Yelp reviews full star rating (5-class)"
+  target_column: label
+  task_type: multiclass
+  priority: 5
+  tags: [text, classification, ludwig_builtin]
+
 # ---------------------------------------------------------------------------
-# Multi-modal — Ludwig built-in
+# Multi-modal / Image — Ludwig built-in
 # ---------------------------------------------------------------------------
 
 mnist:
@@ -246,79 +353,954 @@ mnist:
   priority: 6
   tags: [image, classification, ludwig_builtin]
 
-flickr8k:
+# ---------------------------------------------------------------------------
+# Tabular (price/recommendation/misc) — Ludwig built-in
+# ---------------------------------------------------------------------------
+
+ae_price_prediction:
   source: ludwig
-  description: "Flickr 8k image captioning (image → text)"
-  target_column: caption0
+  description: "AutoEvaluation car price prediction (regression)"
+  target_column: price
+  task_type: regression
+  priority: 4
+  tags: [tabular, regression, ludwig_builtin]
+
+bookprice_prediction:
+  source: ludwig
+  description: "Book price prediction (regression)"
+  target_column: Price
+  task_type: regression
+  priority: 4
+  tags: [tabular, regression, ludwig_builtin]
+
+california_house_price:
+  source: ludwig
+  description: "California house price prediction from text+tabular features"
+  target_column: Sold Price
+  task_type: regression
+  priority: 5
+  tags: [tabular, regression, ludwig_builtin]
+
+data_scientist_salary:
+  source: ludwig
+  description: "Data scientist salary classification"
+  target_column: Salary
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, ludwig_builtin]
+
+fake_job_postings2:
+  source: ludwig
+  description: "Fake job posting detection (binary)"
+  target_column: fraudulent
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, ludwig_builtin]
+
+imdb_genre_prediction:
+  source: ludwig
+  description: "IMDB movie genre prediction from plot text"
+  target_column: Genre
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, ludwig_builtin]
+
+imbalanced_insurance:
+  source: ludwig
+  description: "Imbalanced insurance claim prediction (binary)"
+  target_column: Response
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, imbalanced, ludwig_builtin]
+
+jc_penney_products:
+  source: ludwig
+  description: "JC Penney product sale price regression"
+  target_column: sale_price
   task_type: regression
   priority: 3
-  tags: [image, text, multimodal, captioning, ludwig_builtin]
+  tags: [tabular, regression, ludwig_builtin]
 
-# ---------------------------------------------------------------------------
-# OpenML CC18 suite — representative tasks (suite_id=99)
-# Full suite registration is done programmatically via --openml-suite 99.
-# These entries are the highest-value individual tasks.
-# ---------------------------------------------------------------------------
-
-openml_task_7592:
-  source: openml
-  openml_task_id: 7592
-  description: "Adult income prediction (binary classification)"
-  target_column: class
+kick_starter_funding:
+  source: ludwig
+  description: "Kickstarter project funding success prediction (binary)"
+  target_column: final_status
   task_type: binary
-  priority: 10
-  tags: [tabular, classification, suite_99]
+  priority: 4
+  tags: [tabular, classification, ludwig_builtin]
+
+melbourne_airbnb:
+  source: ludwig
+  description: "Melbourne Airbnb price regression"
+  target_column: price
+  task_type: regression
+  priority: 4
+  tags: [tabular, regression, ludwig_builtin]
+
+news_channel:
+  source: ludwig
+  description: "News article popularity channel prediction"
+  target_column: channel
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, ludwig_builtin]
+
+news_popularity2:
+  source: ludwig
+  description: "Online news popularity prediction (regression)"
+  target_column: shares
+  task_type: regression
+  priority: 4
+  tags: [tabular, regression, ludwig_builtin]
+
+product_sentiment_machine_hack:
+  source: ludwig
+  description: "Product sentiment classification (MachinehHack)"
+  target_column: Sentiment
+  task_type: multiclass
+  priority: 3
+  tags: [text, classification, ludwig_builtin]
+
+women_clothing_review:
+  source: ludwig
+  description: "Women clothing review rating prediction"
+  target_column: Rating
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, ludwig_builtin]
+
+wine_reviews:
+  source: ludwig
+  description: "Wine reviews points prediction (regression)"
+  target_column: points
+  task_type: regression
+  priority: 4
+  tags: [tabular, regression, ludwig_builtin]
+
+yosemite:
+  source: ludwig
+  description: "Yosemite park visitation prediction"
+  target_column: rec_visitors
+  task_type: regression
+  priority: 3
+  tags: [tabular, regression, ludwig_builtin]
+
+# Multi-label datasets (smoke test skips these via _SKIP_OUTPUT_TYPES but they can be added manually)
+google_quest_qa:
+  source: ludwig
+  description: "Google QUEST Q&A labeling (category output)"
+  target_column: question_type_reason_explanation
+  task_type: multiclass
+  priority: 4
+  tags: [text, classification, ludwig_builtin]
+
+jigsaw_unintended_bias:
+  source: ludwig
+  description: "Jigsaw unintended bias in toxicity classification (binary)"
+  target_column: target
+  task_type: binary
+  priority: 5
+  tags: [text, classification, toxicity, ludwig_builtin]
+
+mercari_price_suggestion:
+  source: ludwig
+  description: "Mercari price suggestion (regression)"
+  target_column: log_price
+  task_type: regression
+  priority: 5
+  tags: [tabular, regression, ludwig_builtin]
+
+kdd_appetency:
+  source: ludwig
+  description: "KDD Cup 2009 Appetency (binary)"
+  target_column: target
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, ludwig_builtin]
+
+kdd_churn:
+  source: ludwig
+  description: "KDD Cup 2009 Churn (binary)"
+  target_column: target
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, ludwig_builtin]
+
+kdd_upselling:
+  source: ludwig
+  description: "KDD Cup 2009 Upselling (binary)"
+  target_column: target
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, ludwig_builtin]
+
+# ---------------------------------------------------------------------------
+# OpenML CC18 Benchmark Suite (suite_id=99) — all 72 tasks confirmed working
+# ---------------------------------------------------------------------------
 
 openml_task_3:
   source: openml
   openml_task_id: 3
-  description: "kr-vs-kp chess end-game (binary classification)"
+  description: "kr-vs-kp: King-Rook vs King-Pawn chess endgame (binary)"
   target_column: class
   task_type: binary
-  priority: 8
+  priority: 6
   tags: [tabular, classification, suite_99]
+
+openml_task_6:
+  source: openml
+  openml_task_id: 6
+  description: "letter: Letter image recognition (26-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, suite_99]
+
+openml_task_11:
+  source: openml
+  openml_task_id: 11
+  description: "balance-scale: Balance scale weight & distance (3-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_12:
+  source: openml
+  openml_task_id: 12
+  description: "mfeat-factors: Handwritten digit features (10-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, suite_99]
+
+openml_task_14:
+  source: openml
+  openml_task_id: 14
+  description: "mfeat-fourier: Handwritten digit Fourier features (10-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, suite_99]
+
+openml_task_15:
+  source: openml
+  openml_task_id: 15
+  description: "breast-w: Wisconsin breast cancer (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 6
+  tags: [tabular, classification, medical, suite_99]
+
+openml_task_16:
+  source: openml
+  openml_task_id: 16
+  description: "mfeat-karhunen: Handwritten digit Karhunen features (10-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 3
+  tags: [tabular, classification, suite_99]
+
+openml_task_18:
+  source: openml
+  openml_task_id: 18
+  description: "mfeat-morphological: Handwritten digit morphological features (10-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 3
+  tags: [tabular, classification, suite_99]
+
+openml_task_22:
+  source: openml
+  openml_task_id: 22
+  description: "mfeat-zernike: Handwritten digit Zernike features (10-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 3
+  tags: [tabular, classification, suite_99]
+
+openml_task_23:
+  source: openml
+  openml_task_id: 23
+  description: "cmc: Contraceptive method choice (3-class)"
+  target_column: Contraceptive_method_used
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_28:
+  source: openml
+  openml_task_id: 28
+  description: "optdigits: Optical handwritten digit recognition (10-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, suite_99]
+
+openml_task_29:
+  source: openml
+  openml_task_id: 29
+  description: "credit-approval: Credit card approval (binary)"
+  target_column: class
+  task_type: binary
+  priority: 6
+  tags: [tabular, classification, small, suite_99]
 
 openml_task_31:
   source: openml
   openml_task_id: 31
-  description: "credit-g — German credit risk (binary classification)"
+  description: "credit-g: German credit (binary)"
   target_column: class
   task_type: binary
-  priority: 8
+  priority: 7
+  tags: [tabular, classification, suite_99]
+
+openml_task_32:
+  source: openml
+  openml_task_id: 32
+  description: "pendigits: Pen-based handwritten digit recognition (10-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
   tags: [tabular, classification, suite_99]
 
 openml_task_37:
   source: openml
   openml_task_id: 37
-  description: "diabetes — Pima Indians diabetes (binary classification)"
+  description: "diabetes: Pima Indians diabetes (binary)"
   target_column: class
   task_type: binary
   priority: 8
+  tags: [tabular, classification, medical, suite_99]
+
+openml_task_43:
+  source: openml
+  openml_task_id: 43
+  description: "spambase: Email spam classification (binary)"
+  target_column: class
+  task_type: binary
+  priority: 7
   tags: [tabular, classification, suite_99]
+
+openml_task_45:
+  source: openml
+  openml_task_id: 45
+  description: "splice: DNA splice-junction gene sequences (3-class)"
+  target_column: Class
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, bioinformatics, suite_99]
 
 openml_task_49:
   source: openml
   openml_task_id: 49
-  description: "tic-tac-toe endgame (binary classification)"
+  description: "tic-tac-toe: Tic-tac-toe endgame (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_53:
+  source: openml
+  openml_task_id: 53
+  description: "vehicle: Vehicle silhouette type (4-class)"
+  target_column: Class
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, suite_99]
+
+openml_task_219:
+  source: openml
+  openml_task_id: 219
+  description: "electricity: Electricity price direction (binary)"
   target_column: class
   task_type: binary
-  priority: 7
+  priority: 6
+  tags: [tabular, classification, suite_99]
+
+openml_task_2074:
+  source: openml
+  openml_task_id: 2074
+  description: "satimage: Satellite image land use (6-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
   tags: [tabular, classification, suite_99]
 
 openml_task_2079:
   source: openml
   openml_task_id: 2079
-  description: "hill-valley signal detection (binary classification)"
+  description: "eucalyptus: Eucalyptus seedling survival utility (5-class)"
+  target_column: Utility
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_3021:
+  source: openml
+  openml_task_id: 3021
+  description: "sick: Thyroid sick euthyroid (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, medical, suite_99]
+
+openml_task_3022:
+  source: openml
+  openml_task_id: 3022
+  description: "vowel: Vowel recognition (11-class)"
+  target_column: Class
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, suite_99]
+
+openml_task_3481:
+  source: openml
+  openml_task_id: 3481
+  description: "isolet: Isolated letter speech recognition (26-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, suite_99]
+
+openml_task_3549:
+  source: openml
+  openml_task_id: 3549
+  description: "analcatdata_authorship: Authorship attribution (4-class)"
+  target_column: Author
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_3560:
+  source: openml
+  openml_task_id: 3560
+  description: "analcatdata_dmft: Dental treatment prevention (6-class)"
+  target_column: Prevention
+  task_type: multiclass
+  priority: 3
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_3573:
+  source: openml
+  openml_task_id: 3573
+  description: "mnist_784: MNIST handwritten digits (10-class, 70K rows)"
+  target_column: class
+  task_type: multiclass
+  priority: 6
+  tags: [tabular, classification, suite_99]
+
+openml_task_3902:
+  source: openml
+  openml_task_id: 3902
+  description: "pc4: Software defect prediction NASA PC4 (binary)"
+  target_column: c
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_3903:
+  source: openml
+  openml_task_id: 3903
+  description: "pc3: Software defect prediction NASA PC3 (binary)"
+  target_column: c
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_3904:
+  source: openml
+  openml_task_id: 3904
+  description: "jm1: Software defect prediction NASA JM1 (binary)"
+  target_column: defects
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, suite_99]
+
+openml_task_3913:
+  source: openml
+  openml_task_id: 3913
+  description: "kc2: Software defect prediction NASA KC2 (binary)"
+  target_column: problems
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_3917:
+  source: openml
+  openml_task_id: 3917
+  description: "kc1: Software defect prediction NASA KC1 (binary)"
+  target_column: defects
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, suite_99]
+
+openml_task_3918:
+  source: openml
+  openml_task_id: 3918
+  description: "pc1: Software defect prediction NASA PC1 (binary)"
+  target_column: defects
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_7592:
+  source: openml
+  openml_task_id: 7592
+  description: "adult: Adult income prediction (binary)"
   target_column: class
   task_type: binary
-  priority: 7
+  priority: 10
   tags: [tabular, classification, suite_99]
+
+openml_task_9910:
+  source: openml
+  openml_task_id: 9910
+  description: "Bioresponse: Biological response to molecules (binary, 1777 features)"
+  target_column: target
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, bioinformatics, suite_99]
+
+openml_task_9946:
+  source: openml
+  openml_task_id: 9946
+  description: "wdbc: Wisconsin diagnostic breast cancer (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 6
+  tags: [tabular, classification, medical, small, suite_99]
+
+openml_task_9952:
+  source: openml
+  openml_task_id: 9952
+  description: "phoneme: Phoneme classification (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, suite_99]
+
+openml_task_9957:
+  source: openml
+  openml_task_id: 9957
+  description: "qsar-biodeg: QSAR biodegradation (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, chemistry, suite_99]
+
+openml_task_9960:
+  source: openml
+  openml_task_id: 9960
+  description: "wall-robot-navigation: Wall-following robot navigation (4-class)"
+  target_column: Class
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, robotics, suite_99]
+
+openml_task_9964:
+  source: openml
+  openml_task_id: 9964
+  description: "semeion: Semeion handwritten digit (10-class)"
+  target_column: Class
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, suite_99]
+
+openml_task_9971:
+  source: openml
+  openml_task_id: 9971
+  description: "ilpd: Indian liver patient (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, medical, small, suite_99]
+
+openml_task_9976:
+  source: openml
+  openml_task_id: 9976
+  description: "madelon: NIPS 2003 feature selection challenge (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, suite_99]
+
+openml_task_9977:
+  source: openml
+  openml_task_id: 9977
+  description: "nomao: Place deduplication (binary, 34K rows)"
+  target_column: Class
+  task_type: binary
+  priority: 6
+  tags: [tabular, classification, suite_99]
+
+openml_task_9978:
+  source: openml
+  openml_task_id: 9978
+  description: "ozone-level-8hr: Ozone level detection (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, environment, suite_99]
+
+openml_task_9981:
+  source: openml
+  openml_task_id: 9981
+  description: "cnae-9: Brazilian corporate text classification (9-class)"
+  target_column: Class
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_9985:
+  source: openml
+  openml_task_id: 9985
+  description: "first-order-theorem-proving: ATP theorem proving (6-class)"
+  target_column: Class
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, suite_99]
+
+openml_task_10093:
+  source: openml
+  openml_task_id: 10093
+  description: "banknote-authentication: Banknote authenticity (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_10101:
+  source: openml
+  openml_task_id: 10101
+  description: "blood-transfusion-service-center: Blood donation (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, medical, small, suite_99]
+
+openml_task_14952:
+  source: openml
+  openml_task_id: 14952
+  description: "PhishingWebsites: Phishing website detection (binary)"
+  target_column: Result
+  task_type: binary
+  priority: 6
+  tags: [tabular, classification, security, suite_99]
+
+openml_task_14954:
+  source: openml
+  openml_task_id: 14954
+  description: "cylinder-bands: Printing cylinder band type (binary)"
+  target_column: band_type
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
 
 openml_task_14965:
   source: openml
   openml_task_id: 14965
-  description: "bank-marketing telemarketing campaign (binary classification)"
+  description: "bank-marketing: Bank term deposit subscription (binary, 45K rows)"
+  target_column: Class
+  task_type: binary
+  priority: 7
+  tags: [tabular, classification, finance, suite_99]
+
+openml_task_14969:
+  source: openml
+  openml_task_id: 14969
+  description: "GesturePhaseSegmentationProcessed: Gesture phase segmentation (5-class)"
+  target_column: Phase
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, suite_99]
+
+openml_task_14970:
+  source: openml
+  openml_task_id: 14970
+  description: "har: Human activity recognition from smartphones (6-class)"
+  target_column: Class
+  task_type: multiclass
+  priority: 6
+  tags: [tabular, classification, suite_99]
+
+openml_task_125920:
+  source: openml
+  openml_task_id: 125920
+  description: "dresses-sales: Dress sales suitability (binary)"
+  target_column: Class
+  task_type: binary
+  priority: 3
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_125922:
+  source: openml
+  openml_task_id: 125922
+  description: "texture: Brodatz texture classification (11-class)"
+  target_column: Class
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, suite_99]
+
+openml_task_146195:
+  source: openml
+  openml_task_id: 146195
+  description: "connect-4: Connect-4 game outcome (3-class, 67K rows)"
+  target_column: class
+  task_type: multiclass
+  priority: 6
+  tags: [tabular, classification, suite_99]
+
+openml_task_146800:
+  source: openml
+  openml_task_id: 146800
+  description: "MiceProtein: Mouse protein expression (8-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, biology, small, suite_99]
+
+openml_task_146817:
+  source: openml
+  openml_task_id: 146817
+  description: "steel-plates-fault: Steel plate fault type (7-class)"
+  target_column: target
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, manufacturing, suite_99]
+
+openml_task_146819:
+  source: openml
+  openml_task_id: 146819
+  description: "climate-model-simulation-crashes: Climate model stability (binary)"
+  target_column: outcome
+  task_type: binary
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_146820:
+  source: openml
+  openml_task_id: 146820
+  description: "wilt: Diseased tree detection from satellite (binary)"
   target_column: class
   task_type: binary
-  priority: 8
+  priority: 5
+  tags: [tabular, classification, environment, suite_99]
+
+openml_task_146821:
+  source: openml
+  openml_task_id: 146821
+  description: "car: Car evaluation (4-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, small, suite_99]
+
+openml_task_146822:
+  source: openml
+  openml_task_id: 146822
+  description: "segment: Image segment classification (7-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
   tags: [tabular, classification, suite_99]
+
+openml_task_146824:
+  source: openml
+  openml_task_id: 146824
+  description: "mfeat-pixel: Handwritten digit pixel features (10-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 3
+  tags: [tabular, classification, suite_99]
+
+openml_task_146825:
+  source: openml
+  openml_task_id: 146825
+  description: "Fashion-MNIST: Fashion item classification (10-class, 70K rows)"
+  target_column: class
+  task_type: multiclass
+  priority: 6
+  tags: [tabular, classification, suite_99]
+
+openml_task_167119:
+  source: openml
+  openml_task_id: 167119
+  description: "jungle_chess: Jungle chess endgame classification (binary)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, suite_99]
+
+openml_task_167120:
+  source: openml
+  openml_task_id: 167120
+  description: "numerai28.6: Numerai tournament tabular (binary)"
+  target_column: attribute_21
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, finance, suite_99]
+
+openml_task_167121:
+  source: openml
+  openml_task_id: 167121
+  description: "Devnagari-Script: Devanagari handwritten character (46-class)"
+  target_column: character
+  task_type: multiclass
+  priority: 4
+  tags: [tabular, classification, suite_99]
+
+openml_task_167124:
+  source: openml
+  openml_task_id: 167124
+  description: "CIFAR_10: CIFAR-10 image classification (10-class, 60K rows)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, suite_99]
+
+openml_task_167125:
+  source: openml
+  openml_task_id: 167125
+  description: "Internet-Advertisements: Internet ad classification (binary)"
+  target_column: class
+  task_type: binary
+  priority: 5
+  tags: [tabular, classification, suite_99]
+
+openml_task_167140:
+  source: openml
+  openml_task_id: 167140
+  description: "dna: DNA promoter region classification (3-class)"
+  target_column: class
+  task_type: multiclass
+  priority: 5
+  tags: [tabular, classification, bioinformatics, suite_99]
+
+openml_task_167141:
+  source: openml
+  openml_task_id: 167141
+  description: "churn: Customer churn (binary)"
+  target_column: class
+  task_type: binary
+  priority: 6
+  tags: [tabular, classification, finance, suite_99]
+
+# ---------------------------------------------------------------------------
+# Kaggle datasets — require ~/.kaggle/kaggle.json credentials to download.
+# These are skipped by default (--skip-sources kaggle in smoke_test.py).
+# Run with --skip-sources '' to include them if credentials are present.
+# ---------------------------------------------------------------------------
+
+# Top Kaggle tabular competition datasets available via Ludwig built-ins:
+ames_housing:
+  source: ludwig
+  description: "House price prediction (Kaggle) [kaggle_credentials_required]"
+  target_column: SalePrice
+  task_type: regression
+  priority: 3
+  tags: [tabular, regression, kaggle, kaggle_credentials_required]
+
+allstate_claims_severity:
+  source: ludwig
+  description: "Allstate insurance claims severity (Kaggle) [kaggle_credentials_required]"
+  target_column: loss
+  task_type: regression
+  priority: 3
+  tags: [tabular, regression, kaggle, kaggle_credentials_required]
+
+ieee_fraud:
+  source: ludwig
+  description: "IEEE-CIS fraud detection (Kaggle) [kaggle_credentials_required]"
+  target_column: isFraud
+  task_type: binary
+  priority: 3
+  tags: [tabular, classification, fraud, kaggle, kaggle_credentials_required]
+
+otto_group_product:
+  source: ludwig
+  description: "Otto Group product classification (Kaggle, 9-class) [kaggle_credentials_required]"
+  target_column: target
+  task_type: multiclass
+  priority: 3
+  tags: [tabular, classification, kaggle, kaggle_credentials_required]
+
+porto_seguro_safe_driver:
+  source: ludwig
+  description: "Porto Seguro safe driver prediction (Kaggle) [kaggle_credentials_required]"
+  target_column: target
+  task_type: binary
+  priority: 3
+  tags: [tabular, classification, kaggle, kaggle_credentials_required]
+
+santander_customer_satisfaction:
+  source: ludwig
+  description: "Santander customer satisfaction (Kaggle) [kaggle_credentials_required]"
+  target_column: TARGET
+  task_type: binary
+  priority: 3
+  tags: [tabular, classification, finance, kaggle, kaggle_credentials_required]
+
+santander_customer_transaction:
+  source: ludwig
+  description: "Santander customer transaction prediction (Kaggle) [kaggle_credentials_required]"
+  target_column: target
+  task_type: binary
+  priority: 3
+  tags: [tabular, classification, finance, kaggle, kaggle_credentials_required]
+
+santander_value_prediction:
+  source: ludwig
+  description: "Santander value prediction (Kaggle, regression) [kaggle_credentials_required]"
+  target_column: target
+  task_type: regression
+  priority: 3
+  tags: [tabular, regression, finance, kaggle, kaggle_credentials_required]
+
+mercedes_benz_greener:
+  source: ludwig
+  description: "Mercedes-Benz greener manufacturing time (Kaggle, regression) [kaggle_credentials_required]"
+  target_column: y
+  task_type: regression
+  priority: 3
+  tags: [tabular, regression, kaggle, kaggle_credentials_required]
+
+amazon_employee_access_challenge:
+  source: ludwig
+  description: "Amazon employee access (Kaggle) [kaggle_credentials_required]"
+  target_column: ACTION
+  task_type: binary
+  priority: 3
+  tags: [tabular, classification, kaggle, kaggle_credentials_required]
+
+walmart_recruiting:
+  source: ludwig
+  description: "Walmart recruiting store sales (Kaggle) [kaggle_credentials_required]"
+  target_column: Weekly_Sales
+  task_type: regression
+  priority: 3
+  tags: [tabular, regression, kaggle, kaggle_credentials_required]
+
+talkingdata_adtrack_fraud:
+  source: ludwig
+  description: "TalkingData AdTracking fraud (Kaggle) [kaggle_credentials_required]"
+  target_column: is_attributed
+  task_type: binary
+  priority: 3
+  tags: [tabular, classification, fraud, kaggle, kaggle_credentials_required]
+
+bnp_claims_management:
+  source: ludwig
+  description: "BNP Paribas claims management (Kaggle) [kaggle_credentials_required]"
+  target_column: target
+  task_type: binary
+  priority: 3
+  tags: [tabular, classification, finance, kaggle, kaggle_credentials_required]
+
+customer_churn_prediction:
+  source: ludwig
+  description: "Customer churn prediction (Kaggle) [kaggle_credentials_required]"
+  target_column: Churn
+  task_type: binary
+  priority: 3
+  tags: [tabular, classification, kaggle, kaggle_credentials_required]

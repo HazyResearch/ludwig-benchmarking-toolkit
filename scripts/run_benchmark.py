@@ -93,6 +93,7 @@ def _print_banner(args: argparse.Namespace, n_datasets: int, n_total_jobs: int) 
         f"  Total jobs    : {n_total_jobs}",
         "",
         f"  Mode          : {args.mode}",
+        f"  GPU ID        : {args.gpu_id if args.gpu_id is not None else 'CPU only'}",
     ]
     if args.mode == "ray":
         lines += [
@@ -129,11 +130,23 @@ def _print_banner(args: argparse.Namespace, n_datasets: int, n_total_jobs: int) 
 def _build_registry(args: argparse.Namespace) -> "DatasetRegistry":  # noqa: F821
     from benchmark.dataset_registry import (
         DatasetRegistry,
+        register_from_metadata_yaml,
         register_ludwig_builtins,
         register_openml_suite,
     )
 
     registry = DatasetRegistry(args.registry)
+
+    if getattr(args, "metadata_yaml", None) is not None:
+        yaml_path = Path(args.metadata_yaml)
+        if not yaml_path.exists():
+            logger.error("--metadata-yaml path does not exist: %s", yaml_path)
+            sys.exit(1)
+        logger.info("Registering datasets from metadata YAML: %s ...", yaml_path)
+        added = register_from_metadata_yaml(registry, yaml_path)
+        logger.info("Added %d new datasets from %s", added, yaml_path)
+        if not args.dry_run:
+            registry.save()
 
     if args.openml_suite is not None:
         logger.info("Registering OpenML suite %d ...", args.openml_suite)
@@ -278,16 +291,21 @@ def _load_dataframe_for_entry(entry) -> "pd.DataFrame":  # noqa: F821
         import openml
         task = openml.tasks.get_task(entry.openml_task_id)
         dataset = task.get_dataset()
-        X, y, _, _ = dataset.get_data(task=task)
-        X[task.target_name] = y
+        target_name = task.target_name
+        X, y, _, _ = dataset.get_data(target=target_name, dataset_format="dataframe")
+        if y is not None:
+            X[target_name] = y
         return X
 
     elif source == "ludwig":
         from ludwig.datasets import get_dataset
         loader = get_dataset(entry.name)
-        train, val, test = loader.load(split=True)
-        frames = [d for d in (train, val, test) if d is not None and len(d) > 0]
-        return pd.concat(frames, ignore_index=True)
+        try:
+            train, val, test = loader.load(split=True)
+            frames = [d for d in (train, val, test) if d is not None and len(d) > 0]
+            return pd.concat(frames, ignore_index=True)
+        except (ValueError, TypeError):
+            return loader.load(split=False)
 
     elif source == "kaggle":
         if not entry.local_path:
@@ -578,6 +596,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Path to load/save the dataset registry JSON (default: ./registry.json)",
     )
     ds_group.add_argument(
+        "--metadata-yaml",
+        metavar="PATH",
+        help="Register datasets from a dataset_metadata.yaml file (sets target_column, task_type, etc.)",
+    )
+    ds_group.add_argument(
         "--openml-suite",
         type=int,
         metavar="ID",
@@ -688,6 +711,13 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Retry failed jobs this many times (default: 3)",
     )
     exec_group.add_argument(
+        "--gpu-id",
+        type=int,
+        default=None,
+        metavar="INT",
+        help="GPU device ID to use for sequential runs (e.g. 0). Default: None (CPU).",
+    )
+    exec_group.add_argument(
         "--dry-run",
         action="store_true",
         help="Print the plan and exit — no files written, no jobs run",
@@ -785,6 +815,7 @@ def main() -> None:
     # Require at least one dataset source (unless just estimating cost from an
     # existing registry file)
     has_source = any([
+        getattr(args, "metadata_yaml", None) is not None,
         args.openml_suite is not None,
         args.ludwig_builtins,
         args.datasets,
@@ -902,7 +933,7 @@ def main() -> None:
 
         try:
             if args.mode == "sequential":
-                scheduler.run_sequential(time_limit_per_job=args.time_limit_per_job)
+                scheduler.run_sequential(time_limit_per_job=args.time_limit_per_job, gpu_id=args.gpu_id)
             elif args.mode == "ray":
                 scheduler.run_with_ray(
                     max_concurrent=args.max_concurrent,

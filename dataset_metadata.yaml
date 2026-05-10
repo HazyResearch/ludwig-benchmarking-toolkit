@@ -132,7 +132,7 @@ higgs:
 numerai28pt6:
   source: ludwig
   description: "Numerai stock market tournament (binary)"
-  target_column: attribute_21
+  target_column: target
   task_type: binary
   priority: 5
   tags: [tabular, classification, ludwig_builtin]
@@ -147,8 +147,8 @@ rossman_store_sales:
 
 temperature:
   source: ludwig
-  description: "Temperature forecasting dataset (regression)"
-  target_column: Next_Tmax
+  description: "Multi-city temperature forecasting (regression)"
+  target_column: San Francisco
   task_type: regression
   priority: 4
   tags: [tabular, regression, ludwig_builtin]
@@ -180,7 +180,7 @@ protein:
 poker_hand:
   source: ludwig
   description: "Poker hand classification (10-class)"
-  target_column: CLASS
+  target_column: hand
   task_type: multiclass
   priority: 5
   tags: [tabular, classification, ludwig_builtin]
@@ -188,7 +188,7 @@ poker_hand:
 sarcos:
   source: ludwig
   description: "SARCOS robot arm joint torque regression"
-  target_column: target0
+  target_column: torque_1
   task_type: regression
   priority: 4
   tags: [tabular, regression, small, ludwig_builtin]
@@ -287,16 +287,16 @@ irony:
 
 bbcnews:
   source: ludwig
-  description: "BBC News topic classification (5-class)"
-  target_column: category
+  description: "BBC News topic classification (5-class) [kaggle_credentials_required]"
+  target_column: Category
   task_type: multiclass
-  priority: 5
-  tags: [text, classification, ludwig_builtin]
+  priority: 3
+  tags: [text, classification, kaggle, kaggle_credentials_required]
 
 reuters_r8:
   source: ludwig
   description: "Reuters-21578 news categorization (8-class)"
-  target_column: topic
+  target_column: intent
   task_type: multiclass
   priority: 5
   tags: [text, classification, ludwig_builtin]
@@ -320,7 +320,7 @@ sst5:
 yahoo_answers:
   source: ludwig
   description: "Yahoo Answers topic classification (10-class)"
-  target_column: topic
+  target_column: label
   task_type: multiclass
   priority: 6
   tags: [text, classification, ludwig_builtin]
@@ -384,7 +384,7 @@ california_house_price:
 data_scientist_salary:
   source: ludwig
   description: "Data scientist salary classification"
-  target_column: Salary
+  target_column: salary
   task_type: multiclass
   priority: 4
   tags: [tabular, classification, ludwig_builtin]
@@ -399,13 +399,13 @@ fake_job_postings2:
 
 imdb_genre_prediction:
   source: ludwig
-  description: "IMDB movie genre prediction from plot text"
-  target_column: Genre
-  task_type: multiclass
+  description: "IMDB movie genre Drama prediction (binary)"
+  target_column: Genre_is_Drama
+  task_type: binary
   priority: 4
   tags: [tabular, classification, ludwig_builtin]
 
-imbalanced_insurance:
+imbalaced_insurance:
   source: ludwig
   description: "Imbalanced insurance claim prediction (binary)"
   target_column: Response
@@ -431,9 +431,9 @@ kick_starter_funding:
 
 melbourne_airbnb:
   source: ludwig
-  description: "Melbourne Airbnb price regression"
-  target_column: price
-  task_type: regression
+  description: "Melbourne Airbnb price category prediction"
+  target_column: price_label
+  task_type: multiclass
   priority: 4
   tags: [tabular, regression, ludwig_builtin]
 
@@ -447,8 +447,8 @@ news_channel:
 
 news_popularity2:
   source: ludwig
-  description: "Online news popularity prediction (regression)"
-  target_column: shares
+  description: "Online news popularity (log shares, regression)"
+  target_column: log_shares
   task_type: regression
   priority: 4
   tags: [tabular, regression, ludwig_builtin]
@@ -479,8 +479,8 @@ wine_reviews:
 
 yosemite:
   source: ludwig
-  description: "Yosemite park visitation prediction"
-  target_column: rec_visitors
+  description: "Yosemite park visitation prediction (regression)"
+  target_column: y
   task_type: regression
   priority: 3
   tags: [tabular, regression, ludwig_builtin]

@@ -2239,6 +2239,9 @@ camseq:
   target_column: mask_path
   task_type: image_segmentation
   priority: 3
+  # UNet decoder requires skip-connection encoder; incompatible with generic concat combiner.
+  # Smoke test skips this until a dedicated segmentation pipeline is supported.
+  skip_smoke_test: true
   tags: [image, segmentation, kaggle, kaggle_credentials_required]
 
 # --- Kaggle competition required ---

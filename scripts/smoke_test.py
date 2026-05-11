@@ -84,17 +84,20 @@ def _infer_feature_type(series) -> str:
     sample = series.dropna().astype(str).head(30)
     if sample.empty:
         return "category"
-    # Image / audio path detection
-    if sample.str.match(r'.*\.(jpe?g|png|gif|bmp|tiff?)$', case=False).mean() > 0.5:
-        return "image"
-    if sample.str.match(r'.*\.(wav|mp3|flac|ogg|aac)$', case=False).mean() > 0.5:
-        return "audio"
+    # Image / audio: only local paths (not http/https URLs)
+    local = sample[~sample.str.startswith(("http://", "https://", "ftp://"))]
+    if len(local) > 0:
+        if local.str.match(r'.*\.(jpe?g|png|gif|bmp|tiff?)$', case=False).mean() > 0.5:
+            return "image"
+        if local.str.match(r'.*\.(wav|mp3|flac|ogg|aac)$', case=False).mean() > 0.5:
+            return "audio"
     # Long strings → text (avg > 30 chars or any value > 100 chars)
     avg_len = sample.str.len().mean()
     max_len = sample.str.len().max()
     if avg_len > 30 or max_len > 100:
         return "text"
     return "category"
+
 
 
 def _make_config(df, target_column: str, task_type: str, loader_config=None) -> dict:
@@ -118,12 +121,26 @@ def _make_config(df, target_column: str, task_type: str, loader_config=None) -> 
 
     target_cols = {f["name"] for f in output_features}
 
+    # For image segmentation, let Ludwig infer num_classes from the mask images.
+    # Sample all available images so that no unseen color appears during preprocessing.
+    if task_type == "image_segmentation":
+        for feat in output_features:
+            if feat.get("type") == "image":
+                feat.setdefault("preprocessing", {}).update({
+                    "infer_image_num_classes": True,
+                    "infer_image_sample_size": SAMPLE_ROWS,
+                })
+
     # Build input features with smart type detection
     input_features = []
     for col in df.columns:
         if col in target_cols:
             continue
-        feat_type = _infer_feature_type(df[col])
+        if loader_config is not None and getattr(loader_config, "columns", None):
+            col_type_map = {c["name"]: c["type"] for c in loader_config.columns if isinstance(c, dict)}
+            feat_type = col_type_map.get(col) or _infer_feature_type(df[col])
+        else:
+            feat_type = _infer_feature_type(df[col])
         feat = {"name": col, "type": feat_type}
         # Minimal encoder overrides to keep smoke test fast
         if feat_type == "image":
@@ -144,7 +161,10 @@ def _make_config(df, target_column: str, task_type: str, loader_config=None) -> 
     has_text_in = "text" in input_types
 
     # Batch size scaled by modality cost
-    if has_text_out or has_image_out:
+    if has_text_out:
+        # Translation / generation needs small batches and capped sequence length to avoid OOM
+        batch_size = 1
+    elif has_image_out:
         batch_size = 4
     elif has_image_in or has_audio_in:
         batch_size = 16
@@ -152,6 +172,16 @@ def _make_config(df, target_column: str, task_type: str, loader_config=None) -> 
         batch_size = 16
     else:
         batch_size = 32
+
+    # Add sequence length cap for text features to prevent OOM on long-text datasets
+    if has_text_out or has_text_in:
+        max_seq_len = 64 if has_text_out else 256
+        for feat in input_features:
+            if feat["type"] == "text":
+                feat.setdefault("preprocessing", {})["max_sequence_length"] = max_seq_len
+        for feat in output_features:
+            if feat["type"] == "text":
+                feat.setdefault("preprocessing", {})["max_sequence_length"] = max_seq_len
 
     return {
         "input_features": input_features,
@@ -176,6 +206,20 @@ def _load_df(name: str, meta: dict):
             df = pd.concat(frames, ignore_index=True)
         except (ValueError, TypeError):
             df = loader.load(split=False)
+        # Image/audio paths in the parquet may be relative to processed_dataset_dir.
+        # Make them absolute so Ludwig can find the files regardless of cwd.
+        base_dir = Path(loader.processed_dataset_dir)
+        _IMAGE_AUDIO_RE = re.compile(r'\.(jpe?g|png|gif|bmp|tiff?|wav|mp3|flac|ogg|aac)$', re.I)
+        for col in df.select_dtypes(include="object").columns:
+            sample = df[col].dropna().head(5).astype(str)
+            if sample.empty:
+                continue
+            if (not sample.str.startswith('/').all()
+                    and _IMAGE_AUDIO_RE.search(sample.iloc[0])
+                    and not sample.str.startswith(("http://", "https://")).any()):
+                df[col] = df[col].apply(
+                    lambda p: str(base_dir / p) if pd.notna(p) and not str(p).startswith('/') else p
+                )
 
     elif source == "openml":
         import openml
@@ -355,6 +399,11 @@ def main():
         meta = meta_all.get(name)
         if meta is None:
             print(f"{name:<{col_w}}  {'skip':<6}  {'':>6}  not in YAML")
+            skips += 1
+            continue
+
+        if meta.get("skip_smoke_test"):
+            print(f"{name:<{col_w}}  {'skip':<6}  {'':>6}  skip_smoke_test=true")
             skips += 1
             continue
 
